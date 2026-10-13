@@ -1,9 +1,4 @@
 ﻿tour,singles_rank,name_ru,name_ru_source,name_latin,fs_id,player_id
-ATP,37,Артур Фери,wikidata,Arthur Fery,SKxbA6KA,atp-fery-arthur
-ATP,44,Даниэль Мерида Агилар,flashscore,Daniel Merida Aguilar,WOtXbAu5,atp-daniel-merida-aguilar
-ATP,55,Хуан Мануэль Серундоло,wikidata,Manuel Cerundolo Juan,A93TM7BR,atp-cerundolo-juan-manuel
-ATP,56,Артюр Жеа,wikidata,Arthur Gea,M5Nr6FTR,atp-gea-arthur
-ATP,60,Жайме Фария,wikidata,Jaime Faria,ETojuYQP,atp-faria-jaime
 ATP,62,Роман Андрес Бурручага,wikidata,Andres Burruchaga Roman,CE7B5N90,atp-burruchaga-roman-andres
 ATP,66,Итан Куинн,wikidata,Ethan Quinn,fDEtnFgg,atp-quinn-ethan
 ATP,69,Факундо Диас Акоста,wikidata,Facundo Diaz Acosta,AsRYv2m2,atp-diaz-acosta-facundo
@@ -139,11 +134,6 @@ ATP,295,Эмил Овербек Карл,translit,Emil Overbeck Carl,tGuu5b7S,at
 ATP,297,Сюй Юйсю,wikidata,Hsiou Hsu Yu,WxwHu3lG,atp-hsu-yu-hsiou
 ATP,298,Пётр Нестеров,translit,Petr Nesterov,OvQcnjPp,atp-nesterov-petr
 ATP,299,Джоханнус Мондэй,translit,Johannus Monday,AZ8DoX8b,atp-monday-johannus
-WTA,44,Юлия Стародубцева,wikidata,Yuliia Starodubtseva,GlqMuuhi,wta-starodubtsewa-yulia
-WTA,47,Джанис Тьен,wikidata,Janice Tjen,ngVYO2lo,wta-tjen-janice
-WTA,51,Александра Олейникова,wikidata,Oleksandra Oliynykova,WSu6zx5t,wta-oliynykova-oleksandra
-WTA,58,Паула Бадоса Хиберт,wikidata,Paula Badosa,Wl76rX3I,wta-badosa-paula
-WTA,60,Ланлана Тараруди,wikidata,Lanlana Tararudee,lOEhBzlI,wta-tararudee-lanlana
 WTA,62,Тереза Валентова,wikidata,Tereza Valentova,hWMZK1VQ,wta-valentova-tereza
 WTA,63,Мария Тимофеева,wikidata,Maria Timofeeva,Em3nvKqP,wta-timofeeva-maria
 WTA,68,Эшлин Крюгер,wikidata,Ashlyn Krueger,O81eud9p,wta-krueger-ashlyn

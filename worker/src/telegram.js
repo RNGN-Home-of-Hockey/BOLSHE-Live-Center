@@ -153,7 +153,9 @@ async function onMessage(env, msg) {
     ];
     if (admin) lines.push('', HELP_ADMIN);
     else lines.push('', `Твой Telegram ID: <code>${from.id}</code>`);
-    return send(env, chatId, lines.join('\n'));
+    return send(env, chatId, lines.join('\n'), env.PUBLIC_URL ? {
+      reply_markup: { inline_keyboard: [[{ text: '🎾 Открыть приложение', web_app: { url: `${env.PUBLIC_URL}/app/` } }]] },
+    } : {});
   }
 
   if (cmd === 'player' || cmd === 'p') {
@@ -263,6 +265,15 @@ export async function handleTelegramUpdate(update, env) {
   if (update.callback_query) return onCallback(env, update.callback_query);
   if (update.chat_boost || update.removed_chat_boost) return onBoost(env, update);
   return null;
+}
+
+// Menu button next to the message field opens the Mini App.
+export async function ensureMenuButton(env) {
+  if (!env.TELEGRAM_BOT_TOKEN || !env.PUBLIC_URL) return { skipped: 'no token' };
+  const res = await tg(env, 'setChatMenuButton', {
+    menu_button: { type: 'web_app', text: 'Приложение', web_app: { url: `${env.PUBLIC_URL}/app/` } },
+  });
+  return { ok: Boolean(res.ok), error: res.ok ? null : res.description ?? null };
 }
 
 // Called by the cron: once the token secret exists, point Telegram at this Worker.

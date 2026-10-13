@@ -33,32 +33,32 @@ ATP,31,109,Томас Мартин Этчеверри,sportsru,Martin Etcheverry
 ATP,32,,Юго Эмбер,sportsru,Ugo Humbert,FRA,false,1998-06-26,1832.4,O4ywE5Ah,atp-humbert-ugo,https://www.sports.ru/tennis/person/ugo-humbert/
 ATP,33,113,Артур Риндеркнеш,sportsru,Arthur Rinderknech,FRA,false,1995-07-23,1768.4,pIxZZsof,atp-rinderknech-arthur,https://www.sports.ru/tennis/person/arthur-rinderknech/
 ATP,34,900,Хуберт Хуркач,sportsru,Hubert Hurkacz,POL,false,1997-02-11,1886.4,zuHOBnY9,atp-hurkacz-hubert,https://www.sports.ru/tennis/person/hubert-hurkacz/
-ATP,35,128,Алекс Микельсен,fantasy,Alex Michelsen,USA,false,2004-08-25,1876,nDIhfm9l,atp-michelsen-alex,
-ATP,36,421,Игнасио Бусе,fantasy,Ignacio Buse,PER,false,2004-03-25,1790.8,A1LQjAPb,atp-buse-ignacio,
-ATP,37,,Артур Фери,wikidata,Arthur Fery,GBR,false,2002-07-12,1796.5,SKxbA6KA,atp-fery-arthur,
+ATP,35,128,Алекс Микельсен,bot,Alex Michelsen,USA,false,2004-08-25,1876,nDIhfm9l,atp-michelsen-alex,
+ATP,36,421,Игнасио Бусе,bot,Ignacio Buse,PER,false,2004-03-25,1790.8,A1LQjAPb,atp-buse-ignacio,
+ATP,37,,Артур Фери,bot,Arthur Fery,GBR,false,2002-07-12,1796.5,SKxbA6KA,atp-fery-arthur,
 ATP,38,355,Маттео Арнальди,sportsru,Matteo Arnaldi,ITA,false,2001-02-22,1761.4,hlVLAfZK,atp-arnaldi-matteo,https://www.sports.ru/tennis/person/matteo-arnaldi/
 ATP,39,398,Зизу Бергс,sportsru,Zizou Bergs,BEL,false,1999-06-03,1775.1,SbeTx1o8,atp-bergs-zizou,https://www.sports.ru/tennis/person/zizou-bergs/
 ATP,40,,Кэмерон Норри,sportsru,Cameron Norrie,GBR,false,1995-08-23,1832.4,pvzhJGY8,atp-norrie-cameron,https://www.sports.ru/tennis/person/cameron-norrie/
 ATP,41,207,Ботик ван де Зандшульп,sportsru,Botic Van De Zandschulp,NED,false,1995-10-04,1800.7,YwiLpILD,atp-van-de-zandschulp-botic,https://www.sports.ru/tennis/person/botic-van-de-zandschulp/
 ATP,42,,Денис Шаповалов,sportsru,Denis Shapovalov,CAN,false,1999-04-15,1816.4,zXddgn9o,atp-shapovalov-denis,https://www.sports.ru/tennis/person/denis-shapovalov/
 ATP,43,267,Стефанос Циципас,sportsru,Stefanos Tsitsipas,GRE,false,1998-08-12,1889.6,hb6oWfc6,atp-tsitsipas-stefanos,https://www.sports.ru/tennis/person/stefanos-tsitsipas/
-ATP,44,,Даниэль Мерида Агилар,flashscore,Daniel Merida Aguilar,ESP,false,,1889.7,WOtXbAu5,atp-daniel-merida-aguilar,
+ATP,44,,Даниэль Мерида Агилар,bot,Daniel Merida Aguilar,ESP,false,2004-09-26,1889.7,WOtXbAu5,atp-daniel-merida-aguilar,
 ATP,45,589,Люка Ван Аш,sportsru,Luca van Assche,FRA,false,2004-05-11,1770.3,nP9K42Bg,atp-van-assche-luca,https://www.sports.ru/tennis/person/luca-van-assche/
 ATP,46,583,Маттео Берреттини,sportsru,Matteo Berrettini,ITA,false,1996-04-12,1824.7,OhwtM7N8,atp-berrettini-matteo,https://www.sports.ru/tennis/person/matteo-berrettini/
-ATP,47,,Мариано Навоне,fantasy,Mariano Navone,ARG,false,2001-02-27,1813.2,YoPUeL3o,atp-navone-mariano,
+ATP,47,,Мариано Навоне,bot,Mariano Navone,ARG,false,2001-02-27,1813.2,YoPUeL3o,atp-navone-mariano,
 ATP,48,49,Кентен Алис,sportsru,Quentin Halys,FRA,false,1996-10-26,1777.9,EDve8Ljh,atp-halys-quentin,https://www.sports.ru/tennis/person/quentin-halys/
-ATP,49,592,Хауме Мунар,fantasy,Jaume Munar,ESP,false,1997-05-05,1810.6,zZieQm4D,atp-munar-jaume,
-ATP,50,1363,Рафаэль Коллиньон,fantasy,Raphael Collignon,BEL,false,2002-01-13,1796.5,xzJGXJ6t,atp-collignon-raphael,
+ATP,49,592,Жауме Мунар,bot,Jaume Munar,ESP,false,1997-05-05,1810.6,zZieQm4D,atp-munar-jaume,
+ATP,50,1363,Рафаэль Коллиньон,bot,Raphael Collignon,BEL,false,2002-01-13,1796.5,xzJGXJ6t,atp-collignon-raphael,
 ATP,51,307,Нуну Боржес,sportsru,Nuno Borges,POR,false,1997-02-19,1812.2,hzbEPIOa,atp-borges-nuno,https://www.sports.ru/tennis/person/nuno-borges/
-ATP,52,499,Адольфо Даниэль Вальехо,fantasy,Daniel Vallejo Adolfo,PAR,false,2004-04-28,1764.9,U5RiWEZu,atp-vallejo-daniel,
+ATP,52,499,Адольфо Даниэль Вальехо,bot,Daniel Vallejo Adolfo,PAR,false,2004-04-28,1764.9,U5RiWEZu,atp-vallejo-daniel,
 ATP,53,,Себастьян Баес,sportsru,Sebastian Baez,ARG,false,2000-12-28,1740.4,dd8jLjtO,atp-baez-sebastian,https://www.sports.ru/tennis/person/sebastian-baez/
-ATP,54,285,Тьяго Агустин Тиранте,fantasy,Agustin Tirante Thiago,ARG,false,2001-04-10,1795.5,jBkGDj34,atp-tirante-thiago-agustin,
-ATP,55,487,Хуан Мануэль Серундоло,wikidata,Manuel Cerundolo Juan,ARG,false,2001-01-15,1778,A93TM7BR,atp-cerundolo-juan-manuel,
-ATP,56,,Артюр Жеа,wikidata,Arthur Gea,FRA,false,2005-01-02,1793,M5Nr6FTR,atp-gea-arthur,
+ATP,54,285,Тьяго Агустин Тиранте,bot,Agustin Tirante Thiago,ARG,false,2001-04-10,1795.5,jBkGDj34,atp-tirante-thiago-agustin,
+ATP,55,487,Хуан Мануэль Серундоло,bot,Manuel Cerundolo Juan,ARG,false,2001-01-15,1778,A93TM7BR,atp-cerundolo-juan-manuel,
+ATP,56,,Артюр Жеа,bot,Arthur Gea,FRA,false,2005-01-02,1793,M5Nr6FTR,atp-gea-arthur,
 ATP,57,284,Янник Ганфманн,sportsru,Yannick Hanfmann,GER,false,1991-11-13,1783.7,zLJYYbhm,atp-hanfmann-yannick,https://www.sports.ru/tennis/person/yannick-hanfmann/
 ATP,58,177,Тэллон Грикспор,sportsru,Tallon Griekspoor,NED,false,1996-07-02,1775,f3zfMU5i,atp-griekspoor-tallon,https://www.sports.ru/tennis/person/tallon-griekspoor/
 ATP,59,218,Ян-Леннард Штруфф,sportsru,Jan-Lennard Struff,GER,false,1990-04-25,1742.9,Ek3bDDo2,atp-struff-jan-lennard,https://www.sports.ru/tennis/person/jan-lennard-struff/
-ATP,60,460,Жайме Фария,wikidata,Jaime Faria,POR,false,2003-08-06,1787.2,ETojuYQP,atp-faria-jaime,
+ATP,60,460,Жайме Фария,bot,Jaime Faria,POR,false,2003-08-06,1787.2,ETojuYQP,atp-faria-jaime,
 ATP,61,907,Миомир Кецманович,sportsru,Miomir Kecmanovic,SRB,false,1999-08-31,1723.3,MTQ5CPOR,atp-kecmanovic-miomir,https://www.sports.ru/tennis/person/miomir-kecmanovic/
 ATP,62,212,Роман Андрес Бурручага,wikidata,Andres Burruchaga Roman,ARG,false,2002-01-23,1684.6,CE7B5N90,atp-burruchaga-roman-andres,
 ATP,63,269,Фабиан Марожан,sportsru,Fabian Marozsan,HUN,false,1999-10-08,1761,I1mux0lj,atp-marozsan-fabian,https://www.sports.ru/tennis/person/fabian-marozsan/
@@ -91,7 +91,7 @@ ATP,89,350,Юго Гастон,sportsru,Hugo Gaston,FRA,false,2000-09-26,1696,hG
 ATP,90,592,Марко Трунжеллити,sportsru,Marco Trungelliti,ARG,false,1990-01-31,1650.2,dQJqWoGg,atp-trungelliti-marco,https://www.sports.ru/tennis/person/marco-trungelliti/
 ATP,91,584,Ян Чоински,sportsru,Jan Choinski,GBR,false,1996-06-10,1688,Es82hMVD,atp-choinski-jan,https://www.sports.ru/tennis/person/jan-choinski/
 ATP,92,453,Бенжамен Бонзи,sportsru,Benjamin Bonzi,FRA,false,1996-06-09,1744.7,M5OpGHqH,atp-bonzi-benjamin,https://www.sports.ru/tennis/person/benjamin-bonzi/
-ATP,93,584,Бу Юнчаокете,flashscore,Yunchaokete Bu,CHN,false,,1723.8,Qabjt3Y5,atp-yunchaokete-bu,
+ATP,93,584,Бу Юнчаокете,flashscore,Yunchaokete Bu,CHN,false,2002-01-19,1723.8,Qabjt3Y5,atp-yunchaokete-bu,
 ATP,94,,Майкл Чжэн,wikidata,Michael Zheng,USA,false,2004-01-27,1762.1,tjS5ZIzl,atp-zheng-michael,
 ATP,95,461,Йеспер де Йонг,sportsru,Jesper De Jong,NED,false,2000-05-31,1664.1,8jStUWzB,atp-de-jong-jesper,https://www.sports.ru/tennis/person/jesper-de-jong/
 ATP,96,,Джейкоб Фернли,sportsru,Jacob Fearnley,GBR,false,2001-07-15,1702.8,pGBaKGOn,atp-fearnley-jacob,https://www.sports.ru/tennis/person/jacob-fearnley/
@@ -99,7 +99,7 @@ ATP,97,,Дино Прижмич,sportsru,Dino Prizmic,CRO,false,2005-08-05,1799.
 ATP,98,602,Адам Уолтон,wikidata,Adam Walton,AUS,false,1999-04-17,1690.5,jNRjAU1U,atp-walton-adam,
 ATP,99,,Теренс Атман,sportsru,Terence Atmane,FRA,false,2002-01-09,1737.3,6mkEQ279,atp-atmane-terence,https://www.sports.ru/tennis/person/terence-atmane/
 ATP,100,,Тоби Сэмюэл,wikidata,Toby Samuel,GBR,false,2002-09-06,1781.5,rZVojxZe,atp-samuel-toby,
-ATP,101,897,Чак Лам Колман Вонг,flashscore,Coleman Wong Chak Lam,HKG,false,,,zJqvgzz6,atp-wong-chak-lam-coleman,
+ATP,101,897,Чак Лам Колман Вонг,flashscore,Coleman Wong Chak Lam,HKG,false,2004-06-06,,zJqvgzz6,atp-wong-chak-lam-coleman,
 ATP,102,,Дженсон Бруксби,sportsru,Jenson Brooksby,USA,false,2000-10-26,1723.8,MoOtVkbN,atp-brooksby-jenson,https://www.sports.ru/tennis/person/jenson-brooksby/
 ATP,103,601,Дамир Джумхур,sportsru,Damir Dzumhur,BIH,false,1992-05-20,1627.4,hMrlbuuQ,atp-dzumhur-damir,https://www.sports.ru/tennis/person/damir-dzumhur/
 ATP,104,375,Мартин Дамм-младший,wikidata,(2003) Damm Martin,USA,false,2003-09-30,1704.2,vX7WOXtP,atp-damm-martin-2003,
@@ -174,7 +174,7 @@ ATP,172,243,Виталий Сачко,sportsru,Vitaliy Sachko,UKR,false,1997-07-
 ATP,173,670,Стефано Травалья,sportsru,Stefano Travaglia,ITA,false,1991-12-18,1506.6,KAYoXgme,atp-travaglia-stefano,https://www.sports.ru/tennis/person/stefano-travaglia/
 ATP,174,570,Матей Додиг,translit,Matej Dodig,CRO,false,2005-07-19,1615.2,2wbou5PR,atp-dodig-matej,
 ATP,175,501,Иньяки Монтес де ла Торре,wikidata,Inaki Montes-De La Torre,ESP,false,2002-10-03,1597.8,4CYXUVX7,atp-montes-de-la-torre-inaki,
-ATP,176,485,Йозеф Шверцлер Йёл,translit,Josef Schwaerzler Joel,AUT,false,,,0W4qKuuF,atp-schwarzler-joel-josef,
+ATP,176,485,Йозеф Шверцлер Йёл,translit,Josef Schwaerzler Joel,AUT,false,2006-01-27,,0W4qKuuF,atp-schwarzler-joel-josef,
 ATP,177,,Таро Даниэль,sportsru,Taro Daniel,JPN,false,1993-01-27,1596.9,h4fpmGci,atp-daniel-taro,https://www.sports.ru/tennis/person/taro-daniel/
 ATP,178,397,Даниил Глинка,wikidata,Daniil Glinka,EST,false,2000-05-12,1523.8,bimjKJAE,atp-glinka-daniil,
 ATP,179,,Ласло Дьере,sportsru,Laslo Djere,SRB,false,1995-06-02,1675.4,4GGnypTh,atp-djere-laslo,https://www.sports.ru/tennis/person/laslo-djere/
@@ -186,13 +186,13 @@ ATP,184,354,Алексис Галарно,flashscore,Alexis Galarneau,CAN,false,
 ATP,185,,Бернард Томич,sportsru,Bernard Tomic,AUS,false,1992-10-21,1523.3,fVQY2TUC,atp-tomic-bernard,https://www.sports.ru/tennis/person/bernard-tomic/
 ATP,186,,Харольд Майо,sportsru,Harold Mayot,FRA,false,2002-02-04,1628.3,jPfM16Z1,atp-mayot-harold,https://www.sports.ru/tennis/person/harold-mayot/
 ATP,187,,Павел Котов,sportsru,Pavel Kotov,RUS,true,1998-11-18,1602.3,809HrNqi,atp-kotov-pavel,https://www.sports.ru/tennis/person/pavel-kotov/
-ATP,188,391,Гвидо Иван Хусто,flashscore,Ivan Justo Guido,ARG,false,,1541.4,CjaTkiTr,atp-justo-guido-ivan,
+ATP,188,391,Гвидо Иван Хусто,flashscore,Ivan Justo Guido,ARG,false,1997-12-17,1541.4,CjaTkiTr,atp-justo-guido-ivan,
 ATP,189,1494,Саша Гюэймар Вайенбург,sportsru,Sascha Gueymard Wayenburg,FRA,false,2003-08-01,1588,OdbfkgxD,atp-gueymard-wayenburg-sascha,https://www.sports.ru/tennis/person/sascha-gueymard-wayenburg/
 ATP,190,,Диго Дедура,translit,Diego Dedura,GER,false,2008-03-12,1561.2,IXM4oGM3,atp-dedura-palomero-diego,
 ATP,191,457,Ян Кумстат,translit,Jan Kumstat,CZE,false,2007-01-02,1734.2,tpkd9exs,atp-kumstat-jan,
 ATP,192,1350,Элиас Имер,sportsru,Elias Ymer,SWE,false,1996-04-10,1505.2,GhVfMwlD,atp-ymer-elias,https://www.sports.ru/tennis/person/elias-ymer/
 ATP,193,756,Давид Хорда Санчис,flashscore,David Jorda Sanchis,ESP,false,1994-06-14,1498.4,plc0lDOK,atp-jorda-sanchis-david,
-ATP,194,542,Андре Илаган,translit,Andre Ilagan,USA,false,,1534.9,GbjJTs06,atp-ilagan-andre,
+ATP,194,542,Андре Илаган,translit,Andre Ilagan,USA,false,2000-11-16,1534.9,GbjJTs06,atp-ilagan-andre,
 ATP,195,,Хольгер Руне,wikidata,Holger Rune,DEN,false,2003-04-29,,2kRS8swG,atp-rune-holger,
 ATP,196,233,Зденек Коларж,sportsru,Zdenek Kolar,CZE,false,1996-10-09,1465,rwvvD1sO,atp-kolar-zdenek,https://www.sports.ru/tennis/person/zdenek-kolar/
 ATP,197,161,Факундо Мена,sportsru,Facundo Mena,ARG,false,1992-09-22,1480.5,GALIwHH5,atp-mena-facundo,https://www.sports.ru/tennis/person/facundo-mena/
@@ -209,11 +209,11 @@ ATP,207,359,Лука Павлович,flashscore,Luka Pavlovic,FRA,false,2000-03
 ATP,208,,Артур Казо,sportsru,Arthur Cazaux,FRA,false,2002-08-23,1792.9,bJR9AFq5,atp-cazaux-arthur,https://www.sports.ru/tennis/person/arthur-cazaux/
 ATP,209,,Тристан Бойер,wikidata,Tristan Boyer,USA,false,2001-04-21,1586.8,lYHOmg6t,atp-boyer-tristan,
 ATP,210,,Тимофей Скатов,sportsru,Timofey Skatov,KAZ,false,2001-01-21,1531.9,h6n0i9iE,atp-skatov-timofey,https://www.sports.ru/tennis/person/timofey-skatov/
-ATP,211,231,Браден Шик,translit,Braden Shick,USA,false,,1479.2,QiV3GEFB,atp-shick-braden,
+ATP,211,231,Браден Шик,translit,Braden Shick,USA,false,2003-10-24,1479.2,QiV3GEFB,atp-shick-braden,
 ATP,212,1507,Колтон Смит,flashscore,Colton Smith,USA,false,2003-03-05,1529.1,IHCZRRUJ,atp-colton-smith,
 ATP,213,409,Лиам Броади,sportsru,Liam Broady,GBR,false,1994-01-04,1513.8,UTu7grNI,atp-broady-liam,https://www.sports.ru/tennis/person/liam-broady/
 ATP,214,268,Шан Цзюнчэн,wikidata,Juncheng Shang,CHN,false,2005-02-02,1714.8,tvjTgE3J,atp-shang-juncheng,
-ATP,215,,Пол Мартин Тиффон,flashscore,Pol Martin Tiffon,ESP,false,,1495.4,j52KZBSr,atp-martin-tiffon-pol,
+ATP,215,,Пол Мартин Тиффон,flashscore,Pol Martin Tiffon,ESP,false,1999-07-30,1495.4,j52KZBSr,atp-martin-tiffon-pol,
 ATP,216,,Лоренцо Джустино,sportsru,Lorenzo Giustino,ITA,false,1991-09-10,1458.8,8OSeMYq1,atp-giustino-lorenzo,https://www.sports.ru/tennis/person/lorenzo-giustino/
 ATP,217,1494,Максим Мрва,translit,Maxim Mrva,CZE,false,2007-08-02,1508.6,hMR2isnm,atp-mrva-maxim,
 ATP,218,,Йошихито Нишиока,sportsru,Yoshihito Nishioka,JPN,false,1995-09-27,1684.1,neAMoGXa,atp-nishioka-yoshihito,https://www.sports.ru/tennis/person/yoshihito-nishioka/
@@ -237,7 +237,7 @@ ATP,235,,Тьягу Мойра Монтейру,wikidata,Thiago Monteiro,BRA,fal
 ATP,236,558,Аугуст Хольмгрен,wikidata,August Holmgren,DEN,false,1998-04-22,1519.6,QTqxSQsj,atp-holmgren-august,
 ATP,237,,Илья Ивашко,sportsru,Ilya Ivashka,BLR,false,1994-02-24,1570.7,nkLki9VA,atp-ivashka-ilya,https://www.sports.ru/tennis/person/ilya-ivashka/
 ATP,238,903,Макс Касниковский,wikidata,Maks Kasnikowski,POL,false,2003-07-06,1490.5,IozAI7OM,atp-kasnikowski-maks,
-ATP,239,,Марвин Мёллер,flashscore,Marvin Moeller,GER,false,,1569.1,W4qdFpGM,atp-moeller-marvin,
+ATP,239,,Марвин Мёллер,flashscore,Marvin Moeller,GER,false,1999-01-18,1569.1,W4qdFpGM,atp-moeller-marvin,
 ATP,240,297,Джей Кларк,sportsru,Jay Clarke,GBR,false,1998-07-27,1453.8,pWyUazPi,atp-clarke-jay,https://www.sports.ru/tennis/person/jay-clarke/
 ATP,241,855,Билли Харрис,wikidata,Billy Harris,GBR,false,1995-01-25,1512,G0X2O6XR,atp-harris-billy,
 ATP,242,451,Педро Боскардин Диас,flashscore,Pedro Boscardin Dias,BRA,false,2003-01-28,1462.9,4vuKo3sT,atp-boscardin-dias-pedro,
@@ -258,7 +258,7 @@ ATP,256,766,Даниэль Михальский,wikidata,Daniel Michalski,POL,fa
 ATP,257,,Мартин Крумич,flashscore,Martin Krumich,CZE,false,2002-12-26,1452.3,WKaCDElC,atp-krumich-martin,
 ATP,258,1494,Роберто Карбаллес Баэна,sportsru,Roberto Carballes Baena,ESP,false,1993-03-23,1577.2,hj8fIZPg,atp-carballes-baena-roberto,https://www.sports.ru/tennis/person/roberto-carballes-baena/
 ATP,259,350,Джеймс Маккейб,sportsru,James McCabe,AUS,false,2003-07-05,1447.3,2uDohcK5,atp-mccabe-james,https://www.sports.ru/tennis/person/james-mccabe/
-ATP,260,1229,Дилан Хара Фриэнд Дзяи,translit,Dylan Hara Friend Jay,JPN,false,,1568,IDWtGL8C,atp-friend-jay-dylan-hara,
+ATP,260,1229,Дилан Хара Фриэнд Дзяи,translit,Dylan Hara Friend Jay,JPN,false,2003-12-22,1568,IDWtGL8C,atp-friend-jay-dylan-hara,
 ATP,261,1216,Мика Брунольд,flashscore,Mika Brunold,SUI,false,2004-10-02,1545.1,AqiRBgj5,atp-brunold-mika,
 ATP,262,808,Фредерико Феррейра Сильва,sportsru,Frederico Ferreira Silva,POR,false,1995-03-18,1448,hC8yrUdb,atp-silva-frederico-ferreira,https://www.sports.ru/tennis/person/frederico-ferreira-silva/
 ATP,263,486,Доминик Штрикер,wikidata,Dominic Stricker,SUI,false,2002-08-16,1579.3,zViwxgir,atp-stricker-dominic,
@@ -269,7 +269,7 @@ ATP,267,439,Филип Хеннинг,translit,Philip Henning,RSA,false,2000-11-
 ATP,268,299,Чарльз Брум,flashscore,Charles Broom,GBR,false,1998-04-24,1505.1,pblgp6C1,atp-broom-charles,
 ATP,269,1222,Юго Гренье,wikidata,Hugo Grenier,FRA,false,1996-03-23,1502,dQsvQVYi,atp-grenier-hugo,
 ATP,270,1494,Килиан Фельдбауш,flashscore,Kilian Feldbausch,SUI,false,2005-09-07,1562.3,MgiX0Yi5,atp-feldbausch-kilian,
-ATP,271,336,Бувайсар Гадамаури,flashscore,Buvaysar Gadamauri,BEL,false,,1411.5,QX3MNSXf,atp-gadamauri-buvaysar,
+ATP,271,336,Бувайсар Гадамаури,flashscore,Buvaysar Gadamauri,BEL,false,2000-07-10,1411.5,QX3MNSXf,atp-gadamauri-buvaysar,
 ATP,272,530,Маттео Мартино,flashscore,Matteo Martineau,FRA,false,1999-01-16,1374.5,IDkmT0Hj,atp-martineau-matteo,
 ATP,273,,Мерфи Кассон,flashscore,Murphy Cassone,USA,false,2002-08-16,1515.7,O4aHjdoE,atp-cassone-murphy,
 ATP,274,227,Игор Рибейро Маркондес,flashscore,Igor Marcondes,BRA,false,1997-06-16,1503,GKJCcXKk,atp-marcondes-igor,
@@ -280,8 +280,8 @@ ATP,278,239,Пётр Бар-Бирюков,flashscore,Petr Bar Biryukov,RUS,true
 ATP,279,1392,Хуан-Баутиста Торрес,flashscore,Bautista Torres Juan,ARG,false,2002-04-02,1404.6,p2teWfrT,atp-torres-juan-bautista,
 ATP,280,848,Макс-Ханс Реберг,flashscore,Hans Rehberg Max,GER,false,2003-09-13,1471.9,8AjWdU1N,atp-rehberg-max-hans,
 ATP,281,2105,Ник Хардт,flashscore,Nick Hardt,,false,2000-09-20,1435.2,QaQOIXla,atp-hardt-nick,
-ATP,282,1026,Микеле Рибекаи,translit,Michele Ribecai,ITA,false,,1399.8,fNFrUmQq,atp-ribecai-michele,
-ATP,283,2683,Мэттью Деллаведова,flashscore,Matthew Dellavedova,AUS,false,,1167.8,0AnInLXj,atp-dellavedova-matthew,
+ATP,282,1026,Микеле Рибекаи,translit,Michele Ribecai,ITA,false,2003-02-04,1399.8,fNFrUmQq,atp-ribecai-michele,
+ATP,283,2683,Мэттью Деллаведова,flashscore,Matthew Dellavedova,AUS,false,2000-05-30,1167.8,0AnInLXj,atp-dellavedova-matthew,
 ATP,284,862,Стефано Наполитано,sportsru,Stefano Napolitano,ITA,false,1995-04-11,1465.5,pKG0p9mP,atp-napolitano-stefano,https://www.sports.ru/tennis/person/stefano-napolitano/
 ATP,285,472,Мануэль Ла Серна Хуан,translit,Manuel La Serna Juan,ARG,false,2004-02-05,1461.8,OUerK0bc,atp-la-serna-juan-manuel,
 ATP,286,150,Мили Поличак,flashscore,Mili Poljicak,CRO,false,2004-07-13,1499.8,COLpkwNk,atp-poljicak-mili,
@@ -291,7 +291,7 @@ ATP,289,1039,Филип Кристиан Жияну,flashscore,Cristian Jianu Fi
 ATP,290,693,Стефан Козлов,sportsru,Stefan Kozlov,USA,false,1998-02-01,1402,hI2zuuMo,atp-kozlov-stefan,https://www.sports.ru/tennis/person/stefan-kozlov/
 ATP,291,666,Абедалла Шелбайх,flashscore,Abedallah Shelbayh,,false,2003-11-16,1535.3,AZ4zdtZb,atp-shelbayh-abedallah,
 ATP,292,799,Аластар Грей,sportsru,Alastair Gray,GBR,false,1998-06-22,1316.2,2PmpIG6p,atp-gray-alastair,https://www.sports.ru/tennis/person/alastair-gray/
-ATP,293,767,Макс Шёнхаус,translit,Max Schoenhaus,GER,false,,1460.1,2k82Daun,atp-schoenhaus-max,
+ATP,293,767,Макс Шёнхаус,translit,Max Schoenhaus,GER,false,2007-08-01,1460.1,2k82Daun,atp-schoenhaus-max,
 ATP,294,609,Сергей Фомин,wikidata,Sergey Fomin,UZB,false,2001-02-01,1323.6,nsLeJUw8,atp-fomin-sergey,
 ATP,295,337,Эмил Овербек Карл,translit,Emil Overbeck Carl,DEN,false,2001-08-11,1241,tGuu5b7S,atp-overbeck-carl-emil,
 ATP,296,31,Пьер-Уг Эрбер,sportsru,Pierre-Hugues Herbert,FRA,false,1991-03-18,1550.5,vD0zNRBM,atp-herbert-pierre-hugues,https://www.sports.ru/tennis/person/pierre-hugues-herbert/
@@ -408,7 +408,7 @@ ATP,406,,Ёсукэ Ватануки,wikidata,(1998) Watanuki Yosuke,JPN,false,1
 ATP,407,293,Муркель Алехандро Делльен Веласко,flashscore,Alejandro Dellien Velasco Murkel,BOL,false,,1323.2,tGnlFo7P,atp-dellien-velasco-murkel-alejandro,
 ATP,408,760,Озан Барис,translit,Ozan Baris,USA,false,2004-03-31,,CI4P8u7o,atp-baris-ozan,
 ATP,409,920,Артур Вебе,translit,Arthur Weber,FRA,false,1992-05-09,1321.1,6Bmf3gr6,atp-weber-arthur,
-ATP,410,694,Павел Лагутин,translit,Pavel Lagutin,RUS,true,,,zVCQo6it,atp-lagutin-pavel,
+ATP,410,694,Павел Лагутин,translit,Pavel Lagutin,RUS,true,2005-03-06,,zVCQo6it,atp-lagutin-pavel,
 ATP,411,330,Эрнан Касанова,sportsru,Hernan Casanova,ARG,false,1994-02-06,1388.6,nDzZi0PI,atp-casanova-hernan,https://www.sports.ru/tennis/person/hernan-casanova/
 ATP,412,257,Масамити Имамура,flashscore,Masamichi Imamura,JPN,false,1998-11-23,1283.2,n7tjloOD,atp-imamura-masamichi,
 ATP,413,1119,Себастиан Горзни,translit,Sebastian Gorzny,USA,false,2004-01-24,1493.9,zy0rH7hD,atp-gorzny-sebastian,
@@ -430,7 +430,7 @@ ATP,428,564,Исан Альмасан Валиэнте,translit,Izan Almazan Val
 ATP,429,21,Марк Полманс,sportsru,Marc Polmans,AUS,false,1997-05-02,1434.9,2TDsBEcH,atp-polmans-marc,https://www.sports.ru/tennis/person/marc-polmans/
 ATP,430,,Азиз Дугаз,flashscore,Aziz Dougaz,TUN,false,,1468.2,0YI8tRD1,atp-dougaz-aziz,
 ATP,431,1027,Лука Стахели,flashscore,Luca Staeheli,SUI,false,,1271.8,Eegw5r5O,atp-staeheli-luca,
-ATP,432,387,Семён Панкин,translit,Semen Pankin,RUS,true,,1283.1,AqOZJFvK,atp-pankin-semen,
+ATP,432,387,Семён Панкин,translit,Semen Pankin,RUS,true,1999-09-04,1283.1,AqOZJFvK,atp-pankin-semen,
 ATP,433,893,Карим Беннани,translit,Karim Bennani,MAR,false,2007-09-03,1374.8,O4I1srZ2,atp-bennani-karim,
 ATP,434,2414,Иван Гахов,sportsru,Ivan Gakhov,RUS,true,1996-11-04,1417.7,KWlcYfH2,atp-gakhov-ivan,https://www.sports.ru/tennis/person/ivan-gakhov/
 ATP,435,431,Луис Вессельс,sportsru,Louis Wessels,GER,false,1998-08-27,,MHdqma3a,atp-wessels-louis,https://www.sports.ru/tennis/person/louis-wessels/
@@ -570,7 +570,7 @@ ATP,568,708,Нино Эреншнайдер,flashscore,Nino Ehrenschneider,GER,f
 ATP,569,642,Игнасио Монсон,flashscore,Ignacio Monzon,ARG,false,,,IFnIgEEe,atp-monzon-ignacio,
 ATP,570,637,Габриел Гету,translit,Gabriel Ghetu,ROU,false,,,hKlKZQLd,atp-ghetu-gabriel,
 ATP,571,1110,Матисс Бобишон,translit,Matisse Bobichon,FRA,false,,,AkEPGG1p,atp-bobichon-matisse,
-ATP,572,1074,Святослав Гулин,flashscore,Svyatoslav Gulin,RUS,true,,1280.5,zsPR6kKa,atp-svyatoslav-gulin,
+ATP,572,1074,Святослав Гулин,flashscore,Svyatoslav Gulin,RUS,true,2002-12-04,1280.5,zsPR6kKa,atp-svyatoslav-gulin,
 ATP,573,2282,Таха Баади,flashscore,Taha Baadi,MAR,false,2001-07-15,,ATFygia3,atp-baadi-taha,
 ATP,574,984,Илииан Радулов,translit,Iliyan Radulov,BUL,false,2005-06-11,1309.9,YsC3U3Oi,atp-radulov-iliyan,
 ATP,575,661,Туфик Сахтали,flashscore,Toufik Sahtali,ALG,false,,,bDMnwyZM,atp-sahtali-toufik,
@@ -586,7 +586,7 @@ ATP,584,684,Жоао Домингес,sportsru,Joao Domingues,POR,false,1993-10-
 ATP,585,393,Даниэль Де Йонге,flashscore,Daniel De Jonge,NED,false,1999-08-17,,tGGdpX9d,atp-de-jonge-daniel,
 ATP,586,1269,Робен Катри,translit,Robin Catry,FRA,false,,,8Ase3tht,atp-catry-robin,
 ATP,587,607,Федерико Яннакконе,flashscore,Federico Iannaccone,ITA,false,,1351.4,4OUbV0RG,atp-iannaccone-federico,
-ATP,588,910,Кирилл Киватцев,flashscore,Kirill Kivattsev,RUS,true,,,lYTGGh9p,atp-kivattsev-kirill,
+ATP,588,910,Кирилл Киватцев,flashscore,Kirill Kivattsev,RUS,true,1997-10-10,,lYTGGh9p,atp-kivattsev-kirill,
 ATP,589,770,Себастьян Гима,flashscore,Sebastian Gima,ROU,false,,1151,vcoUMA9G,atp-gima-sebastian,
 ATP,590,1587,Киган Рике,translit,Keegan Rice,CAN,false,,1452,v9l6lgH5,atp-rice-keegan,
 ATP,591,1963,Эрик Арутюнян,flashscore,Erik Arutiunian,RUS,true,2004-10-19,,MF4g5i1o,atp-erik-arutiunian,
@@ -660,7 +660,7 @@ ATP,658,1564,Тео Папамалами,translit,Theo Papamalamis,FRA,false,200
 ATP,659,1709,Куань-И Ли,flashscore,(1996) Lee Kuan-Yi,TPE,false,1996-09-09,,v5u9pFvC,atp-lee-kuan-yi-1996,
 ATP,660,678,Николас Занельлато,translit,Nicolas Zanellato,BRA,false,,,GAcZvpUn,atp-zanellato-nicolas,
 ATP,661,1243,Филип Пеливо,sportsru,Filip Peliwo,POL,false,1994-01-30,1245.3,x6aKFC7p,atp-peliwo-filip,https://www.sports.ru/tennis/person/filip-peliwo/
-ATP,662,447,Тимофеи Дерепаско,translit,Timofei Derepasko,RUS,true,,,Obmq8P5i,atp-derepasko-timofei,
+ATP,662,447,Тимофеи Дерепаско,translit,Timofei Derepasko,RUS,true,2007-01-07,,Obmq8P5i,atp-derepasko-timofei,
 ATP,663,551,Марлон Ванкан,flashscore,Marlon Vankan,GER,false,,,f5JHTw8p,atp-vankan-marlon,
 ATP,664,1371,Сидхарт Рават,flashscore,Sidharth Rawat,IND,false,,1169.3,YLupS3cJ,atp-rawat-sidharth,
 ATP,665,415,Исаак Бекрофт,translit,Isaac Becroft,NZL,false,2000-10-29,,vwFvblTa,atp-becroft-isaac,
@@ -707,7 +707,7 @@ ATP,705,780,Матиас Черны,flashscore,Matyas Cerny,CZE,false,,,Cbx7xjfs
 ATP,706,610,Маниш Сурешкумар,flashscore,Manish Sureshkumar,IND,false,,,zZLFNUKk,atp-sureshkumar-manish,
 ATP,707,323,Алекс Рыбаков,flashscore,Alex Rybakov,USA,false,1997-01-27,1352.1,x01GZe48,atp-rybakov-alex,
 ATP,708,669,Кристиян Юхас,flashscore,Kristijan Juhas,SRB,false,,,G0WthUCI,atp-juhas-kristijan,
-ATP,709,802,Григорий Шебекин,translit,Grigory Shebekin,RUS,true,,,QsEbTSZ0,atp-shebekin-grigory,
+ATP,709,802,Григорий Шебекин,translit,Grigory Shebekin,RUS,true,2005-05-14,,QsEbTSZ0,atp-shebekin-grigory,
 ATP,710,,Лео Ракий,translit,Leo Raquillet,FRA,false,,,6XFOXbPo,atp-raquillet-leo,
 ATP,711,216,Франко Риберо,flashscore,Franco Ribero,ARG,false,,,v7WgNVZb,atp-ribero-franco,
 ATP,712,681,Николас Вильалон,translit,Nicolas Villalon,CHI,false,,1135.4,t26GhUcJ,atp-villalon-nicolas,
@@ -728,7 +728,7 @@ ATP,726,190,Оскар Поулсен Бростром,translit,Oskar Poulsen Br
 ATP,727,2373,Юсуке Такахаси,sportsru,Yusuke Takahashi,JPN,false,1997-10-17,1267.7,2kYVdoCo,atp-takahashi-yusuke,https://www.sports.ru/tennis/person/yusuke-takahashi/
 ATP,728,1328,Джек Антроп,flashscore,Jack Anthrop,USA,false,,,nwVHy1zj,atp-anthrop-jack,
 ATP,729,1958,Андреу Джохнсон,translit,Andrew Johnson,USA,false,,,I18JMi8s,atp-johnson-andrew,
-ATP,730,1567,Максим Жуков,translit,Maxim Zhukov,RUS,true,,,j725TEpn,atp-zhukov-maxim,
+ATP,730,1567,Максим Жуков,translit,Maxim Zhukov,RUS,true,2005-01-30,,j725TEpn,atp-zhukov-maxim,
 ATP,731,1513,Мичаел Агуи,translit,Michael Agwi,,false,2003-09-04,,vHrsxJcB,atp-michael-agwi,
 ATP,732,1195,Касра Рахмани,translit,Kasra Rahmani,IRN,false,,,dlVTglmB,atp-rahmani-kasra,
 ATP,733,424,Лэо Витхоонтиэн,translit,Leo Vithoontien,JPN,false,,,YotWabzf,atp-vithoontien-leo,
@@ -862,12 +862,12 @@ ATP,860,811,Никита Белозерцев,translit,Nikita Belozertsev,UZB,fa
 ATP,861,1564,Марко Миладинович,flashscore,Marko Miladinovic,SRB,false,2000-12-07,,0d5ntrZg,atp-miladinovic-marko,
 ATP,862,1209,Денис Клок,flashscore,Denis Klok,RUS,true,1998-05-26,,rau6U2Wp,atp-klok-denis,
 ATP,863,547,Рафаэль Тозетто,translit,Rafael Tosetto,BRA,false,,,n1NMWrnO,atp-tosetto-rafael,
-ATP,864,764,Егор Плешивцев,translit,Egor Pleshivtsev,RUS,true,,,8CphVCb4,atp-pleshivtsev-egor,
+ATP,864,764,Егор Плешивцев,translit,Egor Pleshivtsev,RUS,true,2007-02-11,,8CphVCb4,atp-pleshivtsev-egor,
 ATP,865,301,Григорий Ломакин,flashscore,Grigoriy Lomakin,KAZ,false,1998-03-18,,vTJ8pfma,atp-lomakin-grigoriy,
 ATP,866,1206,Джанникола Мизази,translit,Giannicola Misasi,ITA,false,,,0KgHTdu1,atp-misasi-giannicola,
 ATP,867,,Николас Харри,sportsru,Nicolas Jarry,CHI,false,1995-10-11,1648.3,W24W9IyU,atp-jarry-nicolas,https://www.sports.ru/tennis/person/nicolas-jarry/
 ATP,868,1389,Джангджун Ким,translit,Jangjun Kim,KOR,false,,,YgQs933D,atp-kim-jangjun,
-ATP,869,1199,Мартин Борисюк,flashscore,Martin Borisiouk,RUS,true,,,KOYgOE8M,atp-borisiouk-martin,
+ATP,869,1199,Мартин Борисюк,flashscore,Martin Borisiouk,RUS,true,2000-07-04,,KOYgOE8M,atp-borisiouk-martin,
 ATP,870,296,Юсукэ Кусухара,translit,Yusuke Kusuhara,JPN,false,1997-08-09,,U12MD469,atp-kusuhara-yusuke,
 ATP,871,289,Натан Родригес,flashscore,Natan Rodrigues,BRA,false,,,4E3Oq5sU,atp-rodrigues-natan,
 ATP,872,1331,Роберт Гуна,translit,Robert Guna,ROU,false,,,fwrmyMn6,atp-guna-robert,
@@ -909,7 +909,7 @@ ATP,907,2474,Ничолас Тудорика Алвин,translit,Nicholas Tudori
 ATP,908,198,Джейсон Юнг,sportsru,Jason Jung,TPE,false,1989-06-15,1431.5,dr6X4r9r,atp-jung-jason,https://www.sports.ru/tennis/person/jason-jung/
 ATP,909,1660,Офек Шиманов,flashscore,Ofek Shimanov,ISR,false,,,ELT1J8xI,atp-shimanov-ofek,
 ATP,910,1759,Чарлие Роберцон,translit,Charlie Robertson,GBR,false,,,YVJBnS1k,atp-robertson-charlie,
-ATP,911,1204,Николай Галак,flashscore,Mikalai Haliak,RUS,true,,,lfm7TL7S,atp-haliak-mikalai,
+ATP,911,1204,Николай Галак,flashscore,Mikalai Haliak,RUS,true,1998-08-14,,lfm7TL7S,atp-haliak-mikalai,
 ATP,912,,Штефан Сайферт,translit,Stefan Seifert,GER,false,,,K6Al1tIN,atp-seifert-stefan,
 ATP,913,1047,Лоренцо Комино,translit,Lorenzo Comino,ITA,false,,,GdO6VwhB,atp-comino-lorenzo,
 ATP,914,831,Миккаэль Каук,translit,Mickael Kaouk,FRA,false,,,McTK98Oj,atp-kaouk-mickael,
@@ -940,7 +940,7 @@ ATP,938,968,Чристопер Ли,translit,Christopher Li,PER,false,,,6wt2BF1J
 ATP,939,633,Стейн Пардекопер,translit,Stijn Paardekooper,NED,false,,,lCkF2LpF,atp-paardekooper-stijn,
 ATP,940,1608,Марселло Серафини,flashscore,Marcello Serafini,ITA,false,,,b1cyvN26,atp-serafini-marcello,
 ATP,941,433,Ииро Васа,flashscore,Iiro Vasa,FIN,false,,,UFqHRZIM,atp-vasa-iiro,
-ATP,942,1054,Руслан Тиукаев,translit,Ruslan Tiukaev,RUS,true,,,CCJm9jO5,atp-tiukaev-ruslan,
+ATP,942,1054,Руслан Тиукаев,translit,Ruslan Tiukaev,RUS,true,2005-06-08,,CCJm9jO5,atp-tiukaev-ruslan,
 ATP,943,734,Чираг Духан,flashscore,Chirag Duhan,IND,false,,,W2Hk0tpc,atp-duhan-chirag,
 ATP,944,736,Юлиан Кандом,flashscore,Julian Cundom,ARG,false,,,xdPIYXbS,atp-cundom-julian,
 ATP,945,608,Рокко Пиатти,translit,Rocco Piatti,,false,,,UqSfnnXG,atp-piatti-rocco,
@@ -972,7 +972,7 @@ ATP,970,1579,Джастин Робертс,flashscore,Justin Roberts,,false,1996
 ATP,971,615,Матье Скалья,flashscore,Mathieu Scaglia,FRA,false,,,txt1SgPI,atp-scaglia-mathieu,
 ATP,972,1010,Ианнис Милетик,translit,Iannis Miletich,ITA,false,,,v33UOz8s,atp-miletich-iannis,
 ATP,973,2794,Лука Талан Лопатиц,translit,Luka Talan Lopatic,SLO,false,,,K2SXhQ9n,atp-talan-lopatic-luka,
-ATP,974,523,Никита Ианин,translit,Nikita Ianin,RUS,true,,,M9e0PJe5,atp-ianin-nikita,
+ATP,974,523,Никита Ианин,translit,Nikita Ianin,RUS,true,2001-09-07,,M9e0PJe5,atp-ianin-nikita,
 ATP,975,640,Джереми Гшуендтнер,translit,Jeremy Gschwendtner,GBR,false,,,jsSzo7Us,atp-gschwendtner-jeremy,
 ATP,976,612,Вишая Тронгчароенчайкул,wikidata,Wishaya Trongcharoenchaikul,THA,false,1995-04-08,,Cdn8t1Wm,atp-trongcharoenchaikul-wishaya,
 ATP,977,1281,Кристиян Брязу Влад,translit,Cristian Breazu Vlad,ROU,false,,,StZGGl50,atp-breazu-vlad-cristian,
@@ -986,7 +986,7 @@ ATP,984,1413,Маркус Маласзсзак,translit,Markus Malaszszak,THA,fa
 ATP,985,1934,Фаньмин Мэн,translit,Fanming Meng,CHN,false,,,GAFQmFOH,atp-meng-fanming,
 ATP,986,604,Дафид Айхенсеер,translit,David Eichenseher,GER,false,,,SGBOqnWb,atp-eichenseher-david,
 ATP,987,536,Адан Фрейре да Силва,flashscore,Adan Freire Da Silva,FRA,false,,,fRC4NeHq,atp-freire-da-silva-adan,
-ATP,988,,Николай Вылегжанин,flashscore,Nikolay Vylegzhanin,RUS,true,,,zkhsV3Jf,atp-vylegzhanin-nikolay,
+ATP,988,,Николай Вылегжанин,flashscore,Nikolay Vylegzhanin,RUS,true,2000-04-18,,zkhsV3Jf,atp-vylegzhanin-nikolay,
 ATP,989,246,Аожань Ван,sportsru,Aoran Wang,CHN,false,1997-02-05,,lM9dwNwr,atp-wang-aoran,https://www.sports.ru/tennis/person/aoran-wang/
 ATP,990,,Миках Брасуелл,translit,Micah Braswell,USA,false,,,8MKxjn4e,atp-braswell-micah,
 ATP,991,818,Джеффри Фон дер Шуленбург,flashscore,Jeffrey Von der Schulenburg,SUI,false,,,tfb3h6El,atp-von-der-schulenburg-jeffrey,
@@ -1002,7 +1002,7 @@ ATP,1000,250,Маттеу Суммерс,translit,Matthew Summers,GBR,false,1998
 ATP,1001,1828,Мичаел Савано,translit,Michael Savano,USA,false,,,UN63JlsA,atp-savano-michael,
 ATP,1002,,Габриел Папое Чезар,translit,Gabriel Papoe Cezar,ROU,false,,,C6SwJllS,atp-papoe-cezar-gabriel,
 ATP,1003,2060,Джоаквин Гуиллеме,translit,Joaquin Guilleme,,false,,,U9TnwRSi,atp-guilleme-joaquin,
-ATP,1004,1405,Бекхан Атлангериев,flashscore,Bekkhan Atlangeriev,RUS,true,,,hbrc2RnR,atp-atlangeriev-bekkhan,
+ATP,1004,1405,Бекхан Атлангериев,flashscore,Bekkhan Atlangeriev,RUS,true,2001-03-12,,hbrc2RnR,atp-atlangeriev-bekkhan,
 ATP,1005,1311,Доминик Келловски,flashscore,Dominik Kellovsky,CZE,false,,,zwteAADd,atp-kellovsky-dominik,
 ATP,1006,655,Энзо Кольманн,translit,Enzo Kohlmann,BRA,false,,,OSEPCL8h,atp-kohlmann-enzo,
 ATP,1007,1682,Линьан Сиао,translit,Linang Xiao,CHN,false,,,ITFKTi7B,atp-xiao-linang,
@@ -1032,7 +1032,7 @@ ATP,1030,1935,Якуб Филип,flashscore,Jakub Filip,CZE,false,2005-09-25,,b
 ATP,1031,2809,Антони Фабр,translit,Antoni Fabre,FRA,false,,,GYivpAoO,atp-fabre-antoni,
 ATP,1032,2248,Аляз Еран,translit,Aljaz Jeran,SLO,false,,,IyuypzVs,atp-jeran-aljaz,
 ATP,1033,936,Маттиас Уйфари,translit,Matthias Ujvary,AUT,false,,,d6tOE9Yo,atp-ujvary-matthias,
-ATP,1034,1783,Савелий Иванов,translit,Saveliy Ivanov,RUS,true,,,rkiXlHy6,atp-ivanov-saveliy,
+ATP,1034,1783,Савелий Иванов,translit,Saveliy Ivanov,RUS,true,2004-09-22,,rkiXlHy6,atp-ivanov-saveliy,
 ATP,1035,796,Павлос Циципас,translit,Pavlos Tsitsipas,GRE,false,,,8SlmNRcC,atp-tsitsipas-pavlos,
 ATP,1036,1765,Жоаким Альмеида,translit,Joaquim Almeida,BRA,false,,,z9VVAcye,atp-almeida-joaquim,
 ATP,1037,,Игорь Гименес,flashscore,Igor Gimenez,BRA,false,,,pnbt8e9R,atp-gimenez-igor,
@@ -1066,8 +1066,8 @@ ATP,1064,1260,Лука Пау,flashscore,Luca Pow,GBR,false,2005-02-01,,b5ksUXqB
 ATP,1065,990,Билли Блэйдес,translit,Billy Blaydes,GBR,false,,,C8TBEhpO,atp-blaydes-billy,
 ATP,1066,606,Николас Арсениулт,translit,Nicolas Arseneault,CAN,false,2007-01-18,,GYqn0WJb,atp-arseneault-nicolas,
 ATP,1067,1303,Ян Купциц,translit,Jan Kupcic,SLO,false,,,jakl92iG,atp-kupcic-jan,
-ATP,1068,1474,Дмитрий Бессонов,translit,Dmitry Bessonov,RUS,true,,,SrjIZjFE,atp-bessonov-dmitry,
-ATP,1069,1123,Евгений Филиппов,flashscore,Evgeny Philippov,RUS,true,,,SAdBjpq1,atp-philippov-evgeny,
+ATP,1068,1474,Дмитрий Бессонов,translit,Dmitry Bessonov,RUS,true,2006-03-17,,SrjIZjFE,atp-bessonov-dmitry,
+ATP,1069,1123,Евгений Филиппов,flashscore,Evgeny Philippov,RUS,true,2002-02-06,,SAdBjpq1,atp-philippov-evgeny,
 ATP,1070,2605,Оскар Лиен Йохан,translit,Oscar Lien Johan,NOR,false,,,GY7zSecB,atp-lien-johan-oscar,
 ATP,1071,2285,Филиппо Маццола,translit,Filippo Mazzola,ITA,false,,,nyTwr6bI,atp-mazzola-filippo,
 ATP,1072,1288,Зач Стефенс,translit,Zach Stephens,GBR,false,,,ph0ysxJr,atp-stephens-zach,
@@ -1169,8 +1169,8 @@ ATP,1167,1150,Тео Эррманн,translit,Theo Herrmann,FRA,false,,,nBuUYktk,
 ATP,1168,686,Стефан Купер,translit,Stefan Cooper,GBR,false,,,zLw45Z1i,atp-stefan-cooper,
 ATP,1169,,Петер Булдорини,translit,Peter Buldorini,,false,,,vysir7a7,atp-buldorini-peter,
 ATP,1170,1000,Рокко Валенте,translit,Rocco Valente,ARG,false,,,YkM7bHON,atp-valente-rocco,
-ATP,1171,2442,Евгений Тюрнев,flashscore,Evgenii Tiurnev,RUS,true,,,GOP8Y3Rf,atp-tiurnev-evgenii,
-ATP,1172,834,Вардан Манукян,translit,Vardan Manukyan,RUS,true,,,6u0YaCAg,atp-manukyan-vardan,
+ATP,1171,2442,Евгений Тюрнев,flashscore,Evgenii Tiurnev,RUS,true,1997-04-08,,GOP8Y3Rf,atp-tiurnev-evgenii,
+ATP,1172,834,Вардан Манукян,translit,Vardan Manukyan,RUS,true,2004-11-11,,6u0YaCAg,atp-manukyan-vardan,
 ATP,1173,1169,Владо Янканй,translit,Vlado Jankanj,SRB,false,,,Gh6HNl7C,atp-jankanj-vlado,
 ATP,1174,492,Бриан Боземой,translit,Brian Bozemoj,NED,false,,,MazWb9nH,atp-bozemoj-brian,
 ATP,1175,827,Виктор Фридрич,translit,Viktor Frydrych,GBR,false,,,UPawsRfF,atp-frydrych-viktor,
@@ -1243,12 +1243,12 @@ ATP,1241,1761,Блу Бакер,translit,Blu Baker,GBR,false,,,GpqDfZio,atp-bake
 ATP,1242,1468,Максанс Риве,translit,Maxence Rivet,FRA,false,,,WlznU7Za,atp-rivet-maxence,
 ATP,1243,1445,Данил Вербек,translit,Daniel Verbeek,NED,false,,,QXIc4ahL,atp-verbeek-daniel,
 ATP,1244,389,Рике Фалк,translit,Reece Falck,NZL,false,,,8h0JLnjM,atp-falck-reece,
-ATP,1245,1185,Роман Харламов,translit,Roman Kharlamov,RUS,true,,,0tvJpt6M,atp-kharlamov-roman,
+ATP,1245,1185,Роман Харламов,translit,Roman Kharlamov,RUS,true,2007-07-16,,0tvJpt6M,atp-kharlamov-roman,
 ATP,1246,1073,Никлас Вальднер,flashscore,Niklas Waldner,AUT,false,,,xz4TEIlg,atp-waldner-niklas,
 ATP,1247,916,Джошуа Пек,translit,Joshua Peck,CAN,false,,,bymI0wAN,atp-peck-joshua,
-ATP,1248,919,Иван Грецкий,translit,Ivan Gretskiy,RUS,true,,,69ZOt3Ph,atp-gretskiy-ivan,
+ATP,1248,919,Иван Грецкий,translit,Ivan Gretskiy,RUS,true,2006-03-07,,69ZOt3Ph,atp-gretskiy-ivan,
 ATP,1249,,Гейдж Браймер,flashscore,Gage Brymer,USA,false,,,nJOl3jsa,atp-brymer-gage,
-ATP,1249,,Амирхамза Насридинов,translit,Amirkhamza Nasridinov,RUS,true,,,tnO5r9w9,atp-nasridinov-amirkhamza,
+ATP,1249,,Амирхамза Насридинов,translit,Amirkhamza Nasridinov,RUS,true,2005-08-28,,tnO5r9w9,atp-nasridinov-amirkhamza,
 ATP,1249,1538,Эрик Шиссл,translit,Erik Schiessl,GER,false,,,EPP4SxoT,atp-schiessl-erik,
 ATP,1252,,Кинан Майо,flashscore,Keenan Mayo,USA,false,,,zTUTG347,atp-mayo-keenan,
 ATP,1253,2373,Ландон Ардила,translit,Landon Ardila,USA,false,,,pYcUTbAd,atp-ardila-landon,
@@ -1274,7 +1274,7 @@ ATP,1272,1611,Алессандро Бельлифемине,translit,Alessandro 
 ATP,1273,2298,Том Зикенбергер,translit,Tom Sickenberger,GER,false,,,zavwHEmF,atp-sickenberger-tom,
 ATP,1274,970,Аббинав Шанмугам,flashscore,Sanjeev Shanmugam Abhinav,IND,false,,,40UJWYc3,atp-shanmugam-abhinav-sanjeev,
 ATP,1274,1577,Риота Танума,flashscore,Ryota Tanuma,JPN,false,,,tt4PWrh6,atp-tanuma-ryota,
-ATP,1276,1928,Артур Кукасян,flashscore,Artur Kukasian,RUS,true,,,tjGzHcWs,atp-kukasian-artur,
+ATP,1276,1928,Артур Кукасян,flashscore,Artur Kukasian,RUS,true,2004-03-21,,tjGzHcWs,atp-kukasian-artur,
 ATP,1277,1924,Ноа Лопес Черубино,translit,Noah Lopez Cherubino,ESP,false,,,42AAjD4s,atp-lopez-cherubino-noah,
 ATP,1278,,Энрике Карраскоса Диас,translit,Enrique Carrascosa Diaz,ESP,false,,,Ofg5xvhg,atp-carrascosa-diaz-enrique,
 ATP,1279,720,Джамес Бивен,translit,James Beaven,GBR,false,,,6D1mvpej,atp-beaven-james,
@@ -1341,7 +1341,7 @@ ATP,1339,1301,Джереми Жанг,translit,Jeremy Zhang,AUS,false,,,A5fUbwGr
 ATP,1340,2683,Роберто Сид,flashscore,Roberto Cid Subervi,,false,1993-08-30,,CEMftmEG,atp-cid-subervi-roberto,
 ATP,1340,,Мати Бонда,translit,Mathis Bondaz,FRA,false,,,6PLJpooa,atp-mathis-bondaz,
 ATP,1342,1234,Мартен Саба,translit,Martin Sabas,FRA,false,,,voQu6sJA,atp-sabas-martin,
-ATP,1343,1287,Дмитрий Долженков,translit,Dmitry Dolzhenkov,RUS,true,,,MR8nWESA,atp-dolzhenkov-dmitry,
+ATP,1343,1287,Дмитрий Долженков,translit,Dmitry Dolzhenkov,RUS,true,2004-08-10,,MR8nWESA,atp-dolzhenkov-dmitry,
 ATP,1343,2130,Дафид Фикс,translit,David Fix,GER,false,,,ILxTqGqU,atp-fix-david,
 ATP,1345,1324,Пабло Перес Наварро,translit,Pablo Perez Navarro,ESP,false,,,nRPXELPi,atp-perez-navarro-pablo,
 ATP,1346,,Оливер Андерсон,sportsru,Oliver Anderson,AUS,false,1998-04-30,,0Wos0db9,atp-anderson-oliver,https://www.sports.ru/tennis/person/oliver-anderson/
@@ -1399,7 +1399,7 @@ ATP,1397,,Нео Ниднер,flashscore,Neo Niedner,GER,false,,,KjOtLyOF,atp-ni
 ATP,1398,1548,Себастьян Фанселов,sportsru,Sebastian Fanselow,GER,false,1991-12-30,,r5LzmF06,atp-fanselow-sebastian,https://www.sports.ru/tennis/person/sebastian-fanselow/
 ATP,1399,1897,Адам Майхжак,translit,Adam Majchrzak,POL,false,,,jq6yUV02,atp-majchrzak-adam,
 ATP,1399,2060,Массимо Пиццигони,translit,Massimo Pizzigoni,ITA,false,,,GAR6x8mC,atp-pizzigoni-massimo,
-ATP,1401,,Артем Алексейчук,translit,Artem Alekseychuk,RUS,true,,,8U71ey5I,atp-alekseychuk-artem,
+ATP,1401,,Артем Алексейчук,translit,Artem Alekseychuk,RUS,true,2005-02-21,,8U71ey5I,atp-alekseychuk-artem,
 ATP,1401,772,Музаммил Муртаза,translit,Muzammil Murtaza,,false,1999-11-12,,6aNxfaYc,atp-murtaza-muzammil,
 ATP,1403,705,Мануел Агуилар Джуан Карлос,translit,Manuel Aguilar Juan Carlos,CAN,false,,,rwlfWinj,atp-aguilar-juan-carlos-manuel,
 ATP,1404,,Ароль Уан,translit,Harold Huens,BEL,false,,,0b5sfzUf,atp-harold-huens,
@@ -1466,7 +1466,7 @@ ATP,1462,1961,Факундо Юнис,flashscore,Facundo Yunis,GER,false,,,EXtJr
 ATP,1465,1261,Томас Бранкателли Габриеле,translit,Thomas Brancatelli Gabriele,USA,false,,,2FX8BwJS,atp-brancatelli-gabriele-thomas,
 ATP,1465,646,Карло Кайин,translit,Karlo Kajin,CRO,false,1999-10-28,,I5szqnhH,atp-kajin-karlo,
 ATP,1465,2043,Тосики Каригё,translit,Toshiki Karigyo,JPN,false,,,vPOYV9C5,atp-karigyo-toshiki,
-ATP,1468,1880,Даниел Хазиме,translit,Daniel Khazime,RUS,true,,,AaT3mCUg,atp-khazime-daniel,
+ATP,1468,1880,Даниел Хазиме,translit,Daniel Khazime,RUS,true,2005-01-04,,AaT3mCUg,atp-khazime-daniel,
 ATP,1469,1095,Кабир Ханс,translit,Kabir Hans,IND,false,,,KQBXU38A,atp-hans-kabir,
 ATP,1469,1373,Петер Ван Нурд Ниелс,translit,Peter Van Noord Niels,CAN,false,,,IBK3Ldci,atp-van-noord-niels-peter,
 ATP,1471,727,Диого Мораис,translit,Diogo Morais,POR,false,,,ltPePEy4,atp-morais-diogo,
@@ -1490,14 +1490,14 @@ ATP,1488,1826,Валентин Гарай,translit,Valentin Garay,ARG,false,,,As
 ATP,1488,1628,Уго Пьер,flashscore,Hugo Pierre,FRA,false,,,dzwAOyu2,atp-pierre-hugo,
 ATP,1490,946,Адриан Аркон,translit,Adrian Arcon,AUS,false,,,xllgFsYa,atp-adrian-arcon,
 ATP,1491,722,Володимир Гуренко,translit,Volodymyr Gurenko,CAN,false,,,UoyOWWZP,atp-gurenko-volodymyr,
-ATP,1492,1561,Александер Чайка,translit,Aleksander Chayka,RUS,true,,,CUQLgHkR,atp-chayka-aleksander,
+ATP,1492,1561,Александер Чайка,translit,Aleksander Chayka,RUS,true,2004-10-06,,CUQLgHkR,atp-chayka-aleksander,
 ATP,1492,804,Никола Йовиц,translit,Nikola Jovic,SRB,false,,,tndqn57N,atp-jovic-nikola,
 ATP,1492,1632,Андреа Мчич,flashscore,Andrea M'Chich,FRA,false,,,h0zYeOuq,atp-mchich-andrea,
 ATP,1495,711,Иван Билетиц,translit,Ivan Biletic,BIH,false,,,fuc0xP4r,atp-biletic-ivan,
-ATP,1496,2265,Иван Иуткин,translit,Ivan Iutkin,RUS,true,,,fXpgJ3Mj,atp-iutkin-ivan,
+ATP,1496,2265,Иван Иуткин,translit,Ivan Iutkin,RUS,true,2007-03-22,,fXpgJ3Mj,atp-iutkin-ivan,
 ATP,1497,1013,Мелвин Кумар,translit,Melvin Kumar,SWE,false,,,CKaQLSyP,atp-kumar-melvin,
 ATP,1498,755,Брено Брага,translit,Breno Braga,BRA,false,,,QymS8B43,atp-braga-breno,
-ATP,1499,1719,Алексей Алещев,translit,Alexey Aleshchev,RUS,true,,,QyfMlesG,atp-aleshchev-alexey,
+ATP,1499,1719,Алексей Алещев,translit,Alexey Aleshchev,RUS,true,1998-12-28,,QyfMlesG,atp-aleshchev-alexey,
 ATP,1499,2051,Артур Бельлежи,translit,Arthur Bellegy,FRA,false,,,bDqIN9nB,atp-bellegy-arthur,
 ATP,1499,778,Мак Виссер,translit,Mac Visser,NED,false,,,WUB8XG2F,atp-visser-mac,
 ATP,1502,997,Лоренцо Беральдо,translit,Lorenzo Beraldo,ITA,false,,,MDwB1jo1,atp-beraldo-lorenzo,
@@ -1691,7 +1691,7 @@ ATP,1689,1410,Леонардо Анджелони,translit,Leonardo Angeloni,ITA
 ATP,1689,1984,Нав Дэйал,translit,Nav Dayal,USA,false,,,8bsZ9sOi,atp-dayal-nav,
 ATP,1689,2265,Андре Де Альмеида Сантос Педро,translit,Andre De Almeida Santos Pedro,BRA,false,,,t4NhL8oj,atp-de-almeida-santos-pedro-andre,
 ATP,1689,2121,Эдоардо Занада,flashscore,Edoardo Zanada,ITA,false,,,veJlVP2H,atp-edoardo-zanada,
-ATP,1689,1996,Макар Кривощеков,translit,Makar Krivoshchekov,RUS,true,,,MgR0ZKCl,atp-krivoshchekov-makar,
+ATP,1689,1996,Макар Кривощеков,translit,Makar Krivoshchekov,RUS,true,2006-01-01,,MgR0ZKCl,atp-krivoshchekov-makar,
 ATP,1689,1436,Алехандро Лопес Эскрибано,translit,Alejandro Lopez Escribano,ESP,false,,,44T7xe0B,atp-lopez-escribano-alejandro,
 ATP,1689,954,Дайсуке Сумизава,flashscore,Daisuke Sumizawa,JPN,false,,,MVw0Fswh,atp-sumizawa-daisuke,
 ATP,1689,1283,Йустас Траинаускас,translit,Justas Trainauskas,LTU,false,,,COhXDKDm,atp-trainauskas-justas,
@@ -1874,8 +1874,8 @@ ATP,1871,1394,Даниэле Минигини,translit,Daniele Minighini,ITA,fal
 ATP,1871,2298,Алексис Гурменди,translit,Alexis Gurmendi,ARG,false,,,0jEklsEg,atp-gurmendi-alexis,
 ATP,1871,1973,Леонардо Мальяроли,flashscore,Leonardo Malgaroli,ITA,false,,,noxlA6rb,atp-malgaroli-leonardo,
 ATP,1871,1691,Алекса Опарница,translit,Aleksa Oparnica,SRB,false,,,0MXltz0e,atp-oparnica-aleksa,
-ATP,1871,2776,Руслан Серажетдинов,translit,Ruslan Serazhetdinov,RUS,true,,,OIwRzoCE,atp-serazhetdinov-ruslan,
-ATP,1871,1914,Дмытро Широкии,translit,Dmytro Shirokyi,RUS,true,,,b3MXkEh4,atp-shirokyi-dmytro,
+ATP,1871,2776,Руслан Серажетдинов,translit,Ruslan Serazhetdinov,RUS,true,2005-03-17,,OIwRzoCE,atp-serazhetdinov-ruslan,
+ATP,1871,1914,Дмытро Широкии,translit,Dmytro Shirokyi,RUS,true,2006-07-02,,b3MXkEh4,atp-shirokyi-dmytro,
 ATP,1871,2605,Тим Вэйсман,translit,Tim Vaisman,ISR,false,,,ObqQ5BZh,atp-vaisman-tim,
 ATP,1871,517,Габриэле Вольпи,translit,Gabriele Volpi,ITA,false,,,IZ4PXFI3,atp-volpi-gabriele,
 ATP,1871,1383,Габриэле Вульпитта,translit,Gabriele Vulpitta,ITA,false,2005-06-25,,A50VgGw9,atp-vulpitta-gabriele,
@@ -1932,7 +1932,7 @@ ATP,1922,,Даниел Борисов,translit,Daniel Borisov,,false,,,29vGYgLb,
 ATP,1922,,Бруно Малакарне,translit,Bruno Malacarne,BRA,false,,,zR0aCPYo,atp-bruno-bruno-vieira-alves-malacarne,
 ATP,1922,,Анамичи Карвахаль,translit,Hanamichi Carvajal,CHI,false,,,CIMsALpH,atp-carvajal-hanamichi,
 ATP,1922,,Йаго Кастельанос,translit,Yago Castellanos,ESP,false,,,IJLrBFn9,atp-castellanos-yago,
-ATP,1922,1422,Антон Чехов,translit,Anton Chekhov,RUS,true,,,0MDaQzZm,atp-chekhov-anton,
+ATP,1922,1422,Антон Чехов,translit,Anton Chekhov,RUS,true,1992-09-15,,0MDaQzZm,atp-chekhov-anton,
 ATP,1922,,Шицзе Чэнь,translit,Shijie Chen,CHN,false,,,AaqTEkqJ,atp-chen-shijie,
 ATP,1922,1194,Чэнь-Юй Лу,translit,Chen-Yu Lu,TPE,false,,,8xvNLcPu,atp-chen-yu-lun,
 ATP,1922,,Кэйден Коломбо,translit,Kayden Colombo,USA,false,,,4hXD7zK8,atp-colombo-kayden,
@@ -1975,7 +1975,7 @@ ATP,1922,,Франсиско Мунос Хуан,translit,Francisco Munoz Juan,M
 ATP,1922,,Франкуа Музительли,translit,Francois Musitelli,FRA,false,,,raedMekp,atp-musitelli-francois,
 ATP,1922,1999,Диан Недев,translit,Dian Nedev,BUL,false,,,jemZN9vE,atp-nedev-dian,
 ATP,1922,,Фелипе Пагнакко,translit,Felipe Pagnacco,ARG,false,,,AFe3BFUn,atp-pagnacco-felipe,
-ATP,1922,,Данил Панарин,translit,Danil Panarin,RUS,true,,,xvHKvrJ5,atp-panarin-danil,
+ATP,1922,,Данил Панарин,translit,Danil Panarin,RUS,true,2005-01-23,,xvHKvrJ5,atp-panarin-danil,
 ATP,1922,1584,Фредерик Папе Валдемар,translit,Frederik Pape Valdemar,DEN,false,,,MPJkDPic,atp-pape-valdemar-frederik,
 ATP,1922,,Факундо Перлов,translit,Facundo Perlov,ARG,false,,,Wbotw2as,atp-perlov-facundo,
 ATP,1922,,Парис Пауатча,translit,Paris Pouatcha,USA,false,,,Ugid5f3K,atp-pouatcha-paris,
@@ -2068,7 +2068,7 @@ ATP,2007,,Зидан Понтьодикромо,flashscore,Sidane Pontjodikromo,
 ATP,2007,1584,Феликс Разер,translit,Felix Raser,AUT,false,,,4zUqlgqH,atp-raser-felix,
 ATP,2007,,Хосе Риваденеира Гальегос Фелипе,translit,Jose Rivadeneira Gallegos Felipe,ECU,false,,,8noW3jAN,atp-rivadeneira-gallegos-felipe-jose,
 ATP,2007,,Педро Родригес Лонгобарди,translit,Pedro Rodrigues Longobardi,BRA,false,,,0nJj0GFi,atp-rodrigues-longobardi-pedro,
-ATP,2007,,Аристарх Сафонов,translit,Aristarkh Safonov,RUS,true,,,4vxEJZR5,atp-safonov-aristarkh,
+ATP,2007,,Аристарх Сафонов,translit,Aristarkh Safonov,RUS,true,2003-03-05,,4vxEJZR5,atp-safonov-aristarkh,
 ATP,2007,,Тикая Сато,translit,Chikaya Sato,JPN,false,,,AiaedMEb,atp-sato-chikaya,
 ATP,2007,2194,Шалин Шах Каел,translit,Shalin Shah Kael,KEN,false,,,EVCGMbvC,atp-shah-kael-shalin,
 ATP,2007,2060,Амаан Сиддикви,translit,Amaan Siddiqui,IND,false,,,ph81h3WS,atp-siddiqui-amaan,
@@ -2142,7 +2142,7 @@ ATP,2093,635,Сай Картик Редди Ганта,flashscore,Reddy Ganta Sa
 ATP,2093,,Дебасис Саху,translit,Debasis Sahoo,IND,false,,,K05z4ibB,atp-sahoo-debasis,
 ATP,2093,2164,Егор Щербаков,translit,Egor Shcherbakov,RUS,true,,,vBDUd0ye,atp-shcherbakov-egor,
 ATP,2093,1728,Раджат Ширур,translit,Rajat Shirur,USA,false,,,v9jNxjEr,atp-shirur-rajat,
-ATP,2093,2052,Даниил Степанов,translit,Daniil Stepanov,RUS,true,,,O4xwJ244,atp-stepanov-daniil,
+ATP,2093,2052,Даниил Степанов,translit,Daniil Stepanov,RUS,true,2006-07-15,,O4xwJ244,atp-stepanov-daniil,
 ATP,2093,2442,Филип Стиделл,translit,Filip Stidell,SWE,false,,,SvrEyw67,atp-stidell-filip,
 ATP,2093,1250,Леонардо Сторкк Франка,translit,Leonardo Storck Franca,BRA,false,,,QuZGg2gJ,atp-storck-franca-leonardo,
 ATP,2093,,Христофер Тис,translit,Christopher Thies,GER,false,,,W2182sKF,atp-thies-christopher,
@@ -2183,7 +2183,7 @@ ATP,2160,1518,Габор Хорнунг,translit,Gabor Hornung,HUN,false,,,fB7Qh
 ATP,2160,,Цзиа Ху,translit,Jia Hu,CHN,false,,,vTtTKNzQ,atp-hu-jia,
 ATP,2160,,Кайгаогэ Кан,translit,Kaigaoge Kang,CHN,false,,,G2ZnHWSk,atp-kang-kaigaoge,
 ATP,2160,,Ууе Каск Маттиас,translit,Uwe Kask Matthias,CAN,false,,,8I9p9n8d,atp-kask-matthias-uwe,
-ATP,2160,956,Егор Хотченков,flashscore,Egor Khotchenkov,RUS,true,,,E3brYSHu,atp-khotchenkov-egor,
+ATP,2160,956,Егор Хотченков,flashscore,Egor Khotchenkov,RUS,true,2003-06-25,,E3brYSHu,atp-khotchenkov-egor,
 ATP,2160,2442,Бруно Кокот,translit,Bruno Kokot,POL,false,,,800bjZ8D,atp-kokot-bruno,
 ATP,2160,2064,Нильс Лотсма,sportsru,Niels Lootsma,NED,false,1994-08-15,,Eu38K6iI,atp-lootsma-niels,https://www.sports.ru/tennis/person/niels-lootsma/
 ATP,2160,2073,Мартин Мальдонадо,translit,Martin Maldonado,ECU,false,,,OU3YjBX7,atp-maldonado-martin,
@@ -2225,7 +2225,7 @@ ATP,2219,1743,Хенрик Бладелиус,translit,Henrik Bladelius,SWE,fals
 ATP,2219,2285,Конгсуп Конгкар,translit,Congsup Congcar,THA,false,,,l0MCAqyK,atp-congcar-congsup,
 ATP,2219,,Бриан Дал Зилио,translit,Brian Dal Zilio,BUL,false,,,K2tb7TTq,atp-dal-zilio-brian,
 ATP,2219,,Мустафа Эл Натаур,translit,Mustapha El Natour,,false,,,je6WrbHu,atp-el-natour-mustapha,
-ATP,2219,,Макар Елесин,translit,Makar Elesin,RUS,true,,,tUCIkhNH,atp-elesin-makar,
+ATP,2219,,Макар Елесин,translit,Makar Elesin,RUS,true,2005-05-31,,tUCIkhNH,atp-elesin-makar,
 ATP,2219,,Алекс Финкелстеин,translit,Alex Finkelstein,USA,false,,,Wfq8Jqg0,atp-finkelstein-alex,
 ATP,2219,1828,Маттео Грибальдо,translit,Matteo Gribaldo,ITA,false,,,4Ip21SPN,atp-gribaldo-matteo,
 ATP,2219,2272,Зебастиан Хайнрих,translit,Sebastian Heinrich,GER,false,,,OChY7pyo,atp-heinrich-sebastian,
@@ -2257,13 +2257,13 @@ ATP,2250,2776,Алексис Кантер,flashscore,Alexis Canter,GBR,false,,,h
 ATP,2250,2460,Дамиан Клерк,translit,Damien Clerc,FRA,false,,,Oph1LGQG,atp-clerc-damien,
 ATP,2250,1626,Килиан Кольлиньон,translit,Kylian Collignon,BEL,false,,,6Bvtbqg4,atp-collignon-kylian,
 ATP,2250,2806,Томас Дрэйтон,translit,Thomas Drayton,GBR,false,,,lK9PkEwI,atp-drayton-thomas,
-ATP,2250,1761,Алексей Дубинин,flashscore,Alexey Dubinin,RUS,true,,,Cr7ZZsgF,atp-dubinin-alexey,
+ATP,2250,1761,Алексей Дубинин,flashscore,Alexey Dubinin,RUS,true,1998-12-04,,Cr7ZZsgF,atp-dubinin-alexey,
 ATP,2250,,Андре Галаррага Марио,translit,Andre Galarraga Mario,ECU,false,,,rTg1bmqD,atp-galarraga-mario-andre,
 ATP,2250,943,Клаудиу Скинтеие Георге,translit,Claudiu Schinteie Gheorghe,ROU,false,,,YHSA09gB,atp-gheorghe-claudiu-schinteie,
 ATP,2250,,Оскар Гжегожевски,translit,Oskar Grzegorzewski,POL,false,,,8ncStpI2,atp-grzegorzewski-oskar,
 ATP,2250,,Петр Иамачкине,translit,Petr Iamachkine,PER,false,,,2HakHvFC,atp-iamachkine-pedro,
 ATP,2250,1437,Оскар Йанссон,translit,Oskar Jansson,SWE,false,,,dCeg90MO,atp-jansson-oskar,
-ATP,2250,2605,Руслан Касциукевич,translit,Ruslan Kastsiukevich,RUS,true,,,INa8MR13,atp-kastsiukevich-ruslan,
+ATP,2250,2605,Руслан Касциукевич,translit,Ruslan Kastsiukevich,RUS,true,2007-05-25,,INa8MR13,atp-kastsiukevich-ruslan,
 ATP,2250,928,Кадзума Кавати,flashscore,Kazuma Kawachi,JPN,false,,,4O6OUOsn,atp-kawachi-kazuma,
 ATP,2250,1673,Михаил Ходорченко,translit,Mikhail Khodorchenko,RUS,true,,,GSf1KRmo,atp-khodorchenko-mikhail,
 ATP,2250,1374,Агустин Либре,translit,Agustin Libre,ARG,false,,,YuovbaJ5,atp-libre-agustin,
@@ -2281,9 +2281,9 @@ ATP,2278,1581,Грегорио Биондолильло,translit,Gregorio Biondo
 ATP,2278,1071,Милледге Коссу,translit,Milledge Cossu,USA,false,,,r5IPCggq,atp-cossu-milledge,
 ATP,2278,1202,Альваро Хименес,translit,Alvaro Jimenez,ESP,false,,,0A39mB24,atp-jimenez-alvaro,
 ATP,2278,2095,Симфиуе Нгуеня,translit,Simphiwe Ngwenya,RSA,false,,,Ec9woWF8,atp-ngwenya-simphiwe,
-ATP,2278,2248,Владимир Осминкин,translit,Vladimir Osminkin,RUS,true,,,Mg3izsvE,atp-osminkin-vladimir,
+ATP,2278,2248,Владимир Осминкин,translit,Vladimir Osminkin,RUS,true,2001-11-27,,Mg3izsvE,atp-osminkin-vladimir,
 ATP,2278,858,Сунгбин Сим,translit,Sungbeen Sim,KOR,false,,,WrMLqsUC,atp-sim-seongbin,
-ATP,2278,,Федор Соседкин,translit,Fedor Sosedkin,RUS,true,,,fs8Veagf,atp-sosedkin-fedor,
+ATP,2278,,Федор Соседкин,translit,Fedor Sosedkin,RUS,true,2006-09-15,,fs8Veagf,atp-sosedkin-fedor,
 ATP,2278,,Сабареш Виджэй Шанкар Муккеш,translit,Sabaresh Vijay Shankar Mukkesh,IND,false,,,IXC1vrt2,atp-vijay-shankar-mukkesh-sabaresh,
 ATP,2287,,Самуил Хестовалиев,translit,Samuil Chestovaliev,MKD,false,,,67z3MmZa,atp-chestovaliev-samuil,
 ATP,2287,1819,Франсишку Фариа,flashscore,Francisco Faria,POR,false,,,pho5k4w0,atp-faria-francisco,
@@ -2306,7 +2306,7 @@ ATP,2302,1973,Ноа Регас Луис,translit,Noah Regas Luis,ESP,false,,,AP
 ATP,2302,1070,Гокберк Саритас,flashscore,Gokberk Saritas,TUR,false,,,I1lBJVW8,atp-saritas-gokberk,
 ATP,2306,962,Дарршан Суреш,translit,Darrshan Suresh,MAS,false,,,pQl96zB5,atp-suresh-darrshan,
 ATP,2307,797,Орен Вассер,translit,Oren Vasser,USA,false,,,fwAGPMY9,atp-vasser-oren,
-ATP,2308,1343,Богдан Селезнев,translit,Bogdan Seleznev,RUS,true,,,WKnDY9gg,atp-seleznev-bogdan,
+ATP,2308,1343,Богдан Селезнев,translit,Bogdan Seleznev,RUS,true,2002-04-18,,WKnDY9gg,atp-seleznev-bogdan,
 ATP,,1,Харри Хелиёваара,sportsru,Harri Heliovaara,FIN,false,1989-06-04,,OYcuApkE,atp-heliovaara-harri,https://www.sports.ru/tennis/person/harri-heliovaara/
 ATP,,1,Генри Паттен,wikidata,Henry Patten,GBR,false,1996-05-06,,tzbx2iwG,atp-patten-henry,
 ATP,,3,Нил Скупски,sportsru,Neal Skupski,GBR,false,1989-12-01,,KUAXIw8j,atp-skupski-neal,https://www.sports.ru/tennis/person/neal-skupski/
@@ -2343,7 +2343,7 @@ ATP,,37,Ян Зелиньский,sportsru,Jan Zielinski,POL,false,1996-11-16,,E
 ATP,,38,Адам Павлашек,sportsru,Adam Pavlasek,CZE,false,1994-10-08,,EmouDEJm,atp-pavlasek-adam,https://www.sports.ru/tennis/person/adam-pavlasek/
 ATP,,40,Александр Эрлер,sportsru,Alexander Erler,AUT,false,1997-10-27,,8fvnhGme,atp-erler-alexander,https://www.sports.ru/tennis/person/alexander-erler/
 ATP,,41,Константин Франтцен,wikidata,Constantin Frantzen,GER,false,1998-03-16,,jqRkqc67,atp-frantzen-constantin,
-ATP,,42,Джамес Траки,translit,James Tracy,USA,false,,,Q5tddYyP,atp-tracy-james,
+ATP,,42,Джамес Траки,translit,James Tracy,USA,false,2002-07-10,,Q5tddYyP,atp-tracy-james,
 ATP,,43,Робин Хаасе,sportsru,Robin Haase,NED,false,1987-04-06,,2Txcqx1b,atp-haase-robin,https://www.sports.ru/tennis/person/robin-haase/
 ATP,,44,Сандер Арендс,sportsru,Sander Arends,NED,false,1991-08-09,,tSxO13Qj,atp-arends-sander,https://www.sports.ru/tennis/person/sander-arends/
 ATP,,45,Дэвид Пел,sportsru,David Pel,NED,false,1991-07-09,,bqQtB0Na,atp-pel-david,https://www.sports.ru/tennis/person/david-pel/
@@ -2485,7 +2485,7 @@ ATP,,839,Алессандро Мондацци,translit,Alessandro Mondazzi,ITA,
 ATP,,848,Блаж Кавчич,sportsru,Blaz Kavcic,SLO,false,1987-03-05,,ED7obEVe,atp-kavcic-blaz,https://www.sports.ru/tennis/person/blaz-kavcic/
 ATP,,856,Фабрис Мартен,sportsru,Fabrice Martin,FRA,false,1986-09-11,,xIoPwcCT,atp-martin-fabrice,https://www.sports.ru/tennis/person/fabrice-martin/
 ATP,,865,Алекс Ганчев,flashscore,Alex Ganchev,BUL,false,,,lWmsER66,atp-ganchev-alex,
-ATP,,884,Кирилл Мишкин,translit,Kirill Mishkin,RUS,true,,,hrv2ilFf,atp-mishkin-kirill,
+ATP,,884,Кирилл Мишкин,translit,Kirill Mishkin,RUS,true,2002-10-23,,hrv2ilFf,atp-mishkin-kirill,
 ATP,,888,Шарли Каму,translit,Charlie Camus,FRA,false,,,zD9e8FVo,atp-camus-charlie,
 ATP,,889,Абрахам Асаба,flashscore,Abraham Asaba,,false,1997-01-01,,lbXdK9yr,atp-asaba-abraham,
 ATP,,891,Иржи Барнат,flashscore,Jiri Barnat,CZE,false,,,voRaNGHO,atp-barnat-jiri,
@@ -2520,7 +2520,7 @@ ATP,,1069,Айзек Норти,flashscore,Isaac Nortey,,false,,,OvbtMgZ6,atp-no
 ATP,,1089,Андреу Делгадо,translit,Andrew Delgado,USA,false,,,zHRwqwvk,atp-delgado-andrew,
 ATP,,1094,Рик Муллер,translit,Rik Muller,NED,false,,,rPgoz0bn,atp-muller-rik,
 ATP,,1098,Алекс Бланчар,translit,Alex Blanchar,ESP,false,,,8hN8Rxuo,atp-blanchar-alex,
-ATP,,1117,Витали Швец,translit,Vitali Shvets,RUS,true,,,828CWjLk,atp-chvets-vitali,
+ATP,,1117,Витали Швец,translit,Vitali Shvets,RUS,true,1981-01-01,,828CWjLk,atp-chvets-vitali,
 ATP,,1120,Никола Керемедхиев,translit,Nikola Keremedchiev,BUL,false,,,6JIoRQzk,atp-keremedchiev-nikola,
 ATP,,1121,Келли Гиесе,translit,Kelly Giese,USA,false,,,vZqemiaL,atp-giese-kelly,
 ATP,,1122,Рян Козад,translit,Ryan Cozad,USA,false,,,U1un2wjR,atp-cozad-ryan,
@@ -2652,13 +2652,13 @@ ATP,,1670,Жакксон Переира Шавиэр,translit,Jackson Pereira Xa
 ATP,,1672,Гильем Бускетс Брау,translit,Guillem Busquets Brau,ESP,false,,,hdUVXTNQ,atp-busquets-brau-guillem,
 ATP,,1677,Леонардо Иэмми,translit,Leonardo Iemmi,ITA,false,,,CxPPE0mJ,atp-iemmi-leonardo,
 ATP,,1678,Йосхуа Шефер,translit,Joshua Schaefer,GER,false,,,4fSDYXVM,atp-schaefer-joshua,
-ATP,,1688,Иван Зайцев,translit,Ivan Zaytsev,RUS,true,,,bc2oljKK,atp-zaytsev-ivan,
+ATP,,1688,Иван Зайцев,translit,Ivan Zaytsev,RUS,true,2000-08-22,,bc2oljKK,atp-zaytsev-ivan,
 ATP,,1689,Даниэль Пати,flashscore,Daniel Paty,CZE,false,,,AyKCrxPQ,atp-paty-daniel,
 ATP,,1689,Колин Ван Бем,flashscore,Colin Van Beem,NED,false,,,jPm95Mzi,atp-van-beem-colin,
 ATP,,1691,Рафаэль Ферреира,translit,Rafael Ferreira,BRA,false,,,tEzaSwca,atp-ferreira-rafael,
 ATP,,1694,Финн Хопфе,translit,Finn Hopfe,GER,false,,,86ZaBxng,atp-hopfe-finn,
 ATP,,1698,Яш Чауразия,flashscore,Yash Chaurasia,IND,false,,,zczXtSCR,atp-chaurasia-yash,
-ATP,,1701,Свиатослав Лутковскии,translit,Sviatoslav Lutkovskii,RUS,true,,,IJc7HiDk,atp-lutkovskii-sviatoslav,
+ATP,,1701,Свиатослав Лутковскии,translit,Sviatoslav Lutkovskii,RUS,true,2001-09-12,,IJc7HiDk,atp-lutkovskii-sviatoslav,
 ATP,,1705,Рахул Локеш,translit,Rahul Lokesh,IND,false,,,hbws2wkJ,atp-lokesh-rahul,
 ATP,,1706,Тымофии Милованов,translit,Tymofii Milovanov,UKR,false,,,ChclycBE,atp-milovanov-tymofii,
 ATP,,1711,Коди Аткинсон,translit,Cody Atkinson,NZL,false,,,xYiQ5W1b,atp-atkinson-cody,
@@ -2716,7 +2716,7 @@ ATP,,1848,Педро Франчини Сантиаго,translit,Pedro Franchini 
 ATP,,1848,Егор Герасимов,sportsru,Egor Gerasimov,BLR,false,1992-11-11,,v5mY2VHL,atp-gerasimov-egor,https://www.sports.ru/tennis/person/egor-gerasimov/
 ATP,,1848,Брйан Эрнандес Кортес,translit,Bryan Hernandez Cortes,ESP,false,,,xW0tFGxJ,atp-hernandez-cortes-bryan,
 ATP,,1848,Харрис Джадун,translit,Harris Jadun,USA,false,,,xYFsMPQ0,atp-jadun-harris,
-ATP,,1848,Олег Колнинов,translit,Oleg Kolninov,RUS,true,,,zVnTgGdp,atp-kolninov-oleg,
+ATP,,1848,Олег Колнинов,translit,Oleg Kolninov,RUS,true,2005-08-31,,zVnTgGdp,atp-kolninov-oleg,
 ATP,,1848,Отсо Мартикаинен,translit,Otso Martikainen,FIN,false,,,pdGuGmfA,atp-martikainen-otso,
 ATP,,1848,Ленн Штюкрат,translit,Lenn Stueckrath,GER,false,,,SlZKzKfl,atp-stueckrath-lenn,
 ATP,,1848,Милош Щыпка,translit,Milosz Szczypka,POL,false,,,QZXMoQmS,atp-szczypka-milosz,
@@ -2733,7 +2733,7 @@ ATP,,1883,Пабло Роче Алькайа,translit,Pablo Roche Alcaya,ESP,fal
 ATP,,1883,Роман Валетов,translit,Roman Valetov,RUS,true,,,2Fq7FLlD,atp-valetov-roman,
 ATP,,1895,Габриел Кореиса Эдуард,translit,Gabriel Coreisa Eduard,ROU,false,,,2VPOo3yh,atp-coreisa-eduard-gabriel,
 ATP,,1898,Энеко Риос Перес,translit,Eneko Rios Perez,ESP,false,,,44kTZlKf,atp-rios-perez-eneko,
-ATP,,1900,Дмитрии Василев,translit,Dmitrii Vasilev,RUS,true,,,AFRXY73h,atp-dmitrii-vasilev,
+ATP,,1900,Дмитрии Василев,translit,Dmitrii Vasilev,RUS,true,2001-05-26,,AFRXY73h,atp-dmitrii-vasilev,
 ATP,,1907,Ави Шугар,translit,Avi Shugar,USA,false,,,EeG0GjJi,atp-shugar-avi,
 ATP,,1908,Лауис Аллен,translit,Louis Allen,GBR,false,,,QRVZV5wP,atp-allen-louis,
 ATP,,1916,Даниил Овчаренко,translit,Daniil Ovcharenko,RUS,true,,,O4YPTQcC,atp-ovcharenko-daniil,
@@ -2803,7 +2803,7 @@ ATP,,2077,Александру Кирита Иоан,translit,Alexandru Chirita 
 ATP,,2077,Николас Ираира,translit,Nicolas Iraira,CHI,false,,,Ie8WbX0i,atp-iraira-nicolas,
 ATP,,2077,Луи-Лу Ланженакан,translit,Louis-Lou Langenaken,BEL,false,,,OjwfZerc,atp-langenaken-louis-lou,
 ATP,,2077,Андрей Радойициц,translit,Andrej Radojicic,SRB,false,,,MadeLejB,atp-radojicic-andrej,
-ATP,,2083,Александр Чепик,flashscore,Alexander Chepik,RUS,true,,,U3iqgssA,atp-chepik-alexander,
+ATP,,2083,Александр Чепик,flashscore,Alexander Chepik,RUS,true,1996-05-06,,U3iqgssA,atp-chepik-alexander,
 ATP,,2083,Пабло Эрмосо,translit,Pablo Hermoso,ESP,false,,,CA6HB4ac,atp-hermoso-pablo,
 ATP,,2083,Якуб Хрынкевич,translit,Jakub Hrynkiewicz,POL,false,,,GryfzwaE,atp-hrynkiewicz-jakub,
 ATP,,2083,Александер Константин,translit,Aleksander Konstantin,GER,false,,,pM99vFzn,atp-konstantin-aleksander,
@@ -2845,7 +2845,7 @@ ATP,,2130,Сандер Йухл Сивертсен,translit,Sander Juuhl Siverts
 ATP,,2130,Максвелл Линдстедт,translit,Maxwell Lindstedt,SWE,false,,,v5vVgH6D,atp-lindstedt-maxwell,
 ATP,,2130,Андрис Лоизас,translit,Andreas Loizas,GRE,false,,,zZGOSxPi,atp-loizas-andreas,
 ATP,,2130,Фелипе Наварро Кастильо Виктор,translit,Felipe Navarro Castillo Victor,COL,false,,,MqY8lFh3,atp-navarro-castillo-victor-felipe,
-ATP,,2130,Ян Сабанин,flashscore,Yan Sabanin,RUS,true,,,j7KLz3vg,atp-sabanin-yan,
+ATP,,2130,Ян Сабанин,flashscore,Yan Sabanin,RUS,true,1990-01-31,,j7KLz3vg,atp-sabanin-yan,
 ATP,,2130,Йулиус Сайц,translit,Julius Seitz,GER,false,,,nLC5sAMs,atp-seitz-julius,
 ATP,,2130,Хун Сон Джи,translit,Hoon Son Ji,KOR,false,,,Ackhrttj,atp-son-ji-hoon,
 ATP,,2130,Макс Штенцер,translit,Max Stenzer,GER,false,,,86FQm7BU,atp-stenzer-max,
@@ -3095,7 +3095,7 @@ ATP,,2494,Штефан Изерат,translit,Stephan Iserath,GER,false,,,2JwO6qH
 ATP,,2494,Рок Ярц,translit,Rok Jarc,SLO,false,,,QohRLSJP,atp-jarc-rok,
 ATP,,2494,Джихун Канг,translit,Jihoon Kang,KOR,false,,,8WAblQmD,atp-kang-jihoon,
 ATP,,2494,Юки Кани,translit,Yuki Kani,JPN,false,,,GrRH0pBk,atp-kani-yuki,
-ATP,,2494,Петр Капускин,translit,Petr Kapuskin,RUS,true,,,M5srKwxG,atp-kapuskin-petr,
+ATP,,2494,Петр Капускин,translit,Petr Kapuskin,RUS,true,2002-01-27,,M5srKwxG,atp-kapuskin-petr,
 ATP,,2494,Биеонгхун Ким,translit,Byeonghun Kim,KOR,false,,,nFSjFAVh,atp-kim-byeonghun,
 ATP,,2494,Хуан Ким Джае,translit,Hwan Kim Jae,KOR,false,,,IixwQcpE,atp-kim-jae-hwan,
 ATP,,2494,Гил Кита,translit,Gil Kita,SLO,false,,,nPfWNaio,atp-kita-gil,
@@ -3173,7 +3173,7 @@ ATP,,2605,Массимо Дель Кармине,translit,Massimo Del Carmine,IT
 ATP,,2605,Самяр Эляси,translit,Samyar Elyasi,IRN,false,,,jPm1Bk2o,atp-elyasi-samyar,
 ATP,,2605,Валантен Фор,translit,Valentin Faure,FRA,false,,,pfobrY3P,atp-faure-valentin,
 ATP,,2605,Лука Фрунза,translit,Luca Frunza,ROU,false,,,nNBvpRHO,atp-frunza-luca,
-ATP,,2605,Михаил Фуфыгин,flashscore,Mikhail Fufygin,RUS,true,,,xY9XJA17,atp-fufygin-mikhail,
+ATP,,2605,Михаил Фуфыгин,flashscore,Mikhail Fufygin,RUS,true,1990-05-13,,xY9XJA17,atp-fufygin-mikhail,
 ATP,,2605,Мигель Гамборино,translit,Miguel Gamborino,MEX,false,,,dK86Etx8,atp-gamborino-miguel,
 ATP,,2605,Родриго Гарса,translit,Rodrigo Garza,MEX,false,,,jmCmko5C,atp-garza-rodrigo,
 ATP,,2605,Врадж Гохил,translit,Vraj Gohil,IND,false,,,AVRJCrWO,atp-gohil-vraj,
@@ -3184,7 +3184,7 @@ ATP,,2605,Али Иссах,translit,Ali Issah,,false,,,lGcsrq6K,atp-issah-ali,
 ATP,,2605,Татсума Ито,sportsru,Tatsuma Ito,JPN,false,1988-05-18,,vZejLcgi,atp-ito-tatsuma,https://www.sports.ru/tennis/person/tatsuma-ito/
 ATP,,2605,Роарк Дзёнэс Лэннон,translit,Roark Jones Lennon,JPN,false,,,C2KXfpqD,atp-jones-lennon-roark,
 ATP,,2605,Пунтонг Комописут,translit,Poonthong Komopisut,THA,false,,,CO5eCTkp,atp-komopisut-poonthong,
-ATP,,2605,Валентин Копеикин,translit,Valentin Kopeikin,RUS,true,,,CGoLBpsd,atp-kopeikin-valentin,
+ATP,,2605,Валентин Копеикин,translit,Valentin Kopeikin,RUS,true,2001-12-25,,CGoLBpsd,atp-kopeikin-valentin,
 ATP,,2605,Матеуш Ланге,translit,Mateusz Lange,POL,false,,,4xq9RrGG,atp-lange-mateusz,
 ATP,,2605,Мико Лапалме,translit,Miko Lapalme,CAN,false,,,U5m8RFvO,atp-lapalme-miko,
 ATP,,2605,Лукиано Лароса,translit,Luciano Larosa,USA,false,,,2DWOkB6t,atp-larosa-luciano,
@@ -3221,7 +3221,7 @@ ATP,,2683,Озан Аваноглу,translit,Ozan Avanoglu,TUR,false,,,0IXIa2IM,
 ATP,,2683,Бенямин Белис,translit,Benjamin Belis,SLO,false,,,MTBC3oxH,atp-belis-benjamin,
 ATP,,2683,Валерио Бракчи,translit,Valerio Bracci,ITA,false,,,j9Z7S3G7,atp-bracci-valerio,
 ATP,,2683,Финниан Булт,translit,Finnian Bult,GBR,false,,,bk9V83Fq,atp-bult-finnian,
-ATP,,2683,Даниил Пиатроуски,translit,Daniil Piatrouski,RUS,true,,,z302JS35,atp-daniil-piatrouski,
+ATP,,2683,Даниил Пиатроуски,translit,Daniil Piatrouski,RUS,true,2003-12-02,,z302JS35,atp-daniil-piatrouski,
 ATP,,2683,Лукиус Гуттеридге,translit,Lucius Gutteridge,GBR,false,,,AFNlgfx4,atp-gutteridge-lucius,
 ATP,,2683,Ори Хиллел,translit,Ori Hillel,ISR,false,,,bBOWolFj,atp-hillel-ori,
 ATP,,2683,Шымон Карпински,translit,Szymon Karpinski,POL,false,,,GtOHgrx3,atp-karpinski-szymon,
@@ -3303,7 +3303,7 @@ WTA,11,79,Ива Йович,sportsru,Iva Jovic,USA,false,2007-12-06,1976.6,bmWvB
 WTA,12,,Белинда Бенчич,sportsru,Belinda Bencic,SUI,false,1997-03-10,1971,ObGlDvu0,wta-bencic-belinda,https://www.sports.ru/tennis/person/belinda-bencic/
 WTA,13,18,Диана Шнайдер,sportsru,Diana Shnaider,RUS,true,2004-04-02,1931.2,028BdVOj,wta-shnaider-diana,https://www.sports.ru/tennis/person/diana-shnaider/
 WTA,14,8,Элиза Мертенс,sportsru,Elise Mertens,BEL,false,1995-11-17,1933.3,Y1ZrrUtl,wta-mertens-elise,https://www.sports.ru/tennis/person/elise-mertens/
-WTA,15,124,Виктория Мбоко,fantasy,Victoria Mboko,CAN,false,2006-08-26,1880.9,AqVez8TJ,wta-mboko-victoria,
+WTA,15,124,Виктория Мбоко,bot,Victoria Mboko,CAN,false,2006-08-26,1880.9,AqVez8TJ,wta-mboko-victoria,
 WTA,16,133,Сорана Кырстя,sportsru,Sorana Cirstea,ROU,false,1990-04-07,1959.7,fBPsm3Iq,wta-cirstea-sorana,https://www.sports.ru/tennis/person/sorana-cirstea/
 WTA,17,,Аманда Анисимова,sportsru,Amanda Anisimova,USA,false,2001-08-31,1949.4,nwkutKbi,wta-anisimova-amanda,https://www.sports.ru/tennis/person/amanda-anisimova/
 WTA,18,,Наоми Осака,sportsru,Naomi Osaka,JPN,false,1997-10-16,2019.9,MDM4BKiA,wta-osaka-naomi,https://www.sports.ru/tennis/person/naomi-osaka/
@@ -3318,13 +3318,13 @@ WTA,26,434,Анастасия Потапова,sportsru,Anastasia Potapova,AUT,f
 WTA,27,,Эмма Наварро,sportsru,Emma Navarro,USA,false,2001-05-18,1899.1,WxLdKcAs,wta-navarro-emma,https://www.sports.ru/tennis/person/emma-navarro/
 WTA,28,35,Мари Бузкова,sportsru,Marie Bouzkova,CZE,false,1998-07-21,1888.4,WMS3AdAb,wta-bouzkova-marie,https://www.sports.ru/tennis/person/marie-bouzkova/
 WTA,29,379,Никола Бартункова,sportsru,Nikola Bartunkova,CZE,false,2006-02-25,1912.4,84ILHaZ4,wta-bartunkova-nikola,https://www.sports.ru/tennis/person/nikola-bartunkova/
-WTA,30,,Сара Бейлек,fantasy,Sara Bejlek,CZE,false,2006-01-31,1842.6,jVCKq0LH,wta-bejlek-sara,
+WTA,30,,Сара Бейлек,bot,Sara Bejlek,CZE,false,2006-01-31,1842.6,jVCKq0LH,wta-bejlek-sara,
 WTA,31,169,Энн Ли,sportsru,Ann Li,USA,false,2000-06-26,1828.1,rwvAgOWm,wta-li-ann,https://www.sports.ru/tennis/person/ann-li/
 WTA,32,487,Диан Парри,sportsru,Diane Parry,FRA,false,2002-09-01,1791.5,hQQLzcNT,wta-parry-diane,https://www.sports.ru/tennis/person/diane-parry/
 WTA,33,37,Жасмин Паолини,sportsru,Jasmine Paolini,ITA,false,1996-01-04,1825.9,noaX0EJn,wta-paolini-jasmine,https://www.sports.ru/tennis/person/jasmine-paolini/
 WTA,34,12,Алёна Остапенко,sportsru,Jelena Ostapenko,LAT,false,1997-06-08,1820.3,Gloq9MUN,wta-ostapenko-jelena,https://www.sports.ru/tennis/person/jelena-ostapenko/
 WTA,35,1566,Мария Саккари,sportsru,Maria Sakkari,GRE,false,1995-07-25,1833.4,KjsokFUj,wta-sakkari-maria,https://www.sports.ru/tennis/person/maria-sakkari/
-WTA,36,1102,Донна Векич,fantasy,Donna Vekic,CRO,false,1996-06-28,1763.4,AsWv5414,wta-vekic-donna,
+WTA,36,1102,Донна Векич,bot,Donna Vekic,CRO,false,1996-06-28,1763.4,AsWv5414,wta-vekic-donna,
 WTA,37,137,Пейтон Стернс,sportsru,Peyton Stearns,USA,false,2001-10-08,1778.2,YsJXLo1O,wta-stearns-peyton,https://www.sports.ru/tennis/person/peyton-stearns/
 WTA,38,13,Кристина Букша,sportsru,Cristina Bucsa,ESP,false,1998-01-01,1720.3,fkFeyKHL,wta-bucsa-cristina,https://www.sports.ru/tennis/person/cristina-bucsa/
 WTA,39,76,Ван Синьюй,sportsru,Xinyu Wang,CHN,false,2001-09-26,1771,8jMJmh84,wta-wang-xinyu-2001,https://www.sports.ru/tennis/person/xinyu-wang/
@@ -3332,23 +3332,23 @@ WTA,40,126,Кимберли Биррелл,sportsru,Kimberly Birrell,AUS,false,1
 WTA,41,81,Талия Гибсон,sportsru,Talia Gibson,AUS,false,2004-06-18,1727,8GwNXON6,wta-gibson-talia,https://www.sports.ru/tennis/person/talia-gibson/
 WTA,42,,Дарья Снигур,sportsru,Daria Snigur,UKR,false,2002-03-27,1829.9,YuOTpKxj,wta-snigur-daria,https://www.sports.ru/tennis/person/darya-snigur/
 WTA,43,45,Людмила Самсонова,sportsru,Liudmila Samsonova,RUS,true,1998-11-11,1836.5,hIA4C9YT,wta-samsonova-liudmila,https://www.sports.ru/tennis/person/liudmila-samsonova/
-WTA,44,157,Юлия Стародубцева,wikidata,Yuliia Starodubtseva,UKR,false,2000-02-17,1730.8,GlqMuuhi,wta-starodubtsewa-yulia,
+WTA,44,157,Юлия Стародубцева,bot,Yuliia Starodubtseva,UKR,false,2000-02-17,1730.8,GlqMuuhi,wta-starodubtsewa-yulia,
 WTA,45,210,Хейли Баптист,sportsru,Hailey Baptiste,USA,false,2001-11-03,1843.9,Cjagsdf4,wta-baptiste-hailey,https://www.sports.ru/tennis/person/hailey-baptiste/
 WTA,46,223,Барбора Крейчикова,sportsru,Barbora Krejcikova,CZE,false,1995-12-18,1876.9,2FyACZYi,wta-krejcikova-barbora,https://www.sports.ru/tennis/person/barbora-krejcikova/
-WTA,47,39,Джанис Тьен,wikidata,Janice Tjen,INA,false,2002-05-06,1710,ngVYO2lo,wta-tjen-janice,
+WTA,47,39,Джанис Тьен,bot,Janice Tjen,INA,false,2002-05-06,1710,ngVYO2lo,wta-tjen-janice,
 WTA,48,146,Ангелина Калинина,sportsru,Anhelina Kalinina,UKR,false,1997-02-07,1760.5,zNoTPac0,wta-kalinina-anhelina,https://www.sports.ru/tennis/person/angelina-kalinina/
 WTA,49,,Каролина Плишкова,sportsru,Karolina Pliskova,CZE,false,1992-03-21,1862,xGn9KNfO,wta-pliskova-karolina,https://www.sports.ru/tennis/person/karolina-pliskova/
 WTA,50,131,Тамара Корпач,sportsru,Tamara Korpatsch,GER,false,1995-05-12,1671.6,KhTa5tH1,wta-korpatsch-tamara,https://www.sports.ru/tennis/person/tamara-korpatsch/
-WTA,51,1118,Александра Олейникова,wikidata,Oleksandra Oliynykova,UKR,false,2001-01-03,1695.2,WSu6zx5t,wta-oliynykova-oleksandra,
+WTA,51,1118,Александра Олейникова,bot,Oleksandra Oliynykova,UKR,false,2001-01-03,1695.2,WSu6zx5t,wta-oliynykova-oleksandra,
 WTA,52,1004,Майар Шериф,sportsru,Mayar Sherif,EGY,false,1996-05-05,1763.3,0QlxEb7i,wta-sherif-mayar,https://www.sports.ru/tennis/person/mayar-sherif/
 WTA,53,99,Клара Таусон,sportsru,Clara Tauson,DEN,false,2002-12-21,1762.7,2PPTHPya,wta-tauson-clara,https://www.sports.ru/tennis/person/clara-tauson/
 WTA,54,291,Кэти Болтер,sportsru,Katie Boulter,GBR,false,1996-08-01,1787.2,0SeXj3jT,wta-boulter-katie,https://www.sports.ru/tennis/person/katie-boulter/
-WTA,55,258,Лилли Таггер,fantasy,Lilli Tagger,AUT,false,2008-02-17,1752.6,UT72lXiG,wta-tagger-lilli,
+WTA,55,258,Лилли Таггер,bot,Lilli Tagger,AUT,false,2008-02-17,1752.6,UT72lXiG,wta-tagger-lilli,
 WTA,56,234,Магдалена Фрех,sportsru,Magdalena Frech,POL,false,1997-12-15,1756.5,W6pL8zuB,wta-frech-magdalena,https://www.sports.ru/tennis/person/magdalena-frech/
 WTA,57,86,Елена Габриэла Рузе,sportsru,Elena-Gabriela Ruse,ROU,false,1997-11-06,1826.2,ra7IoKGO,wta-ruse-elena-gabriela,https://www.sports.ru/tennis/person/elena-gabriela-ruse/
-WTA,58,583,Паула Бадоса Хиберт,wikidata,Paula Badosa,ESP,false,1997-11-15,1824.9,Wl76rX3I,wta-badosa-paula,
+WTA,58,583,Паула Бадоса,bot,Paula Badosa,ESP,false,1997-11-15,1824.9,Wl76rX3I,wta-badosa-paula,
 WTA,59,155,Зейнеп Сёнмез,sportsru,Zeynep Sonmez,TUR,false,2002-04-30,1753.6,vZ8lpjnM,wta-sonmez-zeynep,https://www.sports.ru/tennis/person/zeynep-sonmez/
-WTA,60,483,Ланлана Тараруди,wikidata,Lanlana Tararudee,THA,false,2004-07-07,1724.2,lOEhBzlI,wta-tararudee-lanlana,
+WTA,60,483,Ланлана Тараруди,bot,Lanlana Tararudee,THA,false,2004-07-07,1724.2,lOEhBzlI,wta-tararudee-lanlana,
 WTA,61,123,Жаклин Кристиан,fantasy,Jaqueline  Cristian,ROU,false,1998-06-05,1824.5,vo9FVe2A,wta-cristian-jaqueline,
 WTA,62,214,Тереза Валентова,wikidata,Tereza Valentova,CZE,false,2007-02-20,1810.9,hWMZK1VQ,wta-valentova-tereza,
 WTA,63,500,Мария Тимофеева,wikidata,Maria Timofeeva,UZB,false,2003-11-18,1792.3,Em3nvKqP,wta-timofeeva-maria,
@@ -3443,7 +3443,7 @@ WTA,151,572,Тайра Катерина Грант,wikidata,Tyra Caterina Grant,
 WTA,152,,Дальма Гальфи,sportsru,Dalma Galfi,HUN,false,1998-08-13,1618.6,dGbzUtWd,wta-galfi-dalma,https://www.sports.ru/tennis/person/dalma-galfi/
 WTA,153,63,Робин Монтгомери,sportsru,Robin Montgomery,USA,false,2004-09-05,1743.7,SfXC2Wt1,wta-montgomery-robin,https://www.sports.ru/tennis/person/robin-montgomery/
 WTA,154,108,Екатерина Горгодзе,sportsru,Ekaterine Gorgodze,GEO,false,1991-12-03,1595.1,vPEmPARA,wta-gorgodze-ekaterine,https://www.sports.ru/tennis/person/ekaterine-gorgodze/
-WTA,155,344,Ясмин Ортенци,flashscore,Jasmin Ortenzi,ARG,false,,,GWL0jv2U,wta-ortenzi-jasmin,
+WTA,155,344,Ясмин Ортенци,flashscore,Jasmin Ortenzi,ARG,false,2001-11-20,,GWL0jv2U,wta-ortenzi-jasmin,
 WTA,156,1103,Айла Аксу,sportsru,Ayla Aksu,TUR,false,1996-07-15,1579.2,rDEdDdEe,wta-aksu-ayla,https://www.sports.ru/tennis/person/ayla-aksu/
 WTA,157,886,Линда Фрухвиртова,sportsru,Linda Fruhvirtova,CZE,false,2005-05-01,1578.6,WrhNf3At,wta-fruhvirtova-linda,https://www.sports.ru/tennis/person/linda-fruhvirtova/
 WTA,158,228,Эльза Жакмо,sportsru,Elsa Jacquemot,FRA,false,2003-05-03,1566.6,8Gag74BD,wta-jacquemot-elsa,https://www.sports.ru/tennis/person/elsa-jacquemot/
@@ -3656,7 +3656,7 @@ WTA,364,,Ева Герреро Альварес,flashscore,Eva Guerrero Alvarez,
 WTA,365,565,Аран Теиксидо Гарсиа,translit,Aran Teixido Garcia,ESP,false,2001-01-17,1416.3,CMBBiiQi,wta-teixido-garcia-maria-aran,
 WTA,366,307,Вэйшнави Адкар,translit,Vaishnavi Adkar,IND,false,2004-12-14,1241,riKJvzYF,wta-adkar-vaishnavi,
 WTA,367,377,Анна София Санчес,sportsru,Ana Sofia Sánchez,MEX,false,1994-04-13,1301.3,zZiiCAEg,wta-sanchez-ana-sofia,https://www.sports.ru/tennis/person/ana-sofia-sanchez/
-WTA,368,323,Мария Головина,translit,Maria Golovina,RUS,true,,1304.2,OWl5VJol,wta-golovina-maria,
+WTA,368,323,Мария Головина,translit,Maria Golovina,RUS,true,2007-08-05,1304.2,OWl5VJol,wta-golovina-maria,
 WTA,369,229,Ксения Зайцева,wikidata,Ksenia Zaytseva,RUS,true,2004-09-13,1318.4,vyqrLx1t,wta-zaytseva-ksenia,
 WTA,370,255,Приска Нугрохо,wikidata,Priska Nugroho,INA,false,2003-05-29,1245.4,UopBzI6j,wta-nugroho-priska-madelyn,
 WTA,371,,Цзяцзин Лю,sportsru,Jia-Jing Lu,CHN,false,1989-11-18,1370.5,0OZYPwg9,wta-lu-jia-jing,https://www.sports.ru/tennis/person/jia-jing-lu/
@@ -4262,7 +4262,7 @@ WTA,970,914,Маия Илинка Бурческу,translit,Maia Ilinca Burcescu
 WTA,971,1173,Джизелле Сибэй,translit,Jizelle Sibai,AUS,false,2009-10-01,,SdVCIRnp,wta-sibai-jizelle,
 WTA,972,,Рейчел Гайлис,flashscore,Rachel Gailis,USA,false,2004-08-30,,IcZUTneo,wta-gailis-rachel,
 WTA,973,337,Диа Эль Жарди,translit,Diae El Jardi,MAR,false,2000-10-13,,6VLFd6z4,wta-el-jardi-diae,
-WTA,974,1407,Вероника Мирошниченко,translit,Veronica Miroshnichenko,RUS,true,,,Of6fyDA8,wta-miroshnichenko-veronica,
+WTA,974,1407,Вероника Мирошниченко,translit,Veronica Miroshnichenko,RUS,true,1997-11-19,,Of6fyDA8,wta-miroshnichenko-veronica,
 WTA,974,846,Луси Павлак,translit,Lucie Pawlak,FRA,false,2006-04-12,,MijEGME2,wta-pawlak-lucie,
 WTA,976,916,Исабел Скоог,translit,Isabel Skoog,SWE,false,2008-07-26,,zBlNPgw9,wta-skoog-isabel,
 WTA,977,1043,Солимар Коллинг,flashscore,Solymar Colling,USA,false,2000-04-21,,h4DILw28,wta-colling-solymar,
@@ -4596,7 +4596,7 @@ WTA,1300,1241,Лили Тэйлор,translit,Lily Taylor,AUS,false,2006-09-02,,8
 WTA,1305,808,Алисе  Ферлито,translit,Alice  Ferlito,ESP,false,2005-08-02,,E57JBqm8,wta-ferlito-alice,
 WTA,1306,,Панна Бартха,translit,Panna Bartha,HUN,false,2004-05-14,,UuAKn2D1,wta-bartha-panna,
 WTA,1306,1261,Елена Грекул,translit,Elena Grekul,UKR,false,2004-05-15,,Q94ZveBM,wta-grekul-elena,
-WTA,1306,1063,Мария Михайлова,flashscore,Maria Mikhaylova,RUS,true,,,I3b6TBsb,wta-mikhaylova-maria,
+WTA,1306,1063,Мария Михайлова,flashscore,Maria Mikhaylova,RUS,true,1999-02-24,,I3b6TBsb,wta-mikhaylova-maria,
 WTA,1309,1227,Люян Ань,translit,Liuyan An,CHN,false,2006-06-01,,dG5VSlzp,wta-an-liuyan,
 WTA,1309,,Миа Чудейова,flashscore,Mia Chudejova,SVK,false,2003-07-30,,htzB69zJ,wta-chudejova-mia,
 WTA,1309,1099,Алекса  Каратанхева,translit,Alexa  Karatancheva,BUL,false,2005-09-17,,MoPNhiaE,wta-karatancheva-alexa,
@@ -4922,7 +4922,7 @@ WTA,,692,Мадди Зампардо,translit,Maddy Zampardo,USA,false,,,2iamAUr
 WTA,,720,Кианах Мотосоно,translit,Kianah Motosono,USA,false,2000-02-11,,GnlP1phC,wta-motosono-kianah,
 WTA,,721,Джихо Шин,flashscore,Jiho Shin,KOR,false,,,rgrOZmao,wta-shin-jiho,
 WTA,,728,Элизия Болтон,flashscore,Elysia Bolton,AUS,false,2000-03-24,,61UNAx1e,wta-bolton-elysia,
-WTA,,735,Даря Харланова,translit,Darya Kharlanova,RUS,true,,,OYqVjOW5,wta-kharlanova-darya,
+WTA,,735,Даря Харланова,translit,Darya Kharlanova,RUS,true,2006-11-21,,OYqVjOW5,wta-kharlanova-darya,
 WTA,,743,Риа Дерниковиц,translit,Ria Dernikovic,CRO,false,,,2N3l3YXm,wta-dernikovic-ria,
 WTA,,752,Вероника Кулхава,flashscore,Veronika Kulhava,CZE,false,,,W6wmzLFq,wta-kulhava-veronika,
 WTA,,754,Бэйлен Броун,translit,Baylen Brown,USA,false,,,zw18lCaD,wta-brown-baylen,
@@ -4957,7 +4957,7 @@ WTA,,979,Мирабелле Тахири,translit,Mirabelle Tahiri,USA,false,,,6
 WTA,,985,Сарах Нита,translit,Sarah Nita,,false,,,OGQknkxQ,wta-nita-sarah,
 WTA,,987,Джиан Ибрахим,translit,Jian Ibrahim,EGY,false,,,Mi8sHPu7,wta-ibrahim-jian,
 WTA,,989,Бела Тамханкар,translit,Bela Tamhankar,IND,false,,,McgEwtft,wta-tamhankar-bela,
-WTA,,995,Тациана Сасноуская,translit,Tatsiana Sasnouskaya,RUS,true,,,2RvQSf1T,wta-sasnouskaya-tatsiana,
+WTA,,995,Тациана Сасноуская,translit,Tatsiana Sasnouskaya,RUS,true,2001-12-27,,2RvQSf1T,wta-sasnouskaya-tatsiana,
 WTA,,997,Лусиа Рос Паррес,translit,Lucia Ros Parres,ESP,false,,,WbyptmB5,wta-ros-parres-lucia,
 WTA,,998,Иоана Варса Ана,translit,Ioana Varsa Ana,ROU,false,,,C8D97tAl,wta-varsa-ana-ioana,
 WTA,,1003,Симона Куку,translit,Simona Cucu,ROU,false,,,S4unccmS,wta-cucu-simona,
@@ -4970,7 +4970,7 @@ WTA,,1028,Мила Масиц,translit,Mila Masic,SRB,false,1997-11-29,,Krcsn63n
 WTA,,1029,Лунда Кумхом,translit,Lunda Kumhom,THA,false,2002-08-07,,tUgjMPE6,wta-kumhom-lunda,
 WTA,,1031,Юдзуха Нэгиси,translit,Yuzuha Negishi,JPN,false,,,dGLUGvb4,wta-negishi-yuzuha,
 WTA,,1037,Вилма Кребс Хиллестед,translit,Vilma Krebs Hyllested,DEN,false,2005-12-03,,ENC5LJi9,wta-krebs-hyllested-vilma,
-WTA,,1038,Влада Сварковскаия,translit,Vlada Svarkovskaia,RUS,true,,,0IX1WxAd,wta-svarkovskaia-vlada,
+WTA,,1038,Влада Сварковскаия,translit,Vlada Svarkovskaia,RUS,true,1994-03-21,,0IX1WxAd,wta-svarkovskaia-vlada,
 WTA,,1039,Иулия Марджинян Алексия,translit,Iulia Marginean Alexia,ROU,false,2006-05-16,,EBYpBR5q,wta-marginean-alexia-iulia,
 WTA,,1046,Габриэла Кавано Шо,translit,Gabriela Kawano Cho,BRA,false,,,zT1955hf,wta-kawano-cho-gabriela,
 WTA,,1049,Мариа Гарсиа,translit,Maria Garcia,POR,false,2006-10-03,,hWvZybo3,wta-garcia-maria,
@@ -5066,7 +5066,7 @@ WTA,,1307,Хюнии Ли,translit,Hyunyee Lee,KOR,false,,,jwafB67e,wta-lee-hyun
 WTA,,1308,Елена Уткина,translit,Elena Utkina,RUS,true,,,xvoUsCif,wta-utkina-elena,
 WTA,,1311,Аурора Цурмюхле,translit,Aurora Zurmuehle,SUI,false,,,UelFfDsp,wta-zurmuehle-aurora,
 WTA,,1313,София Крыворучко,translit,Sofia Kryvoruchko,UKR,false,,,WOUlgKmn,wta-kryvoruchko-sofia,
-WTA,,1314,Елизавета Рожкова,translit,Elizaveta Rozhkova,RUS,true,,,M1q2QeTN,wta-rozhkova-elizaveta,
+WTA,,1314,Елизавета Рожкова,translit,Elizaveta Rozhkova,RUS,true,2008-09-23,,M1q2QeTN,wta-rozhkova-elizaveta,
 WTA,,1315,Меган Давиес,translit,Megan Davies,GBR,false,,,n7QUDG8k,wta-davies-megan,
 WTA,,1319,Ами Ли,translit,Amy Lee,USA,false,,,468jqi8L,wta-lee-amy,
 WTA,,1321,Ариадна Гарсиа-Патрон Канальс,translit,Ariadna Garcia-Patron Canals,ESP,false,,,rHubBkEk,wta-garcia-patron-canals-ariadna,
@@ -5151,7 +5151,7 @@ WTA,,1467,Нина Рудюкова,flashscore,Nina Rudiukova,RUS,true,2000-01-2
 WTA,,1467,Редди Сама Чевика,translit,Reddy Sama Chevika,IND,false,,,YP2NdtkA,wta-sama-chevika-reddy,
 WTA,,1467,Ран Вакана,translit,Ran Wakana,JPN,false,,,6N0coiH5,wta-wakana-ran,
 WTA,,1472,Мария Капузу Карина,translit,Maria Capuzu Karina,ROU,false,,,8SfGrUZQ,wta-capuzu-karina-maria,
-WTA,,1472,Карына Фиадосик,translit,Karyna Fiadosik,RUS,true,,,GYJav3W8,wta-fiadosik-karyna,
+WTA,,1472,Карына Фиадосик,translit,Karyna Fiadosik,RUS,true,2008-03-24,,GYJav3W8,wta-fiadosik-karyna,
 WTA,,1472,Флоренсиа Массардо Браин,translit,Florencia Massardo Brain,CHI,false,,,rqyZcx88,wta-massardo-brain-florencia,
 WTA,,1475,Агатха Хитилова,translit,Agatha Chytilova,CZE,false,,,SxwdkEPF,wta-chytilova-agatha,
 WTA,,1477,Яцзин Цао,translit,Yajing Cao,CHN,false,2002-12-05,,bFIB7GN8,wta-cao-yajing,

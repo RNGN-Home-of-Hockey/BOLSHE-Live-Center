@@ -9,6 +9,10 @@ workers_dev = true
 PUBLIC_URL = "https://bolshe-live-center.znamteam-903.workers.dev"
 SCHEDULE_GID = "548911490"
 
+# Mini App files (public/app/ -> /app/); everything else goes to the Worker.
+[assets]
+directory = "./public"
+
 [[d1_databases]]
 binding = "DB"
 database_name = "bolshe-live-center"

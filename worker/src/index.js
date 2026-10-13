@@ -9,10 +9,10 @@
 
 import { LEGEND_STEP, LEVELS, XP_RULES, levelFor } from '../../src/game/levels.js';
 import { matchCard } from './match-details.js';
-import { matchesForDate, syncMatchDays } from './matches-sync.js';
+import { matchesForDate, matchesOfPlayer, syncMatchDays } from './matches-sync.js';
 import { getPlayer, searchPlayers } from './players.js';
 import { broadcastsForDate, syncSchedule } from './schedule-sync.js';
-import { ensureWebhook, handleTelegramUpdate, webhookSecret } from './telegram.js';
+import { ensureMenuButton, ensureWebhook, handleTelegramUpdate, webhookSecret } from './telegram.js';
 
 const json = (data, status = 200, cacheSeconds = 0) => new Response(JSON.stringify(data), {
   status,
@@ -103,6 +103,14 @@ async function maintain(env, { force = false } = {}) {
     tasks.push(runJob(env, 'matches_window', () => syncMatchDays(env, [WINDOW_OFFSETS[index]])));
   }
   if (env.TELEGRAM_BOT_TOKEN) {
+    const menuWant = `${env.PUBLIC_URL}/app/`;
+    const menu = await getState(env, 'menu_button_for');
+    if (menu?.value !== menuWant) {
+      await setState(env, 'menu_button_for', menuWant);
+      tasks.push(runJob(env, 'menu_button', () => ensureMenuButton(env)));
+    }
+  }
+  if (env.TELEGRAM_BOT_TOKEN) {
     const want = (await webhookSecret(env.TELEGRAM_BOT_TOKEN)).slice(0, 16);
     const done = await getState(env, 'webhook_for');
     const tried = await getState(env, 'webhook_attempt');
@@ -152,6 +160,12 @@ export default {
           limit: url.searchParams.get('limit') ?? 20,
         });
         return json({ players }, 200, 60);
+      }
+      const playerMatches = path.match(/^\/api\/players\/([^/]+)\/matches$/);
+      if (playerMatches) {
+        const player = await env.DB.prepare('SELECT fs_id FROM players WHERE player_id = ?').bind(decodeURIComponent(playerMatches[1])).first();
+        if (!player) return json({ ok: false, error: 'not found' }, 404);
+        return json({ matches: await matchesOfPlayer(env.DB, player.fs_id) }, 200, 30);
       }
       if (path.startsWith('/api/players/')) {
         const player = await getPlayer(env.DB, decodeURIComponent(path.slice('/api/players/'.length)));

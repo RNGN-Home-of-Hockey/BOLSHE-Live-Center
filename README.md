@@ -21,6 +21,10 @@ Telegram-приложение (бот + Mini App) для теннисного п
 | Расписание эфиров «Больше» | `src/sources/schedule.js` → таблица `broadcasts` | каждые 10 минут, только теннис, без ключей трансляций |
 | Проверка имён по sports.ru | `scripts/check-sportsru.mjs` → `data/seed/sportsru_names.json` | все игроки, по рейтингу сверху |
 | Уровни (теннисные) | `src/game/levels.js` | от «Подающего мячи» до «Легенды» |
+| Матчи (вся лента Flashscore: ATP/WTA, челленджеры, ITF) | `src/sources/flashscore-matches.js` → `matches` | сегодня — раз в минуту, ±3 дня по очереди; эфиры «Больше» привязаны к матчам |
+| Карточка «Теннис для чайников» | `src/insights/preview.js`, `/api/matches/<id>` | рейтинг, шансы по Эло, форма, покрытие, личные встречи, возраст, фаворит |
+| **Приложение (тестовая копия)** | `public/app/` → https://bolshe-live-center.znamteam-903.workers.dev/app/ | Главная, Матчи, Игроки, Профиль; кнопка «Приложение» в боте |
+| Фото и даты рождения | `scripts/fetch-player-profiles.mjs` | 909 ключевых игроков (топ-300, наши, пары топ-100) |
 
 Что делаем дальше — [docs/ROADMAP.md](docs/ROADMAP.md). Что за продукт — [docs/PRODUCT.md](docs/PRODUCT.md).
 Обсуждение идей и отзывы тестировщиков — ветка [`discussion`](../../tree/discussion).

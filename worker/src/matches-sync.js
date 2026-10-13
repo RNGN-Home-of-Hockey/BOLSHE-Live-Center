@@ -127,6 +127,12 @@ export async function matchesForDate(db, date, { level = null, tour = null, russ
   return bolshe ? shaped.filter((m) => m.bolshe) : shaped;
 }
 
+export async function matchesOfPlayer(db, fsId, limit = 30) {
+  const { results } = await db.prepare(`${MATCH_SELECT} WHERE m.p1_fs_id = ? OR m.p2_fs_id = ?
+    ORDER BY m.start_at DESC LIMIT ?`).bind(fsId, fsId, limit).all();
+  return results.map(shapeMatch);
+}
+
 export async function matchById(db, matchId) {
   const row = await db.prepare(`${MATCH_SELECT} WHERE m.match_id = ?`).bind(matchId).first();
   return row ? shapeMatch(row) : null;
