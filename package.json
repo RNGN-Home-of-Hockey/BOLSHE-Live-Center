@@ -1,0 +1,14 @@
+{
+  "name": "bolshe-live-center",
+  "version": "0.1.0",
+  "private": true,
+  "description": "БОЛЬШЕ Live Center: теннисное ядро данных и Telegram-приложение",
+  "type": "module",
+  "engines": { "node": ">=22.5" },
+  "scripts": {
+    "test": "node --test \"tests/*.test.mjs\"",
+    "players": "node scripts/build-players.mjs",
+    "players:refresh": "node scripts/build-players.mjs --refresh",
+    "db": "node scripts/build-local-db.mjs"
+  }
+}

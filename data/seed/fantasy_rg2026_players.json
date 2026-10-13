@@ -1,0 +1,1831 @@
+{
+ "source": "RG Fantasy 2026 (Roland Garros), editor-checked names",
+ "players": [
+  {
+   "fantasy_player_id": "WTA001",
+   "tour": "WTA",
+   "name_ru": "Арина Соболенко",
+   "name_en": "Aryna Sabalenka",
+   "fs_id": "",
+   "seed": "1.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/xhwEtyEa-I9HZAz1R.png",
+   "aliases": [
+    "Aryna Sabalenka",
+    "Арина Соболенко",
+    "Соболенко А."
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA002",
+   "tour": "WTA",
+   "name_ru": "Елена Рыбакина",
+   "name_en": "Elena Rybakina",
+   "fs_id": "",
+   "seed": "2.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/nwc71xXg-2wyL104C.png",
+   "aliases": [
+    "Elena Rybakina",
+    "Елена Рыбакина",
+    "Рыбакина Е."
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA003",
+   "tour": "WTA",
+   "name_ru": "Ига Швёнтек",
+   "name_en": "Iga Swiatek",
+   "fs_id": "",
+   "seed": "3.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/S2NdWdWg-tOt4Rhy2.png",
+   "aliases": [
+    "Iga Swiatek",
+    "Ига Швёнтек",
+    "Швентек И."
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA004",
+   "tour": "WTA",
+   "name_ru": "Коко Гауфф",
+   "name_en": "Coco Gauff",
+   "fs_id": "",
+   "seed": "4.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/UDnGEpDr-GWXWkTPf.png",
+   "aliases": [
+    "Coco Gauff",
+    "Гауфф К.",
+    "Коко Гауфф"
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA005",
+   "tour": "WTA",
+   "name_ru": "Джессика Пегула",
+   "name_en": "Jessica Pegula",
+   "fs_id": "",
+   "seed": "5.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/GS3hkKzB-nRUkF0Ol.png",
+   "aliases": []
+  },
+  {
+   "fantasy_player_id": "WTA006",
+   "tour": "WTA",
+   "name_ru": "Аманда Анисимова",
+   "name_en": "Amanda Anisimova",
+   "fs_id": "",
+   "seed": "6.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/Cfqk4yBr-SxjHCXS2.png",
+   "aliases": [
+    "Amanda Anisimova",
+    "Аманда Анисимова",
+    "Анисимова А."
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA007",
+   "tour": "WTA",
+   "name_ru": "Мирра Андреева",
+   "name_en": "Mirra Andreeva",
+   "fs_id": "",
+   "seed": "8.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/ncDnFmzB-xE40e4KN.png",
+   "aliases": [
+    "Mirra Andreeva",
+    "Андреева М.",
+    "Мирра Андреева"
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA008",
+   "tour": "WTA",
+   "name_ru": "Жасмин Паолини",
+   "name_en": "Jasmine Paolini",
+   "fs_id": "",
+   "seed": "13.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/h0kH5vDr-0fhNJLOt.png",
+   "aliases": []
+  },
+  {
+   "fantasy_player_id": "WTA009",
+   "tour": "WTA",
+   "name_ru": "Виктория Мбоко",
+   "name_en": "Victoria Mboko",
+   "fs_id": "",
+   "seed": "9.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/hMQb5nWg-fPXtvMaL.png",
+   "aliases": [
+    "Victoria Mboko",
+    "Виктория Мбоко",
+    "Мбоко В."
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA010",
+   "tour": "WTA",
+   "name_ru": "Элина Свитолина",
+   "name_en": "Elina Svitolina",
+   "fs_id": "",
+   "seed": "7.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/0hCIo7h5-WCqsXbkh.png",
+   "aliases": [
+    "Elina Svitolina",
+    "Свитолина Э.",
+    "Элина Свитолина"
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA011",
+   "tour": "WTA",
+   "name_ru": "Каролина Мухова",
+   "name_en": "Karolina Muchova",
+   "fs_id": "",
+   "seed": "10.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/zPfjENFG-jX0SdYnI.png",
+   "aliases": [
+    "Karolina Muchova",
+    "Каролина Мухова",
+    "Мухова К."
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA012",
+   "tour": "WTA",
+   "name_ru": "Белинда Бенчич",
+   "name_en": "Belinda Bencic",
+   "fs_id": "",
+   "seed": "11.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/v7rReKGG-CzsoFbbA.png",
+   "aliases": [
+    "Belinda Bencic",
+    "Белинда Бенчич",
+    "Бенчич Б."
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA013",
+   "tour": "WTA",
+   "name_ru": "Линда Носкова",
+   "name_en": "Linda Noskova",
+   "fs_id": "",
+   "seed": "12.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/vJET2jGG-Kd6vQ4pa.png",
+   "aliases": [
+    "Linda Noskova",
+    "Линда Носкова",
+    "Носкова Л."
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA014",
+   "tour": "WTA",
+   "name_ru": "Екатерина Александрова",
+   "name_en": "Ekaterina Alexandrova",
+   "fs_id": "",
+   "seed": "14.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/xtkK1TWg-SfcmK5PO.png",
+   "aliases": [
+    "Ekaterina Alexandrova",
+    "Александрова Е.",
+    "Екатерина Александрова"
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA015",
+   "tour": "WTA",
+   "name_ru": "Марта Костюк",
+   "name_en": "Marta Kostyuk",
+   "fs_id": "",
+   "seed": "15.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/4tS2p3YA-UcIohdpM.png",
+   "aliases": [
+    "Marta Kostyuk",
+    "Костюк М.",
+    "Марта Костюк"
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA016",
+   "tour": "WTA",
+   "name_ru": "Наоми Осака",
+   "name_en": "Naomi Osaka",
+   "fs_id": "",
+   "seed": "16.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/6NjdR1zB-YgRjYWBf.png",
+   "aliases": [
+    "Naomi Osaka",
+    "Наоми Осака",
+    "Осака Н."
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA017",
+   "tour": "WTA",
+   "name_ru": "Ива Йович",
+   "name_en": "Iva Jovic",
+   "fs_id": "",
+   "seed": "17.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/zDQTpgGG-tjoxv74H.png",
+   "aliases": [
+    "Iva Jovic",
+    "Jovic I.",
+    "Ива Йович"
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA018",
+   "tour": "WTA",
+   "name_ru": "Клара Таусон",
+   "name_en": "Clara Tauson",
+   "fs_id": "",
+   "seed": "21.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/x8Hx9Ljl-x8PFGwT8.png",
+   "aliases": [
+    "Clara Tauson",
+    "Клара Таусон",
+    "Таусон К."
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA019",
+   "tour": "WTA",
+   "name_ru": "Мэдисон Киз",
+   "name_en": "Madison Keys",
+   "fs_id": "",
+   "seed": "19.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/I3KQvBYA-nqGgcXEd.png",
+   "aliases": [
+    "Madison Keys",
+    "Киз М.",
+    "Мэдисон Киз"
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA020",
+   "tour": "WTA",
+   "name_ru": "Диана Шнайдер",
+   "name_en": "Diana Shnaider",
+   "fs_id": "",
+   "seed": "25.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/jFFbLhZg-8jUzGsE1.png",
+   "aliases": [
+    "Diana Shnaider",
+    "Диана Шнайдер",
+    "Шнайдер Д."
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA021",
+   "tour": "WTA",
+   "name_ru": "Людмила Самсонова",
+   "name_en": "Liudmila Samsonova",
+   "fs_id": "",
+   "seed": "20.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/0r6WZYXg-rkx09pZH.png",
+   "aliases": [
+    "Liudmila Samsonova",
+    "Людмила Самсонова",
+    "Самсонова Л."
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA022",
+   "tour": "WTA",
+   "name_ru": "Элизе Мертенс",
+   "name_en": "Elise Mertens",
+   "fs_id": "",
+   "seed": "23.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/zuslwRfM-jX0SdYnI.png",
+   "aliases": [
+    "Elise Mertens",
+    "Мертенс Э.",
+    "Элизе Мертенс"
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA023",
+   "tour": "WTA",
+   "name_ru": "Лейла Фернандес",
+   "name_en": "Leylah Fernandez",
+   "fs_id": "",
+   "seed": "24.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/IyCpYpil-4fqh9y3m.png",
+   "aliases": [
+    "Leylah Fernandez",
+    "Лейла Фернандес",
+    "Фернандес Л."
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA024",
+   "tour": "WTA",
+   "name_ru": "Анна Калинская",
+   "name_en": "Anna Kalinskaya",
+   "fs_id": "",
+   "seed": "22.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/CtIEAqf5-0tiKNHAm.png",
+   "aliases": [
+    "Anna Kalinskaya",
+    "Анна Калинская",
+    "Калинская А."
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA025",
+   "tour": "WTA",
+   "name_ru": "Хейли Баптист",
+   "name_en": "Hailey Baptiste",
+   "fs_id": "",
+   "seed": "26.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/0bhYCheM-63u9INTa.png",
+   "aliases": [
+    "Hailey Baptiste",
+    "Баптист Х.",
+    "Хейли Баптист"
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA026",
+   "tour": "WTA",
+   "name_ru": "Мария Боузкова",
+   "name_en": "Marie Bouzkova",
+   "fs_id": "",
+   "seed": "27.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/KAiTWGyB-Gtaj18Ja.png",
+   "aliases": [
+    "Marie Bouzkova",
+    "Боузкова М.",
+    "Мария Боузкова"
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA027",
+   "tour": "WTA",
+   "name_ru": "Сорана Кырстя",
+   "name_en": "Sorana Cirstea",
+   "fs_id": "",
+   "seed": "18.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/vsolvPAr-vRt5bOUD.png",
+   "aliases": [
+    "Sorana Cirstea",
+    "Кырстя С.",
+    "Сорана Кырстя"
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA028",
+   "tour": "WTA",
+   "name_ru": "Жаклин Кристиан",
+   "name_en": "Jaqueline Cristian",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/C61QS3il-vyWW4JHj.png",
+   "aliases": [
+    "Jaqueline Cristian",
+    "Жаклин Кристиан",
+    "Кристиан Ж."
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA029",
+   "tour": "WTA",
+   "name_ru": "Энн Ли",
+   "name_en": "Ann Li",
+   "fs_id": "",
+   "seed": "30.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/llUgNVZA-f1sNjIYC.png",
+   "aliases": [
+    "Ann Li",
+    "Ли Э.",
+    "Энн Ли"
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA030",
+   "tour": "WTA",
+   "name_ru": "Эмма Радукану",
+   "name_en": "Emma Raducanu",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/pSuxRHh5-SKx4OxTc.png",
+   "aliases": [
+    "Emma Raducanu",
+    "Радукану Э.",
+    "Эмма Радукану"
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA031",
+   "tour": "WTA",
+   "name_ru": "Кристина Букша",
+   "name_en": "Cristina Bucsa",
+   "fs_id": "",
+   "seed": "31.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/8YCMaEYA-zTnucLE3.png",
+   "aliases": [
+    "Cristina Bucsa",
+    "Букша К.",
+    "Кристина Букша"
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA032",
+   "tour": "WTA",
+   "name_ru": "Чжэн Циньвэнь",
+   "name_en": "Qinwen Zheng",
+   "fs_id": "xcyehjas",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/b7N9NHdM-MZFHcn8n.png",
+   "aliases": [
+    "Qinwen Zheng",
+    "WTA032",
+    "Zheng Q.",
+    "Zheng Qinwen",
+    "Циньвэнь Чжэн",
+    "Чжэн Ц.",
+    "Чжэн Циньвэнь"
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA033",
+   "tour": "WTA",
+   "name_ru": "Ван Синьюй",
+   "name_en": "Xinyu Wang",
+   "fs_id": "8jmjmh84",
+   "seed": "32.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/hjYRgqBr-zemI4S71.png",
+   "aliases": [
+    "Wang Xin.",
+    "Xin. Wang",
+    "Xinyu Wang",
+    "Ван С.",
+    "Ван Синьюй"
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA034",
+   "tour": "WTA",
+   "name_ru": "Майя Джойнт",
+   "name_en": "Maya Joint",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/86Gi9wFG-dM17vvbm.png",
+   "aliases": [
+    "Maya Joint",
+    "Джойнт М.",
+    "Майя Джойнт"
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA035",
+   "tour": "WTA",
+   "name_ru": "Эмма Наварро",
+   "name_en": "Emma Navarro",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/GGqezUCr-nPcxRjl7.png",
+   "aliases": [
+    "Emma Navarro",
+    "Наварро Э.",
+    "Эмма Наварро"
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA036",
+   "tour": "WTA",
+   "name_ru": "Елена Остапенко",
+   "name_en": "Jelena Ostapenko",
+   "fs_id": "",
+   "seed": "29.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/2iOITHXg-zmgTzryp.png",
+   "aliases": [
+    "Jelena Ostapenko",
+    "Елена Остапенко",
+    "Остапенко Е."
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA037",
+   "tour": "WTA",
+   "name_ru": "Сара Бейлек",
+   "name_en": "Sara Bejlek",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/zRLgabWg-MTMmYbFB.png",
+   "aliases": [
+    "Sara Bejlek",
+    "Бейлек С.",
+    "Сара Бейлек"
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA038",
+   "tour": "WTA",
+   "name_ru": "Анастасия Потапова",
+   "name_en": "Anastasia Potapova",
+   "fs_id": "",
+   "seed": "28.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/vVMPN8HG-jwKmdl7a.png",
+   "aliases": [
+    "Anastasia Potapova",
+    "Анастасия Потапова",
+    "Потапова А."
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA039",
+   "tour": "WTA",
+   "name_ru": "Катерина Синякова",
+   "name_en": "Katerina Siniakova",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/OxFOPEwS-noagZ2wS.png",
+   "aliases": [
+    "Katerina Siniakova",
+    "Катерина Синякова",
+    "Синякова К."
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA040",
+   "tour": "WTA",
+   "name_ru": "Элизабетта Коччаретто",
+   "name_en": "Elisabetta Cocciaretto",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/Y3p90KYg-tCzZ7nBI.png",
+   "aliases": [
+    "Elisabetta Cocciaretto",
+    "Элизабетта Коччаретто"
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA041",
+   "tour": "WTA",
+   "name_ru": "Александра Эала",
+   "name_en": "Alexandra Eala",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/Me9Rt2Yg-44Oegl12.png",
+   "aliases": [
+    "Alexandra Eala",
+    "Александра Эала",
+    "Эала А."
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA042",
+   "tour": "WTA",
+   "name_ru": "Лоис Буассон",
+   "name_en": "Lois Boisson",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/G4gsX1jl-jZ5nqhd6.png",
+   "aliases": [
+    "Boisson L.",
+    "Lois Boisson",
+    "Лоис Буассон"
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA043",
+   "tour": "WTA",
+   "name_ru": "Маркета Вондроушова",
+   "name_en": "Marketa Vondrousova",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/hMQXSef5-YR0AUUlE.png",
+   "aliases": []
+  },
+  {
+   "fantasy_player_id": "WTA044",
+   "tour": "WTA",
+   "name_ru": "Мария Саккари",
+   "name_en": "Maria Sakkari",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/z1j8gqDa-65ljy5se.png",
+   "aliases": [
+    "Maria Sakkari",
+    "Мария Саккари",
+    "Саккари М."
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA045",
+   "tour": "WTA",
+   "name_ru": "Даяна Ястремская",
+   "name_en": "Dayana Yastremska",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/pl17lbcM-zqHI9uwU.png",
+   "aliases": [
+    "Dayana Yastremska",
+    "Даяна Ястремская",
+    "Ястремская Д."
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA046",
+   "tour": "WTA",
+   "name_ru": "Барбора Крейчикова",
+   "name_en": "Barbora Krejcikova",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/b7TSF7g5-j9C3nl2O.png",
+   "aliases": [
+    "Barbora Krejcikova",
+    "Барбора Крейчикова",
+    "Крейчикова Б."
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA047",
+   "tour": "WTA",
+   "name_ru": "Дарья Касаткина",
+   "name_en": "Daria Kasatkina",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/KMuBc6HG-Sjqf47A4.png",
+   "aliases": [
+    "Daria Kasatkina",
+    "Дарья Касаткина",
+    "Касаткина Д."
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA048",
+   "tour": "WTA",
+   "name_ru": "София Кенин",
+   "name_en": "Sofia Kenin",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/ryBdx3fM-Y5qDemMF.png",
+   "aliases": [
+    "Sofia Kenin",
+    "Кенин С.",
+    "София Кенин"
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA049",
+   "tour": "WTA",
+   "name_ru": "Беатрис Хаддад Майя",
+   "name_en": "Beatriz Haddad Maia",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/bav7yycM-8Osa5clS.png",
+   "aliases": [
+    "Beatriz Haddad Maia",
+    "Беатрис Хаддад Майя"
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA050",
+   "tour": "WTA",
+   "name_ru": "Донна Векич",
+   "name_en": "Donna Vekic",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/6Dh5D1xS-pjtuTgw6.png",
+   "aliases": [
+    "Donna Vekic",
+    "Векич Д.",
+    "Донна Векич"
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA051",
+   "tour": "WTA",
+   "name_ru": "Тейлор Таунсенд",
+   "name_en": "Taylor Townsend",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/Sxzkiugl-6LjBdvnA.png",
+   "aliases": [
+    "Taylor Townsend",
+    "Таунсенд Т.",
+    "Тейлор Таунсенд"
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA052",
+   "tour": "WTA",
+   "name_ru": "Анастасия Павлюченкова",
+   "name_en": "Anastasia Pavlyuchenkova",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/bTxmWPBr-j7TgKTo5.png",
+   "aliases": []
+  },
+  {
+   "fantasy_player_id": "WTA053",
+   "tour": "WTA",
+   "name_ru": "Бьянка Андрееску",
+   "name_en": "Bianca Andreescu",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/CUqnekxS-0Y4Mdm9h.png",
+   "aliases": []
+  },
+  {
+   "fantasy_player_id": "WTA054",
+   "tour": "WTA",
+   "name_ru": "Ирина-Камелия Бегу",
+   "name_en": "Irina-Camelia Begu",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/babfqGxS-Ug2SeBrD.png",
+   "aliases": []
+  },
+  {
+   "fantasy_player_id": "WTA055",
+   "tour": "WTA",
+   "name_ru": "Слоан Стивенс",
+   "name_en": "Sloane Stephens",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/hpVFmzcM-8EbzeCHU.png",
+   "aliases": [
+    "Sloane Stephens",
+    "Слоан Стивенс",
+    "Стивенс С."
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA056",
+   "tour": "WTA",
+   "name_ru": "Винус Уильямс",
+   "name_en": "Venus Williams",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/SjN0Q5wS-2ZI9kSri.png",
+   "aliases": []
+  },
+  {
+   "fantasy_player_id": "ATP001",
+   "tour": "ATP",
+   "name_ru": "Янник Синнер",
+   "name_en": "Jannik Sinner",
+   "fs_id": "",
+   "seed": "1.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/zsxlv1jl-QFjXkoKn.png",
+   "aliases": [
+    "Jannik Sinner",
+    "Синнер Я.",
+    "Янник Синнер"
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP002",
+   "tour": "ATP",
+   "name_ru": "Александр Зверев",
+   "name_en": "Alexander Zverev",
+   "fs_id": "",
+   "seed": "2.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/tO5cePjl-2DqYxEbl.png",
+   "aliases": [
+    "Alexander Zverev",
+    "Александр Зверев",
+    "Зверев А."
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP003",
+   "tour": "ATP",
+   "name_ru": "Новак Джокович",
+   "name_en": "Novak Djokovic",
+   "fs_id": "",
+   "seed": "3.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/tSfwGCdM-MJZajegG.png",
+   "aliases": [
+    "Novak Djokovic",
+    "Джокович Н.",
+    "Новак Джокович"
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP004",
+   "tour": "ATP",
+   "name_ru": "Феликс Оже-Альяссим",
+   "name_en": "Felix Auger-Aliassime",
+   "fs_id": "",
+   "seed": "4.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/vyQLHQEG-8fYqFF2n.png",
+   "aliases": [
+    "Felix Auger-Aliassime",
+    "Оже-Альяссим Ф.",
+    "Феликс Оже-Альяссим"
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP005",
+   "tour": "ATP",
+   "name_ru": "Бен Шелтон",
+   "name_en": "Ben Shelton",
+   "fs_id": "",
+   "seed": "5.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/UBXM3cXg-fgTOwTv9.png",
+   "aliases": [
+    "Ben Shelton",
+    "Бен Шелтон",
+    "Шелтон Б."
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP006",
+   "tour": "ATP",
+   "name_ru": "Тейлор Фриц",
+   "name_en": "Taylor Fritz",
+   "fs_id": "",
+   "seed": "7.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/vDLwcnCa-8AMTtzu5.png",
+   "aliases": [
+    "Taylor Fritz",
+    "Тейлор Фриц",
+    "Фриц Т."
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP007",
+   "tour": "ATP",
+   "name_ru": "Алекс де Минаур",
+   "name_en": "Alex De Minaur",
+   "fs_id": "",
+   "seed": "8.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/jcP2ujzB-CID30mRm.png",
+   "aliases": [
+    "Alex De Minaur",
+    "Алекс де Минаур",
+    "Де Минаур А."
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP008",
+   "tour": "ATP",
+   "name_ru": "Даниил Медведев",
+   "name_en": "Daniil Medvedev",
+   "fs_id": "",
+   "seed": "6.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/QujxPtf5-6Z1AkBdk.png",
+   "aliases": [
+    "Daniil Medvedev",
+    "Даниил Медведев",
+    "Медведев Д."
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP009",
+   "tour": "ATP",
+   "name_ru": "Александр Бублик",
+   "name_en": "Alexander Bublik",
+   "fs_id": "",
+   "seed": "9.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/xEzx16Fa-p45uyGM1.png",
+   "aliases": [
+    "Alexander Bublik",
+    "Александр Бублик",
+    "Бублик А."
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP010",
+   "tour": "ATP",
+   "name_ru": "Флавио Коболли",
+   "name_en": "Flavio Cobolli",
+   "fs_id": "",
+   "seed": "10.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/E1rCFmCr-4rBjn5Su.png",
+   "aliases": [
+    "Flavio Cobolli",
+    "Коболли Ф.",
+    "Флавио Коболли"
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP011",
+   "tour": "ATP",
+   "name_ru": "Иржи Легечка",
+   "name_en": "Jiri Lehecka",
+   "fs_id": "",
+   "seed": "12.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/AqYxUkCa-ne6Kkdx9.png",
+   "aliases": [
+    "Jiri Lehecka",
+    "Иржи Легечка"
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP012",
+   "tour": "ATP",
+   "name_ru": "Андрей Рублёв",
+   "name_en": "Andrey Rublev",
+   "fs_id": "",
+   "seed": "11.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/YoLW01Fa-YV2zBIg4.png",
+   "aliases": [
+    "Andrey Rublev",
+    "Андрей Рублёв",
+    "Рублёв А."
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP013",
+   "tour": "ATP",
+   "name_ru": "Карен Хачанов",
+   "name_en": "Karen Khachanov",
+   "fs_id": "",
+   "seed": "13.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/l8xH1Nhl-hz8C9Mh1.png",
+   "aliases": [
+    "Karen Khachanov",
+    "Карен Хачанов",
+    "Хачанов К."
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP014",
+   "tour": "ATP",
+   "name_ru": "Валентин Вашро",
+   "name_en": "Valentin Vacherot",
+   "fs_id": "",
+   "seed": "16.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/fkT5LycM-6VJ5WJfp.png",
+   "aliases": [
+    "Valentin Vacherot",
+    "Валентин Вашро"
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP015",
+   "tour": "ATP",
+   "name_ru": "Артур Фис",
+   "name_en": "Arthur Fils",
+   "fs_id": "",
+   "seed": "17.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/Eg01vrEa-SQeH6w5H.png",
+   "aliases": [
+    "Arthur Fils",
+    "Артур Фис"
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP016",
+   "tour": "ATP",
+   "name_ru": "Томми Пол",
+   "name_en": "Tommy Paul",
+   "fs_id": "",
+   "seed": "24.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/v7Wf42il-pQ0ElVBe.png",
+   "aliases": [
+    "Tommy Paul",
+    "Пол Т.",
+    "Томми Пол"
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP017",
+   "tour": "ATP",
+   "name_ru": "Кэмерон Норри",
+   "name_en": "Cameron Norrie",
+   "fs_id": "",
+   "seed": "20.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/xQ8cn0eM-2BGSRmDE.png",
+   "aliases": [
+    "Cameron Norrie",
+    "Кэмерон Норри",
+    "Норри К."
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP018",
+   "tour": "ATP",
+   "name_ru": "Лучано Дардери",
+   "name_en": "Luciano Darderi",
+   "fs_id": "",
+   "seed": "14.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/dQXp4veM-WztgPI73.png",
+   "aliases": [
+    "Luciano Darderi",
+    "Дардери Л.",
+    "Лучано Дардери"
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP019",
+   "tour": "ATP",
+   "name_ru": "Лёрнер Тьен",
+   "name_en": "Learner Tien",
+   "fs_id": "",
+   "seed": "18.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/6gxrZhwS-nTVr8xro.png",
+   "aliases": [
+    "Learner Tien",
+    "Лёрнер Тьен",
+    "Тиен Л."
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP020",
+   "tour": "ATP",
+   "name_ru": "Фрэнсис Тиафо",
+   "name_en": "Frances Tiafoe",
+   "fs_id": "",
+   "seed": "19.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/A3X3wNil-AJjcvBgm.png",
+   "aliases": [
+    "Frances Tiafoe",
+    "Тиафо Ф.",
+    "Фрэнсис Тиафо"
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP021",
+   "tour": "ATP",
+   "name_ru": "Алехандро Давидович-Фокина",
+   "name_en": "Alejandro Davidovich Fokina",
+   "fs_id": "",
+   "seed": "21.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/fLk5DXhl-SbT3RDiH.png",
+   "aliases": [
+    "Alejandro Davidovich Fokina",
+    "Алехандро Давидович-Фокина",
+    "Давидович Фокина А."
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP022",
+   "tour": "ATP",
+   "name_ru": "Артур Риндеркнеш",
+   "name_en": "Arthur Rinderknech",
+   "fs_id": "",
+   "seed": "22.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/G0T01vDa-l8UaSgxB.png",
+   "aliases": [
+    "Arthur Rinderknech",
+    "Артур Риндеркнеш"
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP023",
+   "tour": "ATP",
+   "name_ru": "Каспер Рууд",
+   "name_en": "Casper Ruud",
+   "fs_id": "",
+   "seed": "15.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/EwLW3og5-6NHltuug.png",
+   "aliases": [
+    "Casper Ruud",
+    "Каспер Рууд",
+    "Рууд К."
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP024",
+   "tour": "ATP",
+   "name_ru": "Томас Мартин Этчеверри",
+   "name_en": "Tomas Martin Etcheverry",
+   "fs_id": "",
+   "seed": "23.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/UVD79kXg-KYie9gca.png",
+   "aliases": [
+    "Tomas Martin Etcheverry",
+    "Томас Мартин Этчеверри",
+    "Этчеверри Т.-М."
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP025",
+   "tour": "ATP",
+   "name_ru": "Франсиско Серундоло",
+   "name_en": "Francisco Cerundolo",
+   "fs_id": "",
+   "seed": "25.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/zPdeWyDr-pOTe4nSM.png",
+   "aliases": [
+    "Francisco Cerundolo",
+    "Франсиско Серундоло"
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP026",
+   "tour": "ATP",
+   "name_ru": "Якуб Меншик",
+   "name_en": "Jakub Mensik",
+   "fs_id": "",
+   "seed": "26.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/AiIWwJyB-ELzts6wg.png",
+   "aliases": [
+    "Jakub Mensik",
+    "Меншик Я.",
+    "Якуб Меншик"
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP027",
+   "tour": "ATP",
+   "name_ru": "Жоао Фонсека",
+   "name_en": "Joao Fonseca",
+   "fs_id": "",
+   "seed": "28.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/CrZIrsyS-8nnebiIC.png",
+   "aliases": []
+  },
+  {
+   "fantasy_player_id": "ATP028",
+   "tour": "ATP",
+   "name_ru": "Корантен Муте",
+   "name_en": "Corentin Moutet",
+   "fs_id": "",
+   "seed": "30.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/6qav0wFa-SGh44N7b.png",
+   "aliases": [
+    "Corentin Moutet",
+    "Корантен Муте",
+    "Муте К."
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP029",
+   "tour": "ATP",
+   "name_ru": "Таллон Грикспор",
+   "name_en": "Tallon Griekspoor",
+   "fs_id": "",
+   "seed": "29.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/Cxn0T5Ar-I1m5ACZP.png",
+   "aliases": [
+    "Tallon Griekspoor",
+    "Таллон Грикспор"
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP030",
+   "tour": "ATP",
+   "name_ru": "Брэндон Накашима",
+   "name_en": "Brandon Nakashima",
+   "fs_id": "",
+   "seed": "31.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/h8wF43GG-I3vxtblK.png",
+   "aliases": [
+    "Brandon Nakashima",
+    "Брэндон Накашима"
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP031",
+   "tour": "ATP",
+   "name_ru": "Уго Умбер",
+   "name_en": "Ugo Humbert",
+   "fs_id": "",
+   "seed": "32.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/MVi1SsWg-x6lv4PUq.png",
+   "aliases": [
+    "Ugo Humbert",
+    "Уго Умбер",
+    "Умбер У."
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP032",
+   "tour": "ATP",
+   "name_ru": "Рафаэль Ходар",
+   "name_en": "Rafael Jodar",
+   "fs_id": "",
+   "seed": "27.0",
+   "photo_url": "https://static.flashscore.com/res/image/data/A5stpqzB-bJuw1oYE.png",
+   "aliases": [
+    "Jodar R.",
+    "Rafael Jodar",
+    "Рафаэль Ходар"
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP033",
+   "tour": "ATP",
+   "name_ru": "Алехандро Табило",
+   "name_en": "Alejandro Tabilo",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/EwGsYhBr-K2sFfbIp.png",
+   "aliases": [
+    "Alejandro Tabilo",
+    "Алехандро Табило",
+    "Табило А."
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP034",
+   "tour": "ATP",
+   "name_ru": "Денис Шаповалов",
+   "name_en": "Denis Shapovalov",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/hzfpUTWg-8tZx1kbA.png",
+   "aliases": [
+    "Denis Shapovalov",
+    "Денис Шаповалов",
+    "Шаповалов Д."
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP035",
+   "tour": "ATP",
+   "name_ru": "Хауме Мунар",
+   "name_en": "Jaume Munar",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/ENkQDBEG-pQ0ElVBe.png",
+   "aliases": []
+  },
+  {
+   "fantasy_player_id": "ATP036",
+   "tour": "ATP",
+   "name_ru": "Зизу Бергс",
+   "name_en": "Zizou Bergs",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/OWXLbmil-reLgjysB.png",
+   "aliases": [
+    "Zizou Bergs",
+    "Бергс З.",
+    "Зизу Бергс"
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP037",
+   "tour": "ATP",
+   "name_ru": "Томаш Махач",
+   "name_en": "Tomas Machac",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/bsWIvMjl-jBHR7D3h.png",
+   "aliases": [
+    "Tomas Machac",
+    "Махач Т.",
+    "Томаш Махач"
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP038",
+   "tour": "ATP",
+   "name_ru": "Алекс Микельсен",
+   "name_en": "Alex Michelsen",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/Yi8Wfkg5-M7yChA9J.png",
+   "aliases": [
+    "Alex Michelsen",
+    "Алекс Микельсен",
+    "Микельсен А."
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP039",
+   "tour": "ATP",
+   "name_ru": "Себастьян Корда",
+   "name_en": "Sebastian Korda",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/06033vil-zZcsu8lK.png",
+   "aliases": []
+  },
+  {
+   "fantasy_player_id": "ATP040",
+   "tour": "ATP",
+   "name_ru": "Мариано Навоне",
+   "name_en": "Mariano Navone",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/dziYmEFG-jicxINUP.png",
+   "aliases": [
+    "Mariano Navone",
+    "Мариано Навоне",
+    "Навоне М."
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP041",
+   "tour": "ATP",
+   "name_ru": "Адриан Маннарино",
+   "name_en": "Adrian Mannarino",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/6X67JIYA-4AguOuCD.png",
+   "aliases": [
+    "Adrian Mannarino",
+    "Адриан Маннарино",
+    "Маннарино А."
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP042",
+   "tour": "ATP",
+   "name_ru": "Марин Чилич",
+   "name_en": "Marin Cilic",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/GpIZ2Yhl-65GLngPf.png",
+   "aliases": [
+    "Marin Cilic",
+    "Марин Чилич",
+    "Чилич М."
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP043",
+   "tour": "ATP",
+   "name_ru": "Хуберт Хуркач",
+   "name_en": "Hubert Hurkacz",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/xGuYHTGG-xEfD5uDB.png",
+   "aliases": [
+    "Hubert Hurkacz",
+    "Хуберт Хуркач"
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP044",
+   "tour": "ATP",
+   "name_ru": "Джованни Мпетши Перрикар",
+   "name_en": "Giovanni Mpetshi Perricard",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/zBVlWog5-IZSfmrba.png",
+   "aliases": []
+  },
+  {
+   "fantasy_player_id": "ATP045",
+   "tour": "ATP",
+   "name_ru": "Себастьян Баэс",
+   "name_en": "Sebastian Baez",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/futi5Qf5-hI8rc03T.png",
+   "aliases": [
+    "Sebastian Baez",
+    "Баес С.",
+    "Себастьян Баэс"
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP046",
+   "tour": "ATP",
+   "name_ru": "Хамад Меджедович",
+   "name_en": "Hamad Medjedovic",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/KrJ7t6Yg-KvyN7w38.png",
+   "aliases": [
+    "Hamad Medjedovic",
+    "Меджедович Х.",
+    "Хамад Меджедович"
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP047",
+   "tour": "ATP",
+   "name_ru": "Райли Опелка",
+   "name_en": "Reilly Opelka",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/IyzpJXwS-pQ0ElVBe.png",
+   "aliases": [
+    "Reilly Opelka",
+    "Опелка Р.",
+    "Райли Опелка"
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP048",
+   "tour": "ATP",
+   "name_ru": "Стефанос Циципас",
+   "name_en": "Stefanos Tsitsipas",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/zLzqR2Xg-hbIQr8HQ.png",
+   "aliases": [
+    "Stefanos Tsitsipas",
+    "Стефанос Циципас",
+    "Циципас С."
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP049",
+   "tour": "ATP",
+   "name_ru": "Маттео Берреттини",
+   "name_en": "Matteo Berrettini",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/KvZNhNZA-8rO8nrm4.png",
+   "aliases": [
+    "Matteo Berrettini",
+    "Берреттини М.",
+    "Маттео Берреттини"
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP050",
+   "tour": "ATP",
+   "name_ru": "Стэн Вавринка",
+   "name_en": "Stan Wawrinka",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/jskPunCr-0rjbs2wm.png",
+   "aliases": [
+    "Stan Wawrinka",
+    "Вавринка С.",
+    "Стэн Вавринка"
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP051",
+   "tour": "ATP",
+   "name_ru": "Григор Димитров",
+   "name_en": "Grigor Dimitrov",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/GIiIW7fM-WQ0f4DVa.png",
+   "aliases": []
+  },
+  {
+   "fantasy_player_id": "ATP052",
+   "tour": "ATP",
+   "name_ru": "Гаэль Монфис",
+   "name_en": "Gael Monfils",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/S8ndY0FG-QqWcpfRh.png",
+   "aliases": [
+    "Gael Monfils",
+    "Гаэль Монфис",
+    "Монфис Г."
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP_BLOCKX",
+   "tour": "ATP",
+   "name_ru": "Александр Блокс",
+   "name_en": "Alexander Blockx",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/xbU0gWCr-WESsaYX1.png",
+   "aliases": [
+    "Alexander Blockx",
+    "Blockx A.",
+    "Александр Блокс"
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP_BUSE",
+   "tour": "ATP",
+   "name_ru": "Игнасио Бусе",
+   "name_en": "Ignacio Buse",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/zLCvPaFa-W8J3KwbL.png",
+   "aliases": [
+    "Ignacio Buse",
+    "Бусе И.",
+    "Игнасио Бусе"
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP_LANDALUCE",
+   "tour": "ATP",
+   "name_ru": "Мартин Ландалусе",
+   "name_en": "Martin Landaluce",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/h643yEf5-lUgfnnam.png",
+   "aliases": [
+    "Martin Landaluce",
+    "Ландалусе М.",
+    "Мартин Ландалусе"
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP_BONZI",
+   "tour": "ATP",
+   "name_ru": "Бенжамен Бонзи",
+   "name_en": "Benjamin Bonzi",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/MX6U7L9r-K21id9SP.png",
+   "aliases": [
+    "Benjamin Bonzi",
+    "Бенжамен Бонзи",
+    "Бонзи Б."
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP_VAN_DE_ZANDSCHULP",
+   "tour": "ATP",
+   "name_ru": "Ботик ван де Зандсхюлп",
+   "name_en": "Botic Van De Zandschulp",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/IBtP1lf5-dbDiF5vB.png",
+   "aliases": [
+    "Botic Van De Zandschulp",
+    "Ботик ван де Зандсхюлп",
+    "Ван де Зандсхюлп Б."
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP_PRIZMIC",
+   "tour": "ATP",
+   "name_ru": "Дино Прижмич",
+   "name_en": "Dino Prizmic",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/4tr8NFEG-pvjR7s2N.png",
+   "aliases": [
+    "Dino Prizmic",
+    "Дино Прижмич",
+    "Призмич Д."
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP_VALLEJO",
+   "tour": "ATP",
+   "name_ru": "Адольфо Даниэль Вальехо",
+   "name_en": "Adolfo Daniel Vallejo",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/0rrmmGf5-pzUY1ByP.png",
+   "aliases": []
+  },
+  {
+   "fantasy_player_id": "WTA_BOULTER",
+   "tour": "WTA",
+   "name_ru": "Кэти Бултер",
+   "name_en": "Katie Boulter",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/GSXXCJzS-bBJdeELC.png",
+   "aliases": [
+    "Katie Boulter",
+    "Бултер К.",
+    "Кэти Бултер"
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA_PRIDANKINA",
+   "tour": "WTA",
+   "name_ru": "Елена Приданкина",
+   "name_en": "Elena Pridankina",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/M7w8SUGG-QuluFZ8a.png",
+   "aliases": [
+    "Elena Pridankina",
+    "Pridankina E.",
+    "Елена Приданкина"
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA_PUTINTSEVA",
+   "tour": "WTA",
+   "name_ru": "Юлия Путинцева",
+   "name_en": "Yulia Putintseva",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/zHx6Inh5-UNaWeh2O.png",
+   "aliases": [
+    "Yulia Putintseva",
+    "Путинцева Ю.",
+    "Юлия Путинцева"
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP_SAFIULLIN",
+   "tour": "ATP",
+   "name_ru": "Роман Сафиуллин",
+   "name_en": "Roman Safiullin",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/KIHB7Dil-xbQlHtXi.png",
+   "aliases": [
+    "Roman Safiullin",
+    "Роман Сафиуллин",
+    "Сафиуллин Р."
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP_COLLIGNON",
+   "tour": "ATP",
+   "name_ru": "Рафаэль Коллиньон",
+   "name_en": "Raphael Collignon",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/UyXKjhhl-Ecj4yk6A.png",
+   "aliases": [
+    "Raphael Collignon",
+    "Коллиньон Р.",
+    "Рафаэль Коллиньон"
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP_SHEVCHENKO",
+   "tour": "ATP",
+   "name_ru": "Александр Шевченко",
+   "name_en": "Alexander Shevchenko",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/zonCGwzB-IRUQLRO7.png",
+   "aliases": [
+    "Alexander Shevchenko",
+    "Александр Шевченко",
+    "Шевченко А."
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA_KORNEEVA",
+   "tour": "WTA",
+   "name_ru": "Алина Корнеева",
+   "name_en": "Alina Korneeva",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "https://static.flashscore.com/res/image/data/xWgmzrhl-I7Qh5PO8.png",
+   "aliases": [
+    "Alina Korneeva",
+    "Алина Корнеева",
+    "Корнеева А."
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA_KALININA",
+   "tour": "WTA",
+   "name_ru": "Ангелина Калинина",
+   "name_en": "Anhelina Kalinina",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "",
+   "aliases": [
+    "Anhelina Kalinina",
+    "Ангелина Калинина",
+    "Калинина А."
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA_MCNALLY",
+   "tour": "WTA",
+   "name_ru": "Кэти Макнэлли",
+   "name_en": "Caty McNally",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "",
+   "aliases": [
+    "Caty McNally",
+    "Кэти Макнэлли"
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA_BANDECCHI",
+   "tour": "WTA",
+   "name_ru": "Сьюзан Бандекки",
+   "name_en": "Susan Bandecchi",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "",
+   "aliases": [
+    "Susan Bandecchi",
+    "Сьюзан Бандекки"
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP_POPYRIN",
+   "tour": "ATP",
+   "name_ru": "Алексей Попырин",
+   "name_en": "Alexei Popyrin",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "",
+   "aliases": [
+    "Alexei Popyrin",
+    "Алексей Попырин",
+    "Попырин А."
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP_ARNALDI",
+   "tour": "ATP",
+   "name_ru": "Маттео Арнальди",
+   "name_en": "Matteo Arnaldi",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "",
+   "aliases": [
+    "Matteo Arnaldi",
+    "Арнальди М.",
+    "Маттео Арнальди"
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP_TIRANTE",
+   "tour": "ATP",
+   "name_ru": "Тьяго Агустин Тиранте",
+   "name_en": "Thiago Agustin Tirante",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "",
+   "aliases": [
+    "Thiago Agustin Tirante",
+    "Тиранте Т. А.",
+    "Тьяго Агустин Тиранте"
+   ]
+  },
+  {
+   "fantasy_player_id": "ATP_PELLEGRINO",
+   "tour": "ATP",
+   "name_ru": "Андреа Пеллегрино",
+   "name_en": "Andrea Pellegrino",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "",
+   "aliases": [
+    "Andrea Pellegrino",
+    "Андреа Пеллегрино",
+    "Пеллегрино А."
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA_TAGGER",
+   "tour": "WTA",
+   "name_ru": "Лилли Таггер",
+   "name_en": "Lilli Tagger",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "",
+   "aliases": [
+    "Lilli Tagger",
+    "Tagger L.",
+    "Лилли Таггер"
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA_XIYU_WANG",
+   "tour": "WTA",
+   "name_ru": "Ван Сиюй",
+   "name_en": "Xiyu Wang",
+   "fs_id": "6xsnps5h",
+   "seed": "",
+   "photo_url": "",
+   "aliases": [
+    "Wang Xiy.",
+    "Xiy. Wang",
+    "Xiyu Wang",
+    "Ван Сиюй",
+    "Сю Ван"
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA_SONMEZ",
+   "tour": "WTA",
+   "name_ru": "Зейнеп Сонмез",
+   "name_en": "Zeynep Sonmez",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "",
+   "aliases": [
+    "Zeynep Sonmez",
+    "Зейнеп Сонмез",
+    "Сонмез З."
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA_OSORIO",
+   "tour": "WTA",
+   "name_ru": "Камила Осорио",
+   "name_en": "Camila Osorio",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "",
+   "aliases": []
+  },
+  {
+   "fantasy_player_id": "WTA_SNIGUR",
+   "tour": "WTA",
+   "name_ru": "Дарья Снигур",
+   "name_en": "Daria Snigur",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "",
+   "aliases": [
+    "Daria Snigur",
+    "Дарья Снигур",
+    "Снигур Д."
+   ]
+  },
+  {
+   "fantasy_player_id": "WTA_XINYU_WANG",
+   "tour": "WTA",
+   "name_ru": "Ван Синьюй",
+   "name_en": "Xinyu Wang",
+   "fs_id": "",
+   "seed": "",
+   "photo_url": "",
+   "aliases": []
+  }
+ ]
+}

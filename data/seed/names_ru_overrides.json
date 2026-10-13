@@ -1,0 +1,4 @@
+{
+  "about": "Ручные правки русских имён и флагов. Важнее всех источников. fs_id — номер игрока на Flashscore (из data/players/players.csv). Пример строки: {\"fs_id\": \"6HdC3z4H\", \"name_ru\": \"Янник Синнер\"}. Можно также указать is_russian (true/false) и photo_url.",
+  "overrides": []
+}

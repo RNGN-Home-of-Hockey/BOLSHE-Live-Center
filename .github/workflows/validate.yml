@@ -1,0 +1,26 @@
+name: Validate
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Tests
+        run: npm test
+      - name: Player database is valid JSON and has both tours
+        run: |
+          node -e "
+            const d = JSON.parse(require('fs').readFileSync('data/players/players.json', 'utf8'));
+            const atp = d.players.filter((p) => p.tour === 'ATP').length;
+            const wta = d.players.filter((p) => p.tour === 'WTA').length;
+            console.log('ATP', atp, 'WTA', wta);
+            if (atp < 1000 || wta < 1000) process.exit(1);
+            if (d.players.some((p) => !/[А-Яа-яЁё]/.test(p.name_ru))) { console.error('non-Cyrillic name_ru'); process.exit(1); }
+          "

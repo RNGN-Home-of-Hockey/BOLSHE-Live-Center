@@ -1,0 +1,14 @@
+node_modules/
+.env
+.env.*
+!.env.example
+.wrangler/
+# raw answers of the sources and the local database are rebuilt on demand
+data/raw/
+data/local/
+*.sqlite
+*.sqlite-*
+# private exports (fantasy users, prize lists) must never land in this public repository
+*.xlsx
+private/
+__pycache__/
