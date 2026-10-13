@@ -1,6 +1,9 @@
 # BOLSHE Live Center Worker (Cloudflare account of HOH, workers.dev subdomain znamteam-903).
 # Secrets (never in this file): TELEGRAM_BOT_TOKEN, ADMIN_IDS, SCHEDULE_SHEET_ID.
 name = "bolshe-live-center"
+# Pinned: this PC sees two Cloudflare accounts; the Worker and its D1 live on the Znamteam one
+# until the planned move to i.znamensky (f7f0376b…, *.rngn.workers.dev).
+account_id = "9032ec1bd3cb868d89a38453e4bd1a69"
 main = "worker/src/index.js"
 compatibility_date = "2026-09-01"
 workers_dev = true
