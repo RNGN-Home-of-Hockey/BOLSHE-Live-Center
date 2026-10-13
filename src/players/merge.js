@@ -78,7 +78,7 @@ function withYo(name, candidates) {
 
 export function mergePlayers({
   fsRu = {}, fsEn = {}, wta = [], wikidata = [], elo = {}, espn = {}, fantasy = [], overrides = [],
-  sportsru = [], botOverrides = [], extraAliases = [],
+  sportsru = [], botOverrides = [], extraAliases = [], profiles = [],
 } = {}) {
   const players = new Map();
   const rankingDates = {};
@@ -255,6 +255,14 @@ export function mergePlayers({
     p.sources.add('sportsru');
   }
 
+  // Flashscore player pages (scripts/fetch-player-profiles.mjs): photo and birth date.
+  for (const pr of profiles) {
+    const p = players.get(pr.fs_id);
+    if (!p) continue;
+    p.fs_photo = pr.photo_url ?? null;
+    p.birth_date = p.birth_date ?? pr.birth_date ?? null;
+  }
+
   const overrideByKey = new Map(overrides.map((o) => [o.fs_id ?? o.player_id, o]));
   const botByPlayer = new Map(botOverrides.map((o) => [o.player_id, o]));
   const extraByKey = new Map();
@@ -333,7 +341,7 @@ export function mergePlayers({
       neutral_flag: neutral,
       is_russian: Boolean(isRussian),
       birth_date: p.birth_date ?? null,
-      photo_url: override?.photo_url ?? p.fantasy_photo ?? p.espn_headshot ?? null,
+      photo_url: override?.photo_url ?? p.fs_photo ?? p.fantasy_photo ?? p.espn_headshot ?? null,
       singles_rank: p.singles_rank,
       singles_prev_rank: p.singles_prev_rank,
       singles_points: p.singles_points,

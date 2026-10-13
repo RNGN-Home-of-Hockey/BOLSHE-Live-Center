@@ -88,7 +88,8 @@ const broadcasts = sheetId
   ? (await optional('bolshe_schedule', () => fetchBroadcasts(sheetId, privateConfig.schedule_gid || '548911490'))) ?? []
   : [];
 
-const sources = { fsRu, fsEn, wta, wikidata, elo, espn, fantasy, overrides, sportsru, botOverrides };
+const profiles = readJson(join(ROOT, 'data', 'seed', 'flashscore_profiles.json'), { players: [] }).players;
+const sources = { fsRu, fsEn, wta, wikidata, elo, espn, fantasy, overrides, sportsru, botOverrides, profiles };
 // Two passes: the first gives every player all spellings, so «Больше» schedule names can be
 // matched; the second adds those schedule spellings as aliases.
 const firstPass = mergePlayers(sources);

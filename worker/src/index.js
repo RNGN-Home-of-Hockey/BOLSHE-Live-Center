@@ -8,6 +8,8 @@
 // Cron (every 10 min): schedule sheet -> broadcasts; registers the bot webhook once the token exists.
 
 import { LEGEND_STEP, LEVELS, XP_RULES, levelFor } from '../../src/game/levels.js';
+import { matchCard } from './match-details.js';
+import { matchesForDate, syncMatchDays } from './matches-sync.js';
 import { getPlayer, searchPlayers } from './players.js';
 import { broadcastsForDate, syncSchedule } from './schedule-sync.js';
 import { ensureWebhook, handleTelegramUpdate, webhookSecret } from './telegram.js';
@@ -57,6 +59,15 @@ async function runJob(env, job, fn) {
 }
 
 const SCHEDULE_EVERY_MS = 10 * 60 * 1000;
+const MATCHES_TODAY_EVERY_MS = 60 * 1000;
+const MATCHES_WINDOW_EVERY_MS = 5 * 60 * 1000;
+const WINDOW_OFFSETS = [-1, 1, -2, 2, -3, 3];
+
+async function due(env, key, everyMs, force) {
+  const last = await getState(env, key);
+  if (!force && last && Date.now() - Date.parse(last.updated_at) < everyMs) return null;
+  return last ?? { value: null };
+}
 
 async function getState(env, key) {
   return env.DB.prepare('SELECT value, updated_at FROM app_state WHERE key = ?').bind(key).first();
@@ -79,6 +90,17 @@ async function maintain(env, { force = false } = {}) {
       await setState(env, 'schedule_sync_started', force ? 'cron' : 'request');
       tasks.push(runJob(env, 'schedule', () => syncSchedule(env)));
     }
+  }
+  // Matches: today every minute (live scores), the days around it one by one every 5 minutes.
+  if (await due(env, 'matches_today', MATCHES_TODAY_EVERY_MS, force)) {
+    await setState(env, 'matches_today', 'run');
+    tasks.push(runJob(env, 'matches_today', () => syncMatchDays(env, [0])));
+  }
+  const windowState = await due(env, 'matches_window', MATCHES_WINDOW_EVERY_MS, force);
+  if (windowState) {
+    const index = (Number(windowState.value) || 0) % WINDOW_OFFSETS.length;
+    await setState(env, 'matches_window', String(index + 1));
+    tasks.push(runJob(env, 'matches_window', () => syncMatchDays(env, [WINDOW_OFFSETS[index]])));
   }
   if (env.TELEGRAM_BOT_TOKEN) {
     const want = (await webhookSecret(env.TELEGRAM_BOT_TOKEN)).slice(0, 16);
@@ -139,6 +161,34 @@ export default {
         const date = url.searchParams.get('date') ?? todayMsk();
         if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return json({ ok: false, error: 'date must be YYYY-MM-DD' }, 400);
         return json({ date, broadcasts: await broadcastsForDate(env.DB, date) }, 200, 60);
+      }
+      if (path === '/api/matches') {
+        const date = url.searchParams.get('date') ?? todayMsk();
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return json({ ok: false, error: 'date must be YYYY-MM-DD' }, 400);
+        const matches = await matchesForDate(env.DB, date, {
+          level: url.searchParams.get('level') || null,
+          tour: (url.searchParams.get('tour') ?? '').toUpperCase() || null,
+          russian: url.searchParams.get('russian') === '1',
+          bolshe: url.searchParams.get('bolshe') === '1',
+        });
+        return json({ date, matches }, 200, 20);
+      }
+      if (path.startsWith('/api/matches/')) {
+        const card = await matchCard(env, decodeURIComponent(path.slice('/api/matches/'.length)));
+        return card ? json(card, 200, 30) : json({ ok: false, error: 'not found' }, 404);
+      }
+      if (path === '/api/home') {
+        const date = url.searchParams.get('date') ?? todayMsk();
+        const all = await matchesForDate(env.DB, date, {});
+        const main = all.filter((m) => !m.is_doubles && ['tour', 'challenger'].includes(m.tournament.level));
+        return json({
+          date,
+          bolshe: all.filter((m) => m.bolshe),
+          broadcasts: await broadcastsForDate(env.DB, date),
+          russians: main.filter((m) => m.p1.is_russian || m.p2.is_russian),
+          live: main.filter((m) => m.status === 'live').slice(0, 20),
+          tour: all.filter((m) => m.tournament.level === 'tour' && !m.is_doubles),
+        }, 200, 20);
       }
       if (path === '/api/levels') {
         return json({ levels: LEVELS, legend_step: LEGEND_STEP, xp_rules: XP_RULES, you: levelFor(url.searchParams.get('xp') ?? 0) }, 200, 300);
