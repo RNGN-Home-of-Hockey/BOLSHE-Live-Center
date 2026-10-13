@@ -29,16 +29,18 @@ export function slugFromRussian(name) {
 }
 
 // Ordered, unique slug candidates for one player record from data/players/players.json.
-export function slugCandidates(player, limit = 4) {
+export function slugCandidates(player, limit = 5) {
   const out = [];
   const add = (slug) => { if (slug && slug.includes('-') && !out.includes(slug)) out.push(slug); };
   add(slugify(player.name_latin));
   for (const a of player.aliases ?? []) {
     if (/[А-Яа-яЁё]/.test(a.alias)) continue;
     if (a.source === 'flashscore') {
-      // Flashscore Latin is "Last First": try "First Last".
+      // Flashscore Latin is "Last First": try "First Last". With three words the split is unknown:
+      // "Cerundolo Juan Manuel" -> "Juan Manuel Cerundolo", "Carreno Busta Pablo" -> "Pablo Carreno Busta".
       const parts = a.alias.trim().split(/\s+/);
       if (parts.length >= 2) add(slugify([parts[parts.length - 1], ...parts.slice(0, -1)].join(' ')));
+      if (parts.length >= 3) add(slugify([...parts.slice(1), parts[0]].join(' ')));
     } else {
       add(slugify(a.alias));
     }

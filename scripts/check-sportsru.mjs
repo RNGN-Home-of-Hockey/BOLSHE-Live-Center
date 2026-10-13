@@ -37,8 +37,16 @@ if (!recheck && existsSync(progressFile)) {
   }
 }
 
+// --retry-missing: players not found before get only the slugs they have not tried yet.
+const retryMissing = args.includes('--retry-missing');
+const untried = (p) => slugCandidates(p).filter((s) => !(checked.get(p.fs_id)?.tried ?? []).includes(s));
 const order = (p) => (p.singles_rank != null ? p.singles_rank : 10000 + (p.doubles_rank ?? 9999));
-const queue = players.filter((p) => !checked.has(p.fs_id)).sort((a, b) => order(a) - order(b)).slice(0, limit);
+const queue = players
+  .filter((p) => (retryMissing
+    ? checked.get(p.fs_id)?.status === 'not_found' && untried(p).length > 0
+    : !checked.has(p.fs_id)))
+  .sort((a, b) => order(a) - order(b))
+  .slice(0, limit);
 console.log(`players ${players.length}, already checked ${checked.size}, to check now ${queue.length}`);
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -62,8 +70,8 @@ function writeResult() {
 }
 
 async function checkPlayer(player) {
-  const tried = [];
-  for (const slug of slugCandidates(player)) {
+  const tried = [...(checked.get(player.fs_id)?.tried ?? [])];
+  for (const slug of slugCandidates(player).filter((s) => !tried.includes(s))) {
     tried.push(slug);
     const res = await fetchPersonPage(slug);
     await sleep(PAUSE_MS);
