@@ -115,6 +115,14 @@ async function askNewName(env, chatId, userId, playerId, payload = {}) {
   });
 }
 
+const ADMIN_COMMANDS = [
+  { command: 'fix', description: 'Проверять имена по одному' },
+  { command: 'name', description: 'Исправить имя игрока' },
+  { command: 'player', description: 'Найти игрока' },
+  { command: 'stats', description: 'Статистика базы' },
+  { command: 'start', description: 'Помощь' },
+];
+
 const HELP_ADMIN = [
   '<b>Команды админа</b>',
   '/player Медведев — карточка игрока',
@@ -136,6 +144,8 @@ async function onMessage(env, msg) {
   const cmd = command.startsWith('/') ? command.slice(1).split('@')[0].toLowerCase() : null;
 
   if (cmd === 'start' || cmd === 'help') {
+    // Chat-scoped admin menu works only after the admin has opened the bot once.
+    if (admin) await tg(env, 'setMyCommands', { scope: { type: 'chat', chat_id: chatId }, commands: ADMIN_COMMANDS });
     const lines = [
       'Привет! Это «Больше. Теннис» 🎾',
       'Скоро здесь будет приложение: матчи «Больше», прогнозы, уровни, фэнтези.',
@@ -272,16 +282,7 @@ export async function ensureWebhook(env) {
     { command: 'player', description: 'Найти игрока' },
   ] });
   for (const id of adminIds(env)) {
-    await tg(env, 'setMyCommands', {
-      scope: { type: 'chat', chat_id: id },
-      commands: [
-        { command: 'fix', description: 'Проверять имена по одному' },
-        { command: 'name', description: 'Исправить имя игрока' },
-        { command: 'player', description: 'Найти игрока' },
-        { command: 'stats', description: 'Статистика базы' },
-        { command: 'start', description: 'Помощь' },
-      ],
-    });
+    await tg(env, 'setMyCommands', { scope: { type: 'chat', chat_id: id }, commands: ADMIN_COMMANDS });
   }
-  return { ok: Boolean(set.ok), set: true };
+  return { ok: Boolean(set.ok), set: true, error: set.ok ? null : set.description ?? null };
 }

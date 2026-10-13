@@ -83,7 +83,10 @@ async function maintain(env, { force = false } = {}) {
   if (env.TELEGRAM_BOT_TOKEN) {
     const want = (await webhookSecret(env.TELEGRAM_BOT_TOKEN)).slice(0, 16);
     const done = await getState(env, 'webhook_for');
-    if (force || done?.value !== want) {
+    const tried = await getState(env, 'webhook_attempt');
+    const recentlyTried = tried && Date.now() - Date.parse(tried.updated_at) < 60 * 1000;
+    if (force || (done?.value !== want && !recentlyTried)) {
+      await setState(env, 'webhook_attempt', want);
       tasks.push(runJob(env, 'webhook', async () => {
         const result = await ensureWebhook(env);
         if (result.ok) await setState(env, 'webhook_for', want);
