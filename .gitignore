@@ -12,3 +12,4 @@ data/local/
 *.xlsx
 private/
 __pycache__/
+.dev.vars

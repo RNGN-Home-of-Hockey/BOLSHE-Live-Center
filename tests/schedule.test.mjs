@@ -45,6 +45,8 @@ test('broadcasts: tennis only, Moscow time to UTC, cancellations, doubles, no ke
 
 test('note split and time conversion', () => {
   assert.deepEqual(splitNote('Ролан Гаррос'), { tournament: 'Ролан Гаррос', round: null });
+  assert.deepEqual(splitNote('1 раз завис источник.'), { tournament: null, round: null }, 'crew remark is not a tournament');
+  assert.deepEqual(splitNote('ATP Челленджер Брага'), { tournament: 'ATP Челленджер Брага', round: null });
   assert.equal(mskToUtcIso('2026-11-08', '01:30'), '2026-11-07T22:30:00.000Z');
 });
 

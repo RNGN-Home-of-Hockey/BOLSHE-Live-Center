@@ -56,9 +56,46 @@ async function runJob(env, job, fn) {
     .bind(new Date().toISOString(), ok, JSON.stringify(details).slice(0, 2000), meta.last_row_id).run();
 }
 
+const SCHEDULE_EVERY_MS = 10 * 60 * 1000;
+
+async function getState(env, key) {
+  return env.DB.prepare('SELECT value, updated_at FROM app_state WHERE key = ?').bind(key).first();
+}
+
+async function setState(env, key, value) {
+  await env.DB.prepare(`INSERT INTO app_state (key, value, updated_at) VALUES (?, ?, ?)
+    ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`)
+    .bind(key, value, new Date().toISOString()).run();
+}
+
+// Cloudflare did not fire this Worker's cron after the first deployment (2026-10-13), so every
+// request also keeps the base fresh: the schedule is re-read when older than 10 minutes, and
+// the bot webhook is registered as soon as the token secret appears. The cron does the same.
+async function maintain(env, { force = false } = {}) {
+  const tasks = [];
+  if (env.SCHEDULE_SHEET_ID) {
+    const last = await getState(env, 'schedule_sync_started');
+    if (force || !last || Date.now() - Date.parse(last.updated_at) > SCHEDULE_EVERY_MS) {
+      await setState(env, 'schedule_sync_started', force ? 'cron' : 'request');
+      tasks.push(runJob(env, 'schedule', () => syncSchedule(env)));
+    }
+  }
+  if (env.TELEGRAM_BOT_TOKEN) {
+    const want = (await webhookSecret(env.TELEGRAM_BOT_TOKEN)).slice(0, 16);
+    const done = await getState(env, 'webhook_for');
+    if (force || done?.value !== want) {
+      tasks.push(runJob(env, 'webhook', async () => {
+        const result = await ensureWebhook(env);
+        if (result.ok) await setState(env, 'webhook_for', want);
+        return result;
+      }));
+    }
+  }
+  await Promise.all(tasks);
+}
+
 async function runCron(env) {
-  if (env.SCHEDULE_SHEET_ID) await runJob(env, 'schedule', () => syncSchedule(env));
-  if (env.TELEGRAM_BOT_TOKEN) await runJob(env, 'webhook', () => ensureWebhook(env));
+  await maintain(env, { force: true });
   await env.DB.prepare("DELETE FROM sync_runs WHERE started_at < datetime('now', '-14 days')").run();
 }
 
@@ -66,6 +103,7 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const path = url.pathname.replace(/\/+$/, '') || '/';
+    ctx.waitUntil(maintain(env).catch((error) => console.error('maintain failed', error?.stack ?? error)));
     try {
       if (path === '/telegram/webhook') {
         if (request.method !== 'POST') return json({ ok: false }, 405);

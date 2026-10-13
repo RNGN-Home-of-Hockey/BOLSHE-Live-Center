@@ -67,10 +67,14 @@ function cleanLink(value) {
   return /^https:\/\/(vk\.com\/video|vkvideo\.ru\/|vksport\.vkvideo\.ru\/)/.test(v) ? v : null;
 }
 
+// The note column mixes tournaments ("WTA 1000 Пекин |1/16", "Ролан Гаррос", "Артур Эш") with
+// internal remarks of the crew ("1 раз завис источник"); only tournament-like text is public.
+const TOURNAMENT = /WTA|ATP|ITF|челлендж|кубок|ролан|гаррос|уимблдон|us open|ю-эс|австрал|открыт|шлем|финал|мастерс|masters|квалификац|артур эш|луи армстронг|корт|united cup|билли|дэвис|лейвер|laver|хопман|олимп|турнир/i;
+
 // "WTA 1000 Пекин |1/16" -> tournament "WTA 1000 Пекин", round "1/16".
 export function splitNote(note) {
   const text = String(note ?? '').trim();
-  if (!text) return { tournament: null, round: null };
+  if (!text || !TOURNAMENT.test(text)) return { tournament: null, round: null };
   const [left, ...rest] = text.split('|').map((s) => s.trim());
   return { tournament: left || null, round: rest.join(' | ') || null };
 }
