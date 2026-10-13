@@ -16,6 +16,11 @@ Telegram-приложение (бот + Mini App) для теннисного п
 | Русские имена (проверенные редакцией → Wikidata → Flashscore → транскрипция) | `src/players/merge.js`, `src/lib/translit.js` | на проверку: `data/players/review_names.csv` |
 | Схема базы данных (для Cloudflare D1) | `migrations/` | игроки, варианты имён, история рейтингов и Elo, фэнтези |
 | Тесты | `tests/` | `npm test` |
+| **Единая база на сервере** | Cloudflare D1 `bolshe-live-center` + Worker https://bolshe-live-center.znamteam-903.workers.dev | работает: `/health`, `/api/players?q=`, `/api/broadcasts?date=`, `/api/levels?xp=` |
+| Бот (правка имён навсегда, бусты) | `worker/src/telegram.js` | ждёт токен бота |
+| Расписание эфиров «Больше» | `src/sources/schedule.js` → таблица `broadcasts` | каждые 10 минут, только теннис, без ключей трансляций |
+| Проверка имён по sports.ru | `scripts/check-sportsru.mjs` → `data/seed/sportsru_names.json` | все игроки, по рейтингу сверху |
+| Уровни (теннисные) | `src/game/levels.js` | от «Подающего мячи» до «Легенды» |
 
 Что делаем дальше — [docs/ROADMAP.md](docs/ROADMAP.md). Что за продукт — [docs/PRODUCT.md](docs/PRODUCT.md).
 Обсуждение идей и отзывы тестировщиков — ветка [`discussion`](../../tree/discussion).
@@ -26,9 +31,17 @@ Telegram-приложение (бот + Mini App) для теннисного п
 
 ```bash
 npm run players:refresh   # скачать всё заново и пересобрать data/players/
-npm run db                # собрать локальную базу data/local/core.sqlite (+ SQL для D1)
+npm run sportsru          # проверить имена по sports.ru (продолжает с места остановки)
+npm run sync              # забрать правки из бота -> пересобрать -> залить в Cloudflare D1
+npm run deploy            # опубликовать Worker
 npm test
 ```
+
+Правки имён, сделанные в боте (`/name`, `/fix`), хранятся в D1 (`player_name_overrides`) и
+побеждают все источники при каждой пересборке — «навсегда».
+
+Секреты Worker (не в репозитории): `TELEGRAM_BOT_TOKEN`, `ADMIN_IDS`, `SCHEDULE_SHEET_ID`.
+Локально адрес таблицы расписания — в `private/config.json` (в `.gitignore`).
 
 Отчёт о сборке — `data/players/REPORT.md` (сколько игроков, откуда имена, что не связалось).
 Ручные правки имён — `data/seed/names_ru_overrides.json` (важнее всех источников).

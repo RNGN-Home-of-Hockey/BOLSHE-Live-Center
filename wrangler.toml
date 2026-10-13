@@ -1,0 +1,22 @@
+# BOLSHE Live Center Worker (Cloudflare account of HOH, workers.dev subdomain znamteam-903).
+# Secrets (never in this file): TELEGRAM_BOT_TOKEN, ADMIN_IDS, SCHEDULE_SHEET_ID.
+name = "bolshe-live-center"
+main = "worker/src/index.js"
+compatibility_date = "2026-09-01"
+workers_dev = true
+
+[vars]
+PUBLIC_URL = "https://bolshe-live-center.znamteam-903.workers.dev"
+SCHEDULE_GID = "548911490"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "bolshe-live-center"
+database_id = "40576f9c-1573-42c9-ad58-06750c4392e4"
+migrations_dir = "migrations"
+
+[triggers]
+crons = ["*/10 * * * *"]
+
+[observability]
+enabled = true

@@ -3,8 +3,9 @@
 // and Flashscore ids are what the match feeds use). Other sources are joined onto it:
 // official WTA API, Wikidata, Tennis Abstract Elo, ESPN, RG Fantasy seed, manual overrides.
 //
-// Russian name priority: manual override > RG Fantasy (editor-checked) > Wikidata (ruwiki)
-// > Flashscore Russian > transliteration (marked for review).
+// Russian name priority: bot decision (D1) > manual override file > sports.ru > RG Fantasy
+// (editor-checked) > Wikidata (ruwiki) > Flashscore Russian > transcription (marked for review).
+// The same name with ё from another source wins over the ё-less one ("Рублёв").
 
 import {
   cleanRuLabel, isCyrillic, latinFromSlug, letterKey, nameTokens, shortRu, surnameInitialRu,
@@ -68,8 +69,16 @@ function findByLetters(pool, names, accept = () => true) {
   return null;
 }
 
+// "Рублев" -> "Рублёв" when another source spells the same name with ё.
+function withYo(name, candidates) {
+  if (!name || /ё/i.test(name)) return name;
+  const plain = (s) => String(s ?? '').replace(/ё/g, 'е').replace(/Ё/g, 'Е');
+  return candidates.find((c) => c && /ё/i.test(c) && plain(c) === name) ?? name;
+}
+
 export function mergePlayers({
   fsRu = {}, fsEn = {}, wta = [], wikidata = [], elo = {}, espn = {}, fantasy = [], overrides = [],
+  sportsru = [], botOverrides = [], extraAliases = [],
 } = {}) {
   const players = new Map();
   const rankingDates = {};
@@ -236,7 +245,23 @@ export function mergePlayers({
     p.sources.add('fantasy');
   }
 
+  // sports.ru person pages (scripts/check-sportsru.mjs): the media spelling + birth date.
+  for (const s of sportsru) {
+    const p = players.get(s.fs_id);
+    if (!p) continue;
+    p.name_sportsru = s.name_ru;
+    p.sportsru_url = s.url;
+    p.birth_date = p.birth_date ?? s.birth_date ?? null;
+    p.sources.add('sportsru');
+  }
+
   const overrideByKey = new Map(overrides.map((o) => [o.fs_id ?? o.player_id, o]));
+  const botByPlayer = new Map(botOverrides.map((o) => [o.player_id, o]));
+  const extraByKey = new Map();
+  for (const a of extraAliases) {
+    const key = a.fs_id ?? a.player_id;
+    extraByKey.set(key, [...(extraByKey.get(key) ?? []), a]);
+  }
   const usedIds = new Set();
   const out = all.map((p) => {
     let playerId = `${p.tour.toLowerCase()}-${p.fs_slug || p.fs_id}`;
@@ -263,13 +288,21 @@ export function mergePlayers({
     if (override?.country_code) [code, nationalitySource] = [override.country_code, 'override'];
     const isRussian = override?.is_russian ?? code === 'RUS';
 
+    // Priority: bot decision > file override > sports.ru > fantasy > Wikidata > Flashscore > transcription.
+    const bot = botByPlayer.get(playerId);
+    const extras = [...(extraByKey.get(p.fs_id) ?? []), ...(extraByKey.get(playerId) ?? [])];
     let nameRu;
     let nameRuSource;
-    if (override?.name_ru) [nameRu, nameRuSource] = [override.name_ru, 'override'];
+    if (bot?.name_ru) [nameRu, nameRuSource] = [bot.name_ru, 'bot'];
+    else if (override?.name_ru) [nameRu, nameRuSource] = [override.name_ru, 'override'];
+    else if (p.name_sportsru) [nameRu, nameRuSource] = [p.name_sportsru, 'sportsru'];
     else if (p.name_fantasy_ru) [nameRu, nameRuSource] = [p.name_fantasy_ru, 'fantasy'];
     else if (p.name_wikidata_ru && isCyrillic(p.name_wikidata_ru)) [nameRu, nameRuSource] = [p.name_wikidata_ru, 'wikidata'];
     else if (p.name_fs_ru) [nameRu, nameRuSource] = [p.name_fs_ru, 'flashscore'];
     else [nameRu, nameRuSource] = [transcribe(`${display.first} ${display.last}`.trim(), code), 'translit'];
+    if (!['bot', 'override'].includes(nameRuSource)) {
+      nameRu = withYo(nameRu, [p.name_fantasy_ru, p.name_wikidata_ru, p.name_fs_ru, ...extras.map((a) => a.alias)]);
+    }
 
     const aliases = new Map();
     const addAlias = (alias, source) => {
@@ -284,6 +317,8 @@ export function mergePlayers({
     addAlias(p.name_wikidata_en, 'wikidata');
     if (p.first_name) addAlias(`${p.first_name} ${p.last_name}`, 'wta');
     for (const a of p.fantasy_aliases ?? []) addAlias(a, 'fantasy');
+    addAlias(p.name_sportsru, 'sportsru');
+    for (const a of extras) addAlias(a.alias, a.source ?? 'extra');
 
     return {
       player_id: playerId,
@@ -318,6 +353,7 @@ export function mergePlayers({
       ta_id: p.ta_id ?? null,
       wikidata_id: p.wikidata_id ?? null,
       fantasy_player_id: p.fantasy_player_id ?? null,
+      sportsru_url: p.sportsru_url ?? null,
       sources: [...p.sources].sort(),
       aliases: [...aliases.values()],
     };

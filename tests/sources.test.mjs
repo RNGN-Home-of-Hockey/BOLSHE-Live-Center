@@ -69,3 +69,18 @@ test('ESPN rankings', () => {
   const rows = parseEspnRankings({ rankings: [{ ranks: [{ current: 1, points: 11000, athlete: { id: 3623, displayName: 'Jannik Sinner', headshot: { href: 'h.png' }, flag: { alt: 'Italy' } } }] }] });
   assert.deepEqual(rows[0], { espn_id: '3623', name: 'Jannik Sinner', rank: 1, points: 11000, headshot: 'h.png', country: 'Italy' });
 });
+
+test('sports.ru person page and slug candidates', async () => {
+  const { parsePersonPage, pageMatchesPlayer, slugCandidates, slugFromRussian } = await import('../src/sources/sportsru.js');
+  const html = `<meta property="og:image" content="https://cdn.example/p.png"><div>…</div>
+    <h1 class="titleH1">Арина Соболенко</h1> <div class="descr">Aryna Sabalenka</div>
+    <table class="profile-table"><tr><th>Родилась</th><td> 5 мая 1998 <span>|</span> 28 лет </td></tr></table>`;
+  const page = parsePersonPage(html);
+  assert.deepEqual(page, { name_ru: 'Арина Соболенко', name_latin: 'Aryna Sabalenka', birth_date: '1998-05-05', photo: 'https://cdn.example/p.png' });
+  const player = { name_latin: 'Aryna Sabalenka', name_ru: 'Арина Соболенко', birth_date: '1998-05-05', aliases: [{ alias: 'Sabalenka Aryna', source: 'flashscore' }] };
+  assert.ok(pageMatchesPlayer(page, player));
+  assert.ok(!pageMatchesPlayer({ ...page, birth_date: '1990-01-01' }, player), 'different birth date = namesake');
+  assert.deepEqual(slugCandidates(player), ['aryna-sabalenka', 'arina-sobolenko']);
+  assert.equal(slugFromRussian('Андрей Рублёв'), 'andrey-rublev');
+  assert.equal(parsePersonPage('<h1 class="titleH1">Page not found</h1>'), null);
+});

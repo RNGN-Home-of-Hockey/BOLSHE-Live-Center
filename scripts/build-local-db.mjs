@@ -27,7 +27,7 @@ const columns = ['player_id', 'tour', 'name_ru', 'name_ru_short', 'name_ru_sourc
   'photo_url', 'singles_rank', 'singles_prev_rank', 'singles_points', 'singles_tournaments',
   'doubles_rank', 'doubles_points', 'elo', 'elo_rank', 'elo_hard', 'elo_clay', 'elo_grass',
   'fs_id', 'fs_slug', 'wta_id', 'atp_id', 'espn_id', 'ta_id', 'wikidata_id', 'fantasy_player_id',
-  'sources', 'updated_at'];
+  'sportsru_url', 'sources', 'updated_at'];
 
 const sqlValue = (v) => {
   if (v === null || v === undefined) return 'NULL';

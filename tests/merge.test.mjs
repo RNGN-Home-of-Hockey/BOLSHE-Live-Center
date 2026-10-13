@@ -97,3 +97,27 @@ test('joins: WTA API, Wikidata, Elo, fantasy (incl. Chinese name order)', () => 
   assert.equal(by('ALC00001').wikidata_id, 'Q3', 'Flashscore slug has the second surname');
   assert.ok(by('MED00001').aliases.some((a) => a.alias === 'Медведев Д.'));
 });
+
+test('bot decision > sports.ru > fantasy; ё restored from other sources', () => {
+  const base = fixture();
+  const { players } = mergePlayers({
+    ...base,
+    sportsru: [
+      { fs_id: 'MED00001', name_ru: 'Даниил Медведев', url: 'https://www.sports.ru/tennis/person/daniil-medvedev/', birth_date: '1996-02-11' },
+      { fs_id: 'AND00001', name_ru: 'Мирра Андреева', url: 'u', birth_date: null },
+      { fs_id: 'BUB00001', name_ru: 'Александр Бублик', url: 'u2' },
+    ],
+    botOverrides: [{ player_id: 'atp-bublik-alexander', name_ru: 'Саша Бублик' }],
+    extraAliases: [
+      { fs_id: 'AND00001', alias: 'Мирра Андреёва', source: 'bolshe' },
+      { fs_id: 'AND00001', alias: 'Мира Андреева', source: 'bolshe' },
+    ],
+  });
+  const by = (fs) => players.find((p) => p.fs_id === fs);
+  assert.equal(by('MED00001').name_ru_source, 'sportsru');
+  assert.equal(by('MED00001').sportsru_url, 'https://www.sports.ru/tennis/person/daniil-medvedev/');
+  assert.equal(by('BUB00001').name_ru, 'Саша Бублик');
+  assert.equal(by('BUB00001').name_ru_source, 'bot');
+  assert.equal(by('AND00001').name_ru, 'Мирра Андреёва', 'same letters with ё are preferred');
+  assert.ok(by('AND00001').aliases.some((a) => a.alias === 'Мира Андреева' && a.source === 'bolshe'), 'a new spelling becomes an alias');
+});

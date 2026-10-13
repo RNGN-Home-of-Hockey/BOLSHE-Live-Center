@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS players (
   tour TEXT NOT NULL CHECK (tour IN ('ATP', 'WTA')),
   name_ru TEXT NOT NULL,                      -- display name, always Cyrillic
   name_ru_short TEXT,                         -- "Я. Синнер"
-  name_ru_source TEXT NOT NULL,               -- override | fantasy | wikidata | flashscore | translit
+  name_ru_source TEXT NOT NULL,               -- bot | override | sportsru | fantasy | wikidata | flashscore | translit
   name_latin TEXT,
   country_code TEXT,                          -- IOC code (RUS for Russians under the neutral flag)
   country_ru TEXT,
@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS players (
   ta_id TEXT,
   wikidata_id TEXT,
   fantasy_player_id TEXT,
+  sportsru_url TEXT,
   sources TEXT,                               -- JSON array of sources that know the player
   updated_at TEXT NOT NULL
 );
