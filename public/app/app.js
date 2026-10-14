@@ -256,7 +256,10 @@ const plural = (n, one, few, many) => {
   return many;
 };
 const DONE = ['finished', 'retired', 'walkover'];
-const startOf = (m) => Date.parse(m.start_at ?? '') || 0;
+// A «Больше» broadcast keeps the time of the schedule (the time on the cover), not the moment
+// the match really began.
+const startOf = (m) => Date.parse(m.bolshe?.starts_at ?? '') || Date.parse(m.start_at ?? '') || 0;
+const startIso = (m) => new Date(startOf(m)).toISOString();
 let earlyOpen = false; // «Ранние эфиры» opened once stay open on refresh
 
 function ratingCard() {
@@ -283,7 +286,7 @@ function airCard(m) {
   const live = m.status === 'live';
   const meta = [m.bolshe?.title || `${t.tour ?? ''} ${t.name ?? ''}`.trim(), m.bolshe?.round].filter(Boolean).join(' · ');
   const badge = live ? `<span class="live on-dark"><span class="dot"></span>LIVE${m.live_set ? ` · ${m.live_set}-й сет` : ''}</span>`
-    : m.status === 'scheduled' ? `<span>${esc(localTime(m.start_at))}</span>` : `<span>${esc(STATUS[m.status] ?? '')}</span>`;
+    : m.status === 'scheduled' ? `<span>${esc(localTime(startIso(m)))}</span>` : `<span>${esc(STATUS[m.status] ?? '')}</span>`;
   const set = (m.sets ?? []).at(-1);
   const center = m.status === 'scheduled' ? 'vs' : showScore(m) ? `${m.sets_p1 ?? 0}:${m.sets_p2 ?? 0}` : '—';
   const sub = live && set && showScore(m) ? `${m.live_set ?? (m.sets ?? []).length}-й сет ${set.p1 ?? 0}:${set.p2 ?? 0}` : m.status === 'scheduled' ? 'начало' : '';
@@ -337,7 +340,7 @@ function broadcastRow({ m, b }) {
   const w = m && showScore(m) ? m.winner : null;
   const n1 = m ? lastName(m.p1) : String(p1.name ?? '');
   const n2 = m ? lastName(m.p2) : String(p2.name ?? '');
-  const when = m?.status === 'live' ? '<span class="live"><span class="dot"></span>LIVE</span>' : esc(localTime(m?.start_at ?? b.starts_at));
+  const when = m?.status === 'live' ? '<span class="live"><span class="dot"></span>LIVE</span>' : esc(localTime(m ? startIso(m) : b.starts_at));
   const score = m && m.status !== 'scheduled' && showScore(m) ? `${m.sets_p1 ?? 0}:${m.sets_p2 ?? 0}` : '';
   const small = [m ? m.tournament.name : b.tournament, (m ? m.bolshe?.commentator1 : b.commentator1)].filter(Boolean).join(' · ');
   const extra = m ? `${oddsRow(m)}${m.status === 'scheduled' ? `<span class="vote-chip">${me?.picks?.[m.match_id] ? 'Твой прогноз принят' : 'Кто выиграет? →'}</span>` : ''}` : '';
@@ -358,7 +361,8 @@ function broadcastsBlock(d) {
   if (!rows.length) return '<div class="seccap"><span>Прямые трансляции «Больше» сегодня</span></div><div class="empty">Сегодня эфиров нет</div>';
   const doneRows = rows.filter((r) => r.done);
   const hidden = !earlyOpen && doneRows.length > 4 ? doneRows.slice(0, doneRows.length - 4) : [];
-  const nowIndex = rows.findIndex((r) => !r.done);
+  // "Сейчас" sits before the first broadcast that is still ahead by the clock.
+  const nowIndex = rows.findIndex((r) => r.at > Date.now() && !r.m?.status?.match(/live|finished|retired|walkover/));
   const parts = [];
   if (hidden.length) {
     parts.push(`<button class="more-early" type="button" data-early>Ранние эфиры ${esc(localTime(new Date(hidden[0].at).toISOString()))}–${esc(localTime(new Date(hidden.at(-1).at).toISOString()))}: ещё ${hidden.length} →</button>`);

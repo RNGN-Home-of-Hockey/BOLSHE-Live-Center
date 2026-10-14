@@ -74,7 +74,7 @@ export const MATCH_SELECT = `SELECT m.*, t.name AS tournament_name, t.tournament
        FROM match_odds o WHERE o.match_id = m.match_id) AS odds,
     (SELECT json_object('p1', SUM(v.pick = 1), 'p2', SUM(v.pick = 2), 'total', COUNT(*)) FROM votes v WHERE v.match_id = m.match_id) AS votes,
     (SELECT json_object('commentator1', br.commentator1, 'commentator2', br.commentator2, 'vk_url', br.vk_url, 'time_msk', br.time_msk,
-        'round', br.round, 'title', br.tournament,
+        'round', br.round, 'title', br.tournament, 'starts_at', br.starts_at,
         'cover', (SELECT r2_key || '?v=' || version FROM media WHERE media_key = 'cover/' || br.vk_video AND status = 'ok'))
        FROM broadcasts br
       WHERE br.date_msk = m.date_msk AND br.status != 'removed'

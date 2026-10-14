@@ -39,12 +39,14 @@ export async function syncOdds(env, kind) {
 }
 
 // Odds of a match as the app shows them: in-play price while the match is live (if fresh),
-// otherwise the last pre-match price.
+// otherwise the last pre-match price. A finished match shows only the price it was played at
+// (the last in-play price of a decided match, like 1.04, would mislead), or nothing.
 export function shapeOdds(row, status) {
   if (!row) return null;
   const liveFresh = row.live_at && Date.now() - Date.parse(row.live_at) < 10 * 60e3;
+  const over = ['finished', 'retired', 'walkover', 'cancelled'].includes(status);
   if (status === 'live' && liveFresh && row.live1 && row.live2) return { p1: row.live1, p2: row.live2, kind: 'live', url: row.wl_url ?? null };
   if (row.pre1 && row.pre2) return { p1: row.pre1, p2: row.pre2, kind: 'pre', url: row.wl_url ?? null };
-  if (row.live1 && row.live2) return { p1: row.live1, p2: row.live2, kind: 'live', url: row.wl_url ?? null };
+  if (!over && row.live1 && row.live2) return { p1: row.live1, p2: row.live2, kind: 'live', url: row.wl_url ?? null };
   return null;
 }
