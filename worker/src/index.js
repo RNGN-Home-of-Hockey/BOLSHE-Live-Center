@@ -183,7 +183,8 @@ async function maintain(env, { force = false } = {}) {
     await setState(env, 'match_stats', 'run');
     tasks.push(runJob(env, 'match_stats', () => syncMatchStats(env)));
   }
-  if (await due(env, 'player_stats', PLAYER_STATS_EVERY_MS, force)) {
+  // Rewrites ~1 400 rows: hourly even when the cron forces the other jobs.
+  if (await due(env, 'player_stats', PLAYER_STATS_EVERY_MS, false)) {
     await setState(env, 'player_stats', 'run');
     tasks.push(runJob(env, 'player_stats', () => refreshPlayerStats(env)));
   }
