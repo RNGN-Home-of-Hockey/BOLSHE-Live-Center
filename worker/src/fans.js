@@ -4,6 +4,7 @@
 //   POST /api/votes   {match_id, pick: 1|2}
 //   POST /api/follows {player_id, on: true|false}
 
+import { fanAchievements } from '../../src/game/achievements.js';
 import { LEVELS, XP_RULES, levelFor } from '../../src/game/levels.js';
 import { mediaUrl } from '../../src/lib/media.js';
 import { verifyInitData } from '../../src/lib/telegram-auth.js';
@@ -71,6 +72,16 @@ async function xpTable(db) {
 
 const DONE = ['finished', 'retired', 'walkover'];
 
+// Points for brackets (worker/src/brackets.js); 0 until the fan has filled one.
+async function bracketPointsOf(db, userId) {
+  try {
+    const row = await db.prepare('SELECT COALESCE(SUM(points), 0) AS p FROM bracket_entries WHERE user_id = ?').bind(userId).first();
+    return row?.p ?? 0;
+  } catch {
+    return 0; // the brackets table arrives with migration 0008
+  }
+}
+
 function playerCard(p, matches, now) {
   const mine = (m) => (m.p1.fs_id === p.fs_id ? 1 : 2);
   const other = (m) => (mine(m) === 1 ? m.p2 : m.p1);
@@ -105,6 +116,22 @@ export async function fanProfile(env, user, date) {
   const { results: followed } = await db.prepare(`SELECT p.player_id, p.name_ru, p.fs_id, p.photo_url,
       (SELECT r2_key || '?v=' || version FROM media WHERE media_key = 'head/' || p.fs_id AND status = 'ok') AS head
     FROM follows f JOIN players p ON p.player_id = f.player_id WHERE f.user_id = ? ORDER BY f.created_at LIMIT 30`).bind(user.id).all();
+  // Everything the achievements count: the fan's votes with the match result, surface, Winline
+  // pre-match prices, the community split, our players and «Больше» broadcasts.
+  const { results: voteRows } = await db.prepare(`WITH tally AS (
+      SELECT match_id, SUM(pick = 1) AS n1, SUM(pick = 2) AS n2, COUNT(*) AS n FROM votes GROUP BY match_id)
+    SELECT v.pick, v.created_at AS voted_at, m.winner, m.start_at, t.surface, o.pre1, o.pre2, tl.n1, tl.n2, tl.n,
+      (COALESCE(a.is_russian, 0) = 1 OR COALESCE(b.is_russian, 0) = 1) AS ours,
+      EXISTS (SELECT 1 FROM broadcasts br WHERE br.date_msk = m.date_msk AND br.status != 'removed'
+        AND ((br.player1_id = a.player_id AND br.player2_id = b.player_id) OR (br.player1_id = b.player_id AND br.player2_id = a.player_id))) AS bolshe
+    FROM votes v
+    JOIN matches m ON m.match_id = v.match_id
+    JOIN tournaments t ON t.tournament_key = m.tournament_key
+    LEFT JOIN players a ON a.fs_id = m.p1_fs_id
+    LEFT JOIN players b ON b.fs_id = m.p2_fs_id
+    LEFT JOIN match_odds o ON o.match_id = v.match_id
+    LEFT JOIN tally tl ON tl.match_id = v.match_id
+    WHERE v.user_id = ?`).bind(user.id).all();
   const now = Date.now();
   const myPlayers = [];
   for (const p of followed) myPlayers.push(playerCard(p, p.fs_id ? await matchesOfPlayer(db, p.fs_id, 8) : [], now));
@@ -121,5 +148,8 @@ export async function fanProfile(env, user, date) {
     picks: Object.fromEntries(picks.map((r) => [r.match_id, r.pick])),
     follows: followed.map((p) => p.player_id),
     my_players: myPlayers,
+    achievements: fanAchievements(voteRows.map((r) => ({ ...r, ours: Boolean(r.ours), bolshe: Boolean(r.bolshe) })), {
+      follows: followed.length, bracketPoints: await bracketPointsOf(db, user.id),
+    }),
   };
 }

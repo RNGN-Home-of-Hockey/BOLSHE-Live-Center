@@ -10,6 +10,7 @@
 //   POST /telegram/webhook               Telegram updates (secret header required)
 // Cron (every 10 min): schedule sheet -> broadcasts; registers the bot webhook once the token exists.
 
+import { ACHIEVEMENTS, achievementLevel } from '../../src/game/achievements.js';
 import { LEGEND_STEP, LEVELS, XP_RULES, levelFor } from '../../src/game/levels.js';
 import { explainTournament } from '../../src/insights/tournaments.js';
 import { authUser, castVote, fanProfile, setFollow } from './fans.js';
@@ -317,7 +318,10 @@ export default {
         }, 200, 20);
       }
       if (path === '/api/levels') {
-        return json({ levels: LEVELS, legend_step: LEGEND_STEP, xp_rules: XP_RULES, you: levelFor(url.searchParams.get('xp') ?? 0) }, 200, 300);
+        return json({
+          levels: LEVELS, legend_step: LEGEND_STEP, xp_rules: XP_RULES, you: levelFor(url.searchParams.get('xp') ?? 0),
+          achievements: ACHIEVEMENTS.map((d) => ({ ...achievementLevel(d, 0), thresholds: d.levels })),
+        }, 200, 300);
       }
       return json({ ok: false, error: 'not found' }, 404);
     } catch (error) {

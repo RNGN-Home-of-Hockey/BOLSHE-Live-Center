@@ -623,14 +623,20 @@ async function player(id, token) {
 }
 
 // ---------- profile ----------
-const ACHIEVEMENTS = [
-  ['🔥', 'Горячая серия', '5 верных прогнозов подряд'],
-  ['👁', 'Охотник за сенсациями', 'Угадал 3 неожиданные победы'],
-  ['👑', 'Король грунта', 'Лучший результат на грунтовых турнирах'],
-  ['🎯', 'Снайпер', 'Угадал точный счёт 5 раз'],
-  ['🛡', 'Против большинства', 'Выиграл 3 прогноза вопреки общему выбору'],
-  ['🏅', 'Лучше эксперта', 'Обошёл ведущего по итогам турнира'],
-];
+// One achievement: five levels (stars), a bar to the next level and what is left to do.
+function achievementCard(a) {
+  const stars = Array.from({ length: a.max_level }, (_, i) => `<i class="${i < a.level ? 'on' : ''}">★</i>`).join('');
+  const goal = a.next
+    ? `${a.value.toLocaleString('ru-RU')} из ${a.next.toLocaleString('ru-RU')} ${esc(a.unit)} — до ${a.level + 1}-го уровня ещё ${a.to_next.toLocaleString('ru-RU')}`
+    : `Высший уровень: ${a.value.toLocaleString('ru-RU')} ${esc(a.unit)}`;
+  return `<div class="ach${a.level ? '' : ' locked'}">
+    <div class="ach-top"><span class="ach-ic">${a.icon}</span><div><b>${esc(a.title)}</b><small>${a.level ? `Уровень ${a.level} из ${a.max_level}` : 'Ещё не открыто'}</small></div></div>
+    <div class="ach-stars">${stars}</div>
+    <div class="ach-bar"><i style="width:${Math.round(a.progress * 100)}%"></i></div>
+    <small class="ach-goal">${goal}</small>
+    <small class="ach-about">${esc(a.about)}</small>
+  </div>`;
+}
 
 // Same rules as src/game/levels.js, fed by /api/levels so both stay in sync.
 function levelFor(levels, step, xp) {
@@ -652,7 +658,8 @@ async function profile(token) {
     <div class="level" id="lvl"></div>
     <div class="muted small" style="margin:8px 2px">${me ? `Опыт: ${me.xp.toLocaleString('ru-RU')} XP · угадано ${me.guessed} из ${me.settled}${me.place ? ` · №${me.place} из ${me.fans}` : ''}. +10 XP за прогноз, +20 за верный.` : 'Голосуй «Кто выиграет?» в приложении в Telegram: +10 XP за прогноз, +20 за верный.'} Ползунок показывает, как растут уровни.</div>
     <h2>Достижения</h2>
-    <div class="badges">${ACHIEVEMENTS.map(([i, t, s]) => `<div>${i}<b>${esc(t)}</b><small>${esc(s)}</small></div>`).join('')}</div>`;
+    <div class="muted small" style="margin:-4px 2px 10px">У каждого достижения пять уровней — звёзды растут с каждым матчем.</div>
+    <div class="achs">${(me?.achievements ?? d.achievements ?? []).map(achievementCard).join('')}</div>`;
   const box = view.querySelector('#lvl');
   function paint(xp) {
     const lv = levelFor(d.levels, d.legend_step, xp);
