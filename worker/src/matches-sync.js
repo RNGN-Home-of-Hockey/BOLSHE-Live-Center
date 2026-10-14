@@ -2,6 +2,7 @@
 
 import { mediaUrl } from '../../src/lib/media.js';
 import { fetchDay } from '../../src/sources/flashscore-matches.js';
+import { shapeOdds } from './odds-sync.js';
 
 const mskDate = (iso) => (iso ? new Date(Date.parse(iso) + 3 * 3600 * 1000).toISOString().slice(0, 10) : null);
 
@@ -69,7 +70,11 @@ export const MATCH_SELECT = `SELECT m.*, t.name AS tournament_name, t.tournament
     ${PLAYER_COLS('a')}, ${PLAYER_COLS('b')},
     (SELECT r2_key || '?v=' || version FROM media WHERE media_key = 'head/' || m.p1_fs_id AND status = 'ok') AS p1_head,
     (SELECT r2_key || '?v=' || version FROM media WHERE media_key = 'head/' || m.p2_fs_id AND status = 'ok') AS p2_head,
+    (SELECT json_object('pre1', o.pre1, 'pre2', o.pre2, 'live1', o.live1, 'live2', o.live2, 'live_at', o.live_at, 'wl_url', o.wl_url)
+       FROM match_odds o WHERE o.match_id = m.match_id) AS odds,
+    (SELECT json_object('p1', SUM(v.pick = 1), 'p2', SUM(v.pick = 2), 'total', COUNT(*)) FROM votes v WHERE v.match_id = m.match_id) AS votes,
     (SELECT json_object('commentator1', br.commentator1, 'commentator2', br.commentator2, 'vk_url', br.vk_url, 'time_msk', br.time_msk,
+        'round', br.round, 'title', br.tournament,
         'cover', (SELECT r2_key || '?v=' || version FROM media WHERE media_key = 'cover/' || br.vk_video AND status = 'ok'))
        FROM broadcasts br
       WHERE br.date_msk = m.date_msk AND br.status != 'removed'
@@ -114,7 +119,14 @@ export function shapeMatch(row) {
     p1: side(row, 'a', 1),
     p2: side(row, 'b', 2),
     bolshe: row.bolshe ? withCover(JSON.parse(row.bolshe)) : null,
+    odds: row.odds ? shapeOdds(JSON.parse(row.odds), row.status) : null,
+    votes: votesOf(row.votes),
   };
+}
+
+function votesOf(json) {
+  const v = json ? JSON.parse(json) : null;
+  return { p1: v?.p1 ?? 0, p2: v?.p2 ?? 0, total: v?.total ?? 0 };
 }
 
 const withCover = (b) => ({ ...b, cover: mediaUrl(b.cover) });

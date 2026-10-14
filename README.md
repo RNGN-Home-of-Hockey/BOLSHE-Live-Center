@@ -26,6 +26,7 @@ Telegram-приложение (бот + Mini App) для теннисного п
 | **Приложение (тестовая копия)** | `public/app/` → https://bolshe-live-center.znamteam-903.workers.dev/app/ | Главная, Матчи, Игроки, Профиль; кнопка «Приложение» в боте |
 | Фото и даты рождения | `scripts/fetch-player-profiles.mjs` | 909 ключевых игроков (топ-300, наши, пары топ-100) |
 | **Обложки эфиров «Больше» и головы игроков** | `worker/src/media.js` → R2 `bolshe-live-media`, `/media/covers/…`, `/media/heads/…` | обложка из VK уменьшается до 640×360 и хранится навсегда; нет обложки — головы обоих игроков |
+| **Главная (вариант D)**, коэффициенты Winline, «Кто выиграет?», «Мои игроки» | `public/app/`, `worker/src/odds-sync.js`, `worker/src/fans.js` | привет и рейтинг, эфир «Больше» с голосованием, мои игроки, эфиры дня с коэффициентами, турниры цифрами; вход по подписи Telegram |
 
 Что делаем дальше — [docs/ROADMAP.md](docs/ROADMAP.md). Что за продукт — [docs/PRODUCT.md](docs/PRODUCT.md).
 Обсуждение идей и отзывы тестировщиков — ветка [`discussion`](../../tree/discussion).

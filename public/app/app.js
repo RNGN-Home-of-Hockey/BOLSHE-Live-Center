@@ -8,6 +8,14 @@ let timer = null;
 // Every navigation gets a token; a screen whose data arrives after the user moved on draws nothing.
 let routeToken = 0;
 const stale = (token) => token !== routeToken;
+// A screen refreshes itself while it stays open. A refresh redraws the screen, and the redraw
+// must not start one more timer: before 2026-10-14 every refresh did, so an open app doubled
+// its requests every minute until the browser ran out of connections.
+// route() clears the timer when the user moves to another screen.
+function refreshEvery(ms, redraw) {
+  if (timer) return;
+  timer = setInterval(() => { if (!document.hidden) redraw().catch(() => {}); }, ms);
+}
 
 if (tg) {
   tg.ready();
@@ -17,7 +25,6 @@ if (tg) {
 
 // ---------- helpers ----------
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const mskTime = (iso) => (iso ? new Date(iso).toLocaleTimeString('ru-RU', { timeZone: 'Europe/Moscow', hour: '2-digit', minute: '2-digit' }) : '');
 const mskDay = (offset = 0) => new Date(Date.now() + 3 * 3600e3 + offset * 86400e3).toISOString().slice(0, 10);
 const shortDate = (date) => new Date(`${date}T12:00:00Z`).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
 const longDate = (date) => {
@@ -43,7 +50,7 @@ spoilerBtn.addEventListener('click', () => {
 paintSpoiler();
 
 async function api(path) {
-  const res = await fetch(path);
+  const res = await fetch(path, { headers: authHeaders() });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
 }
@@ -70,6 +77,117 @@ document.addEventListener('error', (event) => {
   else if (img.hasAttribute('data-head')) img.outerHTML = silhouette(img.className);
 }, true);
 
+// ---------- time in the user's own zone ----------
+const localTime = (iso) => (iso ? new Date(iso).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) : '');
+function tzLabel() {
+  try {
+    if (Intl.DateTimeFormat().resolvedOptions().timeZone === 'Europe/Moscow') return 'Москва';
+    return new Intl.DateTimeFormat('ru-RU', { timeZoneName: 'short' }).formatToParts(new Date()).find((p) => p.type === 'timeZoneName')?.value ?? 'местное';
+  } catch {
+    return 'местное';
+  }
+}
+function dayWord(iso) {
+  const d = new Date(iso);
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  if (d.toDateString() === today.toDateString()) return 'сегодня';
+  if (d.toDateString() === tomorrow.toDateString()) return 'завтра';
+  return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }).replace('.', '');
+}
+// "серия 1000" → "1000 " for headings like "WTA 1000 Ухань".
+const tierNumber = (t) => { const n = String(t?.tier_label ?? '').match(/\d{3,4}/)?.[0]; return n ? `${n} ` : ''; };
+
+// ---------- Winline odds ----------
+const WINLINE_LOGO = '/app/winline.png';
+// "П1 2.90 · П2 1.41" with the small logo; after the match the winner's price is marked
+// (not while the no-spoilers switch is on).
+function oddsRow(m) {
+  const o = m.odds;
+  if (!o) return '';
+  const done = DONE.includes(m.status) && showScore(m);
+  const chip = (side, v) => `<span class="odd${done && m.winner === side ? ' won' : ''}">П${side} <b>${Number(v).toFixed(2)}</b></span>`;
+  return `<span class="odds"><img src="${WINLINE_LOGO}" alt="Winline">${chip(1, o.p1)}${chip(2, o.p2)}</span>`;
+}
+function oddsBox(m) {
+  const o = m.odds;
+  if (!o) return '';
+  const done = DONE.includes(m.status) && showScore(m);
+  const cell = (side, p, v) => `<div class="o${done && m.winner === side ? ' won' : ''}"><span>${esc(p.name)}</span><b>${Number(v).toFixed(2)}</b></div>`;
+  return `<div class="wlbox"><img src="${WINLINE_LOGO}" alt="Winline">${cell(1, m.p1, o.p1)}${cell(2, m.p2, o.p2)}</div>`;
+}
+
+// ---------- fans: Telegram sign-in, votes, follows ----------
+let me = null;
+const authHeaders = () => (tg?.initData ? { 'x-telegram-init-data': tg.initData } : {});
+async function post(path, body) {
+  const res = await fetch(path, { method: 'POST', headers: { 'content-type': 'application/json', ...authHeaders() }, body: JSON.stringify(body) });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || data.ok === false) throw new Error(data.error || `HTTP ${res.status}`);
+  return data;
+}
+async function loadMe(date) {
+  if (!tg?.initData) { me = null; return null; }
+  try { me = await api(`/api/me?date=${date}`); } catch { me = null; }
+  return me;
+}
+function toast(text) {
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = text;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2600);
+}
+function splitBar(m, v) {
+  const p1 = Math.round((v.p1 / v.total) * 100);
+  return `<div class="split-lbl"><span>Голоса болельщиков</span><span>${v.total} ${plural(v.total, 'голос', 'голоса', 'голосов')}</span></div>
+    <div class="split"><i style="width:${p1}%"></i><i style="width:${100 - p1}%"></i></div>
+    <div class="split-pc"><span>${p1}% ${esc(lastName(m.p1))}</span><span>${esc(lastName(m.p2))} ${100 - p1}%</span></div>`;
+}
+// "Кто выиграет?": buttons until the match starts, then the fans' split.
+function voteBlock(m) {
+  const pick = me?.picks?.[m.match_id] ?? null;
+  const v = m.votes ?? { p1: 0, p2: 0, total: 0 };
+  if (m.status === 'scheduled') {
+    if (!tg?.initData) return '<div class="vote"><div class="vote-cap">Кто выиграет?</div><div class="vote-note">Голосовать можно в приложении в Telegram</div></div>';
+    const btn = (side, p) => `<button type="button" class="${pick === side ? 'on' : ''}" data-vote="${esc(m.match_id)}" data-pick="${side}">${esc(lastName(p))}</button>`;
+    return `<div class="vote"><div class="vote-cap">Кто выиграет?${pick ? ' Голос принят — до начала можно передумать' : ''}</div>
+      <div class="vote-btns">${btn(1, m.p1)}${btn(2, m.p2)}</div>${pick && v.total ? splitBar(m, v) : ''}</div>`;
+  }
+  if (m.status === 'cancelled') return '';
+  if (!v.total) return '<div class="vote"><div class="vote-note">Голосование закрылось с началом матча — голосов не было</div></div>';
+  return `<div class="vote">${splitBar(m, v)}<div class="vote-note">Голосование закрылось с началом матча${pick ? `. Твой выбор: ${esc(lastName(pick === 1 ? m.p1 : m.p2))}` : ''}</div></div>`;
+}
+function bindFanActions(root, rerender) {
+  root.querySelectorAll('[data-vote]').forEach((b) => b.addEventListener('click', async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    b.disabled = true;
+    try {
+      await post('/api/votes', { match_id: b.dataset.vote, pick: Number(b.dataset.pick) });
+      tg?.HapticFeedback?.selectionChanged?.();
+      toast('Голос принят');
+    } catch (error) {
+      toast(error.message);
+    }
+    rerender().catch(() => {});
+  }));
+  root.querySelectorAll('[data-follow]').forEach((b) => b.addEventListener('click', async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    b.disabled = true;
+    try {
+      await post('/api/follows', { player_id: b.dataset.follow, on: b.dataset.on !== '0' });
+      toast(b.dataset.on === '0' ? 'Больше не следишь' : 'Добавлен в «Мои игроки»');
+    } catch (error) {
+      toast(error.message);
+    }
+    rerender().catch(() => {});
+  }));
+}
+
+
 const showScore = (m) => !noSpoilers || m.status === 'scheduled';
 const lastName = (p) => {
   const name = String(p?.name ?? p?.short ?? '');
@@ -95,7 +213,7 @@ function matchRow(m, side) {
 
 function statusLabel(m) {
   if (m.status === 'live') return `<span class="live">● LIVE${m.live_set ? ` · ${m.live_set}-й сет` : ''}</span>`;
-  if (m.status === 'scheduled') return `<span>${mskTime(m.start_at)}</span>`;
+  if (m.status === 'scheduled') return `<span>${localTime(m.start_at)}</span>`;
   return `<span>${STATUS[m.status] ?? ''}</span>`;
 }
 
@@ -108,19 +226,7 @@ function matchCard(m) {
     : '';
   return `<a class="card" href="#/match/${encodeURIComponent(m.match_id)}">
     <div class="meta"><span>${esc(t.tour ?? '')} ${esc(t.name ?? '')}${t.surface ? ` · ${SURFACE[t.surface]}` : ''}</span>${statusLabel(m)}</div>
-    ${matchRow(m, 1)}${matchRow(m, 2)}${hidden}${bolshe}</a>`;
-}
-
-// One line per match for the home screen: "13:00 · Медведев — Циципас".
-function compactLine(m) {
-  const score = m.status === 'scheduled' ? '' : showScore(m) ? `${m.sets_p1 ?? 0}:${m.sets_p2 ?? 0}` : '';
-  const when = m.status === 'live' ? '<span class="live">LIVE</span>' : m.status === 'scheduled' ? mskTime(m.start_at) : (STATUS[m.status] ?? '');
-  const n1 = lastName(m.p1);
-  const n2 = lastName(m.p2);
-  const w = showScore(m) ? m.winner : null;
-  return `<a class="line" href="#/match/${encodeURIComponent(m.match_id)}"><span class="when">${when}</span>
-    <span class="who">${w === 1 ? `<b>${esc(n1)}</b>` : esc(n1)} — ${w === 2 ? `<b>${esc(n2)}</b>` : esc(n2)}<small>${esc(m.tournament.name ?? '')}</small></span>
-    <span class="sc">${esc(score)}</span></a>`;
+    ${matchRow(m, 1)}${matchRow(m, 2)}${hidden}${m.odds ? `<div class="card-odds">${oddsRow(m)}</div>` : ''}${bolshe}</a>`;
 }
 
 // Вчера — Сегодня — Завтра — 📆 (any day within the week Flashscore keeps).
@@ -141,100 +247,175 @@ function bindDays(go) {
   pick?.addEventListener('change', () => { if (pick.value) go(pick.value); });
 }
 
-// ---------- home ----------
-const TIPS = [
-  ['Тай-брейк', 'При счёте 6:6 в сете играют тай-брейк — до 7 очков с разницей в два. Маленькая цифра рядом со счётом, например 6⁴, — сколько очков набрал проигравший в тай-брейке.'],
-  ['Как считают гейм', '15, 30, 40 и гейм. При 40:40 — «ровно»: чтобы взять гейм, нужно выиграть два розыгрыша подряд.'],
-  ['Брейк', 'Брейк — это выигранный гейм на подаче соперника. Подающему играть легче, поэтому именно брейки чаще всего решают сет.'],
-  ['Рейтинг', 'Рейтинг ATP и WTA — сумма очков за последние 52 недели. Чем дальше игрок проходит на крупных турнирах, тем больше очков.'],
-  ['Рейтинг Эло', 'Эло учитывает, у кого ты выигрываешь, а не только сколько. Разница в 100 пунктов — это примерно 64% шансов у более сильного.'],
-  ['Покрытия', 'Хард — ровный и довольно быстрый, грунт — медленный, мяч отскакивает выше, трава — самая быстрая, отскок низкий.'],
-  ['Сеяные', 'Сеяные — лучшие по рейтингу участники турнира. Их разводят по сетке, чтобы они не встретились в первых кругах.'],
-  ['Квалификация', 'Перед турниром идёт квалификация: несколько её победителей получают места в основной сетке.'],
-  ['Отказ и неявка', 'Отказ — игрок снялся по ходу матча. Неявка — не вышел на корт. В обоих случаях победа засчитывается сопернику.'],
-  ['Челленджеры', 'Челленджеры — второй уровень после основного тура. Здесь набирают очки, чтобы пробиться к лучшим.'],
-  ['Большой шлем', 'Четыре главных турнира года: Australian Open, Ролан Гаррос, Уимблдон и US Open. Победитель получает 2000 очков.'],
-  ['Итоговые турниры', 'В конце сезона восемь лучших игроков года выходят на итоговый турнир: сначала группы, потом полуфиналы и финал.'],
-];
+// ---------- home (variant D: hello + rating → on air → my players → «Больше» broadcasts → tournaments) ----------
+const plural = (n, one, few, many) => {
+  const m10 = n % 10;
+  const m100 = n % 100;
+  if (m10 === 1 && m100 !== 11) return one;
+  if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return few;
+  return many;
+};
+const DONE = ['finished', 'retired', 'walkover'];
+const startOf = (m) => Date.parse(m.start_at ?? '') || 0;
+let earlyOpen = false; // «Ранние эфиры» opened once stay open on refresh
 
-function tipOfDay(date) {
-  const day = Math.floor(Date.parse(`${date}T00:00:00Z`) / 86400e3);
-  const [title, text] = TIPS[day % TIPS.length];
-  return `<div class="tip"><div class="cap">Теннис простыми словами</div><b>${esc(title)}</b><p>${esc(text)}</p></div>`;
+function ratingCard() {
+  if (!me) {
+    return `<div class="level-card"><div class="row"><b>Подающий мячи</b><span>0 XP</span></div>
+      <div class="prog"><i style="width:0%"></i></div>
+      <div class="row"><span>${tg?.initData ? 'Сделай первый прогноз — и опыт пойдёт' : 'Открой приложение в Telegram, чтобы голосовать и копить опыт'}</span></div></div>`;
+  }
+  const lv = me.level;
+  return `<a class="level-card" href="#/profile"><div class="row"><b>${esc(lv.title)}</b><span>${me.xp.toLocaleString('ru-RU')} XP</span></div>
+    <div class="prog"><i style="width:${Math.round((lv.progress ?? 0) * 100)}%"></i></div>
+    <div class="row"><span>${esc(lv.subtitle)}</span><span>до «${esc(lv.next_title)}» ${lv.to_next.toLocaleString('ru-RU')} XP</span></div>
+    <div class="lvstats">
+      <div><b>${me.place ? `№${me.place}` : '—'}</b><span>${me.place ? `из ${me.fans}` : 'в таблице'}</span></div>
+      <div><b>${me.guessed} из ${me.settled}</b><span>угадано</span></div>
+      <div><b>${me.streak}</b><span>серия</span></div>
+    </div></a>`;
 }
 
-function tournamentCard(t) {
-  const tags = [t.tier_label, SURFACE[t.surface]].filter(Boolean).map((x) => `<span class="tag">${esc(x)}</span>`).join('');
-  const stats = [
-    `${t.matches} ${t.matches === 1 ? 'матч' : t.matches < 5 ? 'матча' : 'матчей'} сегодня`,
-    t.live ? `${t.live} идёт сейчас` : null,
-    t.bolshe ? `${t.bolshe} в эфире «Больше»` : null,
-    t.russians ? `наши: ${t.russians}` : null,
-  ].filter(Boolean).join(' · ');
-  return `<a class="tcard" href="#/matches?level=${esc(t.level)}"><div class="tt">${esc(t.tour ?? '')} ${esc(t.name ?? '')}</div>
-    <div class="tags">${tags}</div>${t.about ? `<p>${esc(t.about)}</p>` : ''}<div class="muted small">${esc(stats)}</div></a>`;
+// The big card of a «Больше» broadcast: cover, full names, score, Winline odds, and the vote —
+// buttons before the start, the fans' split once the match is on.
+function airCard(m) {
+  const t = m.tournament;
+  const live = m.status === 'live';
+  const meta = [m.bolshe?.title || `${t.tour ?? ''} ${t.name ?? ''}`.trim(), m.bolshe?.round].filter(Boolean).join(' · ');
+  const badge = live ? `<span class="live on-dark"><span class="dot"></span>LIVE${m.live_set ? ` · ${m.live_set}-й сет` : ''}</span>`
+    : m.status === 'scheduled' ? `<span>${esc(localTime(m.start_at))}</span>` : `<span>${esc(STATUS[m.status] ?? '')}</span>`;
+  const set = (m.sets ?? []).at(-1);
+  const center = m.status === 'scheduled' ? 'vs' : showScore(m) ? `${m.sets_p1 ?? 0}:${m.sets_p2 ?? 0}` : '—';
+  const sub = live && set && showScore(m) ? `${m.live_set ?? (m.sets ?? []).length}-й сет ${set.p1 ?? 0}:${set.p2 ?? 0}` : m.status === 'scheduled' ? 'начало' : '';
+  const side = (p) => `<div><div class="nm">${esc(p.name)}</div><div class="rk">${p.rank ? `№${p.rank}` : ''}</div></div>`;
+  return `<div class="air">
+    <div class="air-meta"><span>${esc(meta)}</span>${badge}</div>
+    <a href="#/match/${encodeURIComponent(m.match_id)}">${coverBox(m.bolshe?.cover, m.p1, m.p2, 'in-air')}</a>
+    <div class="air-vs">${side(m.p1)}<div><div class="big">${esc(center)}</div><div class="sub">${esc(sub)}</div></div>${side(m.p2)}</div>
+    ${oddsBox(m)}
+    ${voteBlock(m)}
+    ${m.bolshe?.commentator1 ? `<div class="air-com">Комментирует ${esc([m.bolshe.commentator1, m.bolshe.commentator2].filter(Boolean).join(' и '))}</div>` : ''}
+    ${m.bolshe?.vk_url ? `<a class="air-watch" href="${esc(m.bolshe.vk_url)}" target="_blank" rel="noopener">▶ Смотреть на VK</a>` : ''}
+  </div>`;
 }
 
-function matchOfDay(mod) {
-  if (!mod) return '';
-  const m = mod.match;
-  const side = (p) => `<div class="pl">${avatar(p.photo, 'pa')}<div class="nm">${esc(lastName(p))}</div><div class="rk">${p.rank ? `№${p.rank}` : ''}</div></div>`;
-  const center = m.status === 'scheduled' ? mskTime(m.start_at) : m.status === 'live' ? (showScore(m) ? `${m.sets_p1}:${m.sets_p2}` : 'LIVE') : (showScore(m) ? `${m.sets_p1}:${m.sets_p2}` : '—');
-  return `<h2>Матч дня</h2><a class="hero mod" href="#/match/${encodeURIComponent(m.match_id)}">
-    ${m.bolshe?.cover ? coverBox(m.bolshe.cover, m.p1, m.p2, 'in-hero') : ''}
-    <div class="muted small">${esc(m.tournament.tour ?? '')} ${esc(m.tournament.name ?? '')}${m.status === 'live' ? ' · <span class="live">LIVE</span>' : ''}</div>
-    <div class="vs">${side(m.p1)}<div class="score">${esc(center)}</div>${side(m.p2)}</div>
-    ${mod.why.length ? `<p class="why">${mod.why.map(esc).join(' ')}</p>` : ''}<div class="more">Сравнение и факты →</div></a>`;
+function myPlayersBlock(d) {
+  const cards = me?.my_players ?? [];
+  if (cards.length) {
+    return `<div class="seccap"><span>Мои игроки</span><a href="#/players">изменить</a></div><div class="mine">${cards.map((p) => {
+      const status = p.live ? `<span class="st live-st">LIVE ${showScore({ status: 'live' }) ? esc(p.live.score) : ''}</span>`
+        : p.last && showScore({ status: 'finished' }) ? `<span class="st ${p.last.won ? 'win' : 'loss'}">${p.last.won ? 'Победа' : 'Поражение'} ${esc(p.last.score)}</span>`
+          : '<span class="st idle">Не играет</span>';
+      const line1 = p.live ? `с ${esc(lastName({ name: p.live.opponent }))}` : p.last ? `с ${esc(lastName({ name: p.last.opponent }))}` : 'матчей нет';
+      const line2 = p.next ? `${esc(dayWord(p.next.start_at))} — ${esc(lastName({ name: p.next.opponent }))}` : '';
+      return `<a class="pl-card" href="#/player/${encodeURIComponent(p.player_id)}">${avatar(p.photo, 'head')}<b>${esc(lastName({ name: p.name }))}</b>${status}<small>${line1}${line2 ? `<br>${line2}` : ''}</small></a>`;
+    }).join('')}</div>`;
+  }
+  // Nobody followed yet: our players of the day to pick from.
+  const seen = new Set();
+  const ours = [];
+  for (const m of d.russians) {
+    for (const p of [m.p1, m.p2]) {
+      if (p.is_russian && p.player_id && !seen.has(p.player_id) && ours.length < 3) { seen.add(p.player_id); ours.push(p); }
+    }
+  }
+  if (!ours.length) return '';
+  return `<div class="seccap"><span>Мои игроки</span></div>
+    <div class="hint">Отметь игроков — здесь будут их матчи и результаты.</div>
+    <div class="mine">${ours.map((p) => `<div class="pl-card">${avatar(p.photo, 'head')}<b>${esc(lastName(p))}</b>
+      ${tg?.initData ? `<button class="follow" type="button" data-follow="${esc(p.player_id)}">☆ Следить</button>` : `<a class="small" href="#/player/${encodeURIComponent(p.player_id)}">открыть</a>`}</div>`).join('')}</div>`;
+}
+
+// One «Больше» broadcast row: time in the user's zone, cover thumb (or both heads), names, score,
+// then Winline odds (+ the vote for matches still to come).
+function broadcastRow({ m, b }) {
+  const p1 = m ? m.p1 : { photo: b.player1_photo, name: b.player1_name ?? b.player1_ru };
+  const p2 = m ? m.p2 : { photo: b.player2_photo, name: b.player2_name ?? b.player2_ru };
+  const cover = m ? m.bolshe?.cover : b.cover;
+  const thumb = cover ? `<img class="th" src="${esc(cover)}" alt="" loading="lazy" data-cover>`
+    : `<span class="th nocov">${avatar(p1.photo, 'mini')}${avatar(p2.photo, 'mini')}</span>`;
+  const w = m && showScore(m) ? m.winner : null;
+  const n1 = m ? lastName(m.p1) : String(p1.name ?? '');
+  const n2 = m ? lastName(m.p2) : String(p2.name ?? '');
+  const when = m?.status === 'live' ? '<span class="live"><span class="dot"></span>LIVE</span>' : esc(localTime(m?.start_at ?? b.starts_at));
+  const score = m && m.status !== 'scheduled' && showScore(m) ? `${m.sets_p1 ?? 0}:${m.sets_p2 ?? 0}` : '';
+  const small = [m ? m.tournament.name : b.tournament, (m ? m.bolshe?.commentator1 : b.commentator1)].filter(Boolean).join(' · ');
+  const extra = m ? `${oddsRow(m)}${m.status === 'scheduled' ? `<span class="vote-chip">${me?.picks?.[m.match_id] ? 'Твой прогноз принят' : 'Кто выиграет? →'}</span>` : ''}` : '';
+  const href = m ? `#/match/${encodeURIComponent(m.match_id)}` : (b.vk_url ?? '#/');
+  return `<a class="bline" href="${esc(href)}"${!m && b.vk_url ? ' target="_blank" rel="noopener"' : ''}><span class="t">${when}</span>${thumb}
+    <span class="who">${w === 1 ? `<b>${esc(n1)}</b>` : esc(n1)} — ${w === 2 ? `<b>${esc(n2)}</b>` : esc(n2)}<small>${esc(small)}</small></span>
+    <span class="sc">${esc(score)}</span>${extra ? `<span class="extra">${extra}</span>` : ''}</a>`;
+}
+
+function broadcastsBlock(d) {
+  const pairKey = (a, c) => [a, c].sort().join('|');
+  const shown = new Set(d.bolshe.map((m) => pairKey(m.p1.player_id, m.p2.player_id)));
+  const rows = [
+    ...d.bolshe.map((m) => ({ at: startOf(m), done: DONE.includes(m.status) || m.status === 'cancelled', m })),
+    ...d.broadcasts.filter((b) => b.status !== 'cancelled' && !shown.has(pairKey(b.player1_id, b.player2_id)))
+      .map((b) => ({ at: Date.parse(b.starts_at ?? '') || 0, done: (Date.parse(b.starts_at ?? '') || 0) < Date.now() - 2 * 3600e3, b })),
+  ].sort((a, c) => a.at - c.at);
+  if (!rows.length) return '<div class="seccap"><span>Прямые трансляции «Больше» сегодня</span></div><div class="empty">Сегодня эфиров нет</div>';
+  const doneRows = rows.filter((r) => r.done);
+  const hidden = !earlyOpen && doneRows.length > 4 ? doneRows.slice(0, doneRows.length - 4) : [];
+  const nowIndex = rows.findIndex((r) => !r.done);
+  const parts = [];
+  if (hidden.length) {
+    parts.push(`<button class="more-early" type="button" data-early>Ранние эфиры ${esc(localTime(new Date(hidden[0].at).toISOString()))}–${esc(localTime(new Date(hidden.at(-1).at).toISOString()))}: ещё ${hidden.length} →</button>`);
+  }
+  rows.forEach((r, i) => {
+    if (i === nowIndex && i > 0) parts.push(`<div class="now"><span>Сейчас ${esc(localTime(new Date().toISOString()))}</span><i></i></div>`);
+    parts.push(`<div class="brow${hidden.includes(r) ? ' early' : ''}">${broadcastRow(r)}</div>`);
+  });
+  return `<div class="seccap"><span>Прямые трансляции «Больше» сегодня</span></div>
+    <div class="note">Время по твоему часовому поясу (${esc(tzLabel())}) · коэффициенты <img src="${WINLINE_LOGO}" alt="Winline"></div>
+    <div class="blist">${parts.join('')}</div>`;
+}
+
+function tournamentsBlock(d) {
+  const tour = d.tournaments.filter((t) => t.level === 'tour');
+  const challengers = d.tournaments.filter((t) => t.level === 'challenger').length;
+  if (!tour.length && !challengers) return '';
+  const card = (t) => `<a class="tour-card" href="#/matches?level=tour">
+    <div class="tt"><b>${esc(`${t.tour ?? ''} ${tierNumber(t)}${t.name ?? ''}`.replace(/\s+/g, ' ').trim())}</b>${t.live ? `<span class="live"><span class="dot"></span>${t.live} ${plural(t.live, 'идёт', 'идут', 'идут')}</span>` : ''}</div>
+    <div>${[SURFACE[t.surface], t.round].filter(Boolean).map((x) => `<span class="tag">${esc(x)}</span>`).join('')}</div>
+    <div class="nums"><div><b>${t.matches}</b><span>${plural(t.matches, 'матч', 'матча', 'матчей')} сегодня</span></div>
+      <div><b>${t.bolshe}</b><span>в эфире «Больше»</span></div><div><b>${t.russians}</b><span>${plural(t.russians, 'наш', 'наших', 'наших')}</span></div></div>
+    ${t.upcoming?.length ? `<div class="ahead">Главные матчи впереди — не в графике «Больше»</div>
+      ${t.upcoming.map((m) => `<div class="up"><span class="t">${esc(dayWord(m.start_at))}<br>${esc(localTime(m.start_at))}</span>
+        <span class="who">${esc(lastName(m.p1))}${m.p1.rank ? ` (№${m.p1.rank})` : ''} — ${esc(lastName(m.p2))}${m.p2.rank ? ` (№${m.p2.rank})` : ''}${oddsRow(m)}</span></div>`).join('')}` : ''}
+  </a>`;
+  return `<div class="seccap"><span>Турниры</span></div><div class="tours">${tour.map(card).join('')}
+    ${challengers ? `<a class="tour-card slim" href="#/matches?level=challenger">Ещё ${challengers} ${plural(challengers, 'челленджер', 'челленджера', 'челленджеров')} →</a>` : ''}</div>`;
 }
 
 async function home(params, token) {
   const date = mskDay(0);
-  const d = await api(`/api/home?date=${date}`);
+  const [d] = await Promise.all([api(`/api/home?date=${date}`), loadMe(date)]);
   if (stale(token)) return;
-  const tourNames = d.tournaments.filter((t) => t.level === 'tour').map((t) => `${t.tour} ${t.name}`);
-  const lead = [
-    tourNames.length ? `Идут ${tourNames.slice(0, 3).join(', ')}.` : 'Крупных турниров сегодня нет.',
-    d.bolshe.length ? `«Больше» показывает ${d.bolshe.length} ${d.bolshe.length === 1 ? 'матч' : d.bolshe.length < 5 ? 'матча' : 'матчей'}.` : '',
-    d.russians.length ? `Наши играют ${d.russians.length} ${d.russians.length === 1 ? 'матч' : d.russians.length < 5 ? 'матча' : 'матчей'}.` : '',
-  ].filter(Boolean).join(' ');
-  const pairKey = (a, b) => [a, b].sort().join('|');
-  const shown = new Set(d.bolshe.map((m) => pairKey(m.p1.player_id, m.p2.player_id)));
-  const otherBroadcasts = d.broadcasts.filter((b) => b.status !== 'cancelled' && !shown.has(pairKey(b.player1_id, b.player2_id)));
-  // The «Больше» schedule reads left to right by broadcast time, finished or not: our VK cover
-  // of each broadcast, or both players' heads when there is no cover yet.
-  const tile = ({ href, external, cover, p1, p2, when, names, commentator }) => `<a class="bc" href="${esc(href ?? '#/')}"${external ? ' target="_blank" rel="noopener"' : ''}>
-    ${coverBox(cover, p1, p2)}<div class="bc-when">${when}</div><div class="bc-names">${esc(names)}</div>
-    ${commentator ? `<div class="muted small">${esc(commentator)}</div>` : ''}</a>`;
-  const broadcastTiles = [
-    ...d.bolshe.map((m) => ({
-      time: m.bolshe?.time_msk ?? mskTime(m.start_at),
-      html: tile({
-        href: `#/match/${encodeURIComponent(m.match_id)}`, cover: m.bolshe?.cover, p1: m.p1, p2: m.p2,
-        when: m.status === 'live' ? `<span class="live">● LIVE</span>${showScore(m) ? ` · ${m.sets_p1 ?? 0}:${m.sets_p2 ?? 0}` : ''}`
-          : m.status === 'scheduled' ? esc(m.bolshe?.time_msk ?? mskTime(m.start_at)) : `${esc(STATUS[m.status] ?? '')}${showScore(m) ? ` · ${m.sets_p1 ?? 0}:${m.sets_p2 ?? 0}` : ''}`,
-        names: `${lastName(m.p1)} — ${lastName(m.p2)}`, commentator: m.bolshe?.commentator1,
-      }),
-    })),
-    ...otherBroadcasts.map((b) => ({
-      time: b.time_msk ?? '',
-      html: tile({
-        href: b.vk_url, external: Boolean(b.vk_url), cover: b.cover,
-        p1: { photo: b.player1_photo }, p2: { photo: b.player2_photo }, when: esc(b.time_msk ?? ''),
-        names: `${b.player1_name ?? b.player1_ru} — ${b.player2_name ?? b.player2_ru ?? ''}`, commentator: b.commentator1,
-      }),
-    })),
-  ].sort((a, b) => String(a.time).localeCompare(String(b.time)));
+  const live = d.bolshe.filter((m) => m.status === 'live').sort((a, c) => startOf(a) - startOf(c));
+  const coming = d.bolshe.filter((m) => m.status === 'scheduled').sort((a, c) => startOf(a) - startOf(c));
+  const air = live.length ? live : coming.slice(0, 2);
+  const name = me?.user?.first_name || tg?.initDataUnsafe?.user?.first_name || '';
+  const sub = [
+    live.length ? `Сейчас в эфире «Больше» ${live.length} ${plural(live.length, 'матч', 'матча', 'матчей')}` : '',
+    coming.length ? `${live.length ? 'впереди ещё' : 'Сегодня впереди'} ${coming.length} — успей с прогнозом` : '',
+  ].filter(Boolean).join(', ') || 'Эфиры «Больше» на сегодня закончились — смотри результаты ниже';
   view.innerHTML = `
-    <div class="hello"><div class="date">${esc(longDate(date))}</div><p>${esc(lead)}</p></div>
-    ${matchOfDay(d.match_of_day)}
-    ${d.tournaments.length ? `<h2>Что сейчас идёт</h2>${d.tournaments.filter((t) => t.level === 'tour').map(tournamentCard).join('')}
-      ${d.tournaments.some((t) => t.level === 'challenger') ? `<a class="tcard slim" href="#/matches?level=challenger">Ещё ${d.tournaments.filter((t) => t.level === 'challenger').length} челленджеров — второй уровень тура →</a>` : ''}` : ''}
-    <h2>Наши сегодня</h2>${d.russians.length ? `<div class="lines">${d.russians.map(compactLine).join('')}</div>` : '<div class="empty">Сегодня россияне не играют</div>'}
-    ${d.russians_yesterday.length ? `<h2>Наши вчера</h2><div class="lines">${d.russians_yesterday.map(compactLine).join('')}</div>` : ''}
-    <h2>Эфиры «Больше» сегодня</h2>${broadcastTiles.length ? `<div class="shelf">${broadcastTiles.map((x) => x.html).join('')}</div>` : '<div class="empty">Сегодня эфиров нет</div>'}
-    ${tipOfDay(date)}
-    <div class="links"><a href="#/matches">Все матчи дня →</a><a href="#/players">Найти игрока →</a></div>`;
-  timer = setInterval(() => home(params, token).catch(() => {}), 60000);
+    <div class="hello"><div class="hi">Привет${name ? `, ${esc(name)}` : ''}!</div><p>${esc(sub)}.</p></div>
+    ${ratingCard()}
+    ${air.length ? `<div class="seccap"><span>${live.length ? 'Сейчас в эфире «Больше»' : 'Скоро в эфире «Больше»'}</span>${air.length > 1 ? `<span class="r">${air.length} ${plural(air.length, 'матч', 'матча', 'матчей')} ›</span>` : ''}</div>
+      <div class="air-strip">${air.map(airCard).join('')}</div>` : ''}
+    ${myPlayersBlock(d)}
+    ${broadcastsBlock(d)}
+    ${tournamentsBlock(d)}`;
+  bindFanActions(view, () => home(params, token));
+  view.querySelector('[data-early]')?.addEventListener('click', (e) => {
+    earlyOpen = true;
+    view.querySelectorAll('.brow.early').forEach((r) => r.classList.remove('early'));
+    e.currentTarget.remove();
+  });
+  refreshEvery(60000, () => home(params, token));
 }
 
 // ---------- matches ----------
@@ -255,7 +436,7 @@ async function matches(params, token) {
       || `<div class="empty" style="margin-top:12px">${date > mskDay(1) ? 'Расписание на этот день ещё не опубликовано — обычно оно появляется накануне' : 'В этот день матчей нет'}</div>`}`;
   bindDays((day) => { location.hash = `#/matches?date=${day}&level=${level}`; });
   view.querySelectorAll('[data-level]').forEach((b) => b.addEventListener('click', () => { location.hash = `#/matches?date=${date}&level=${b.dataset.level}`; }));
-  if (date === mskDay(0)) timer = setInterval(() => matches(params, token).catch(() => {}), 30000);
+  if (date === mskDay(0)) refreshEvery(30000, () => matches(params, token));
 }
 
 // ---------- match ----------
@@ -281,12 +462,12 @@ function compareBlock(m, pv) {
 }
 
 async function match(id, token) {
-  const d = await api(`/api/matches/${encodeURIComponent(id)}`);
+  const [d] = await Promise.all([api(`/api/matches/${encodeURIComponent(id)}`), loadMe(mskDay(0))]);
   if (stale(token)) return;
   const m = d.match;
   const t = m.tournament;
   const status = m.status === 'live' ? '<span class="live">● LIVE</span>'
-    : m.status === 'scheduled' ? `начало в ${mskTime(m.start_at)} МСК` : STATUS[m.status] ?? '';
+    : m.status === 'scheduled' ? `начало в ${localTime(m.start_at)}` : STATUS[m.status] ?? '';
   const scoreBig = m.status === 'scheduled' ? 'vs' : showScore(m) ? `${m.sets_p1 ?? 0}:${m.sets_p2 ?? 0}` : '—';
   const setLine = m.status !== 'scheduled' && showScore(m) ? m.sets.map((s) => `${s.p1}:${s.p2}`).join('  ') : '';
   const player = (p) => {
@@ -303,13 +484,16 @@ async function match(id, token) {
     <div class="hero">
       <div class="vs">${player(m.p1)}<div class="score">${esc(scoreBig)}</div>${player(m.p2)}</div>
       ${setLine ? `<div class="setline">${esc(setLine)}</div>` : ''}
+      ${oddsBox(m)}
+      ${voteBlock(m)}
       ${m.bolshe ? `<div class="bolshe" style="justify-content:center;margin-top:10px"><span class="badge">Больше</span>&nbsp;${esc([m.bolshe.commentator1, m.bolshe.commentator2].filter(Boolean).join(' и '))}</div>` : ''}
       ${m.bolshe?.vk_url ? `<a class="watch" href="${esc(m.bolshe.vk_url)}" target="_blank" rel="noopener">▶ Смотреть на VK</a>` : ''}
     </div>
     ${compareBlock(m, d.preview)}
     ${d.meetings.length ? `<h2>Личные встречи</h2><div class="hero list">${d.meetings.map((x) => resultLine(x, m.p1.fs_id)).join('')}</div>` : ''}
     ${noSpoilers ? '' : lastBlock(m.p1, d.last.p1) + lastBlock(m.p2, d.last.p2)}`;
-  if (m.status === 'live' || m.status === 'scheduled') timer = setInterval(() => match(id, token).catch(() => {}), 30000);
+  bindFanActions(view, () => match(id, token));
+  if (m.status === 'live' || m.status === 'scheduled') refreshEvery(30000, () => match(id, token));
 }
 
 // ---------- players ----------
@@ -352,20 +536,22 @@ const age = (birth) => {
 
 async function player(id, token) {
   const [{ player: p }, { matches: list }] = await Promise.all([
-    api(`/api/players/${encodeURIComponent(id)}`), api(`/api/players/${encodeURIComponent(id)}/matches`),
+    api(`/api/players/${encodeURIComponent(id)}`), api(`/api/players/${encodeURIComponent(id)}/matches`), loadMe(mskDay(0)),
   ]);
   if (stale(token)) return;
   const a = age(p.birth_date);
   view.innerHTML = `
     <div class="profile-head">${avatar(p.photo_url, '')}<div><h1>${esc(p.name_ru)}</h1>
       <div class="muted">${esc(p.name_latin ?? '')} · ${esc(p.tour)}${p.country_code ? ` · ${esc(p.country_code)}` : ''}${a != null ? ` · ${a} лет` : ''}</div>
-      ${p.sportsru_url ? `<a href="${esc(p.sportsru_url)}" target="_blank" rel="noopener" class="small">sports.ru</a>` : ''}</div></div>
+      ${p.sportsru_url ? `<a href="${esc(p.sportsru_url)}" target="_blank" rel="noopener" class="small">sports.ru</a>` : ''}
+      ${me ? (me.follows.includes(p.player_id) ? `<button class="follow on" type="button" data-follow="${esc(p.player_id)}" data-on="0">★ В моих игроках</button>` : `<button class="follow" type="button" data-follow="${esc(p.player_id)}">☆ Следить</button>`) : ''}</div></div>
     <div class="kv">
       <div><b>${p.singles_rank ?? '—'}</b><span>рейтинг</span></div>
       <div><b>${p.elo ? Math.round(p.elo) : '—'}</b><span>Эло</span></div>
       <div><b>${p.doubles_rank ?? '—'}</b><span>пары</span></div>
     </div>
     <h2>Матчи</h2>${list.length ? list.map(matchCard).join('') : '<div class="empty">Свежих матчей нет — история появится по мере игр</div>'}`;
+  bindFanActions(view, () => player(id, token));
 }
 
 // ---------- profile ----------
@@ -391,12 +577,12 @@ function levelFor(levels, step, xp) {
 }
 
 async function profile(token) {
-  const d = await api('/api/levels?xp=0');
+  const [d] = await Promise.all([api('/api/levels?xp=0'), loadMe(mskDay(0))]);
   if (stale(token)) return;
   const max = d.levels[d.levels.length - 1].from + d.legend_step;
   view.innerHTML = `
     <div class="level" id="lvl"></div>
-    <div class="muted small" style="margin:8px 2px">Прогнозы и опыт появятся в ближайших обновлениях. Пока можно посмотреть, как растут уровни.</div>
+    <div class="muted small" style="margin:8px 2px">${me ? `Опыт: ${me.xp.toLocaleString('ru-RU')} XP · угадано ${me.guessed} из ${me.settled}${me.place ? ` · №${me.place} из ${me.fans}` : ''}. +10 XP за прогноз, +20 за верный.` : 'Голосуй «Кто выиграет?» в приложении в Telegram: +10 XP за прогноз, +20 за верный.'} Ползунок показывает, как растут уровни.</div>
     <h2>Достижения</h2>
     <div class="badges">${ACHIEVEMENTS.map(([i, t, s]) => `<div>${i}<b>${esc(t)}</b><small>${esc(s)}</small></div>`).join('')}</div>`;
   const box = view.querySelector('#lvl');
@@ -409,7 +595,7 @@ async function profile(token) {
       <div class="muted small" style="margin-top:6px">Передвинь ползунок, чтобы посмотреть, как меняется уровень.</div>`;
     box.querySelector('input').addEventListener('input', (e) => paint(Number(e.target.value)));
   }
-  paint(0);
+  paint(me?.xp ?? 0);
 }
 
 // ---------- router ----------

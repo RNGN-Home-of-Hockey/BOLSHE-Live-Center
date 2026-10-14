@@ -6,14 +6,17 @@
 //   GET  /api/levels?xp=1234             tennis levels and XP rules
 //   GET  /media/covers/<vk id>.jpg       our stored cover of a «Больше» broadcast (640×360)
 //   GET  /media/heads/<flashscore id>.png our stored head of a player
+//   GET  /api/me?date=  POST /api/votes  POST /api/follows   fans (header X-Telegram-Init-Data)
 //   POST /telegram/webhook               Telegram updates (secret header required)
 // Cron (every 10 min): schedule sheet -> broadcasts; registers the bot webhook once the token exists.
 
 import { LEGEND_STEP, LEVELS, XP_RULES, levelFor } from '../../src/game/levels.js';
 import { explainTournament } from '../../src/insights/tournaments.js';
+import { authUser, castVote, fanProfile, setFollow } from './fans.js';
 import { matchCard } from './match-details.js';
 import { mediaCounts, serveMedia, syncMedia } from './media.js';
 import { matchesForDate, matchesOfPlayer, syncMatchDays } from './matches-sync.js';
+import { syncOdds } from './odds-sync.js';
 import { getPlayer, searchPlayers } from './players.js';
 import { broadcastsForDate, syncSchedule } from './schedule-sync.js';
 import { ensureMenuButton, ensureWebhook, handleTelegramUpdate, webhookSecret } from './telegram.js';
@@ -44,28 +47,27 @@ function summarizeTournaments(matches, broadcasts) {
     byKey.set(key, entry);
   }
   return [...byKey.values()].map((e) => {
-    const hint = broadcasts.find((b) => b.tournament && e.name && b.tournament.toLowerCase().includes(e.name.toLowerCase()))?.tournament;
-    return { ...e, ...explainTournament({ ...e, tournament: e.name }, hint) };
+    const broadcast = broadcasts.find((b) => b.tournament && e.name && b.tournament.toLowerCase().includes(e.name.toLowerCase()));
+    return { ...e, round: broadcast?.round ?? null, ...explainTournament({ ...e, tournament: e.name }, broadcast?.tournament) };
   }).sort((a, b) => (a.level === b.level ? b.matches - a.matches : a.level === 'tour' ? -1 : 1));
 }
 
-// The most interesting singles match still to watch: best-ranked pair, a bonus for a «Больше»
-// broadcast and for a Russian player. Returns the match and why it was picked.
-function pickMatchOfDay(matches) {
-  const open = matches.filter((m) => !m.is_doubles && m.tournament.level === 'tour' && ['scheduled', 'live'].includes(m.status));
-  const pool = open.length ? open : matches.filter((m) => !m.is_doubles && m.tournament.level === 'tour');
-  let best = null;
-  for (const m of pool) {
-    const r1 = m.p1.rank ?? 500;
-    const r2 = m.p2.rank ?? 500;
-    const score = 1 / r1 + 1 / r2 + (m.bolshe ? 0.05 : 0) + (m.p1.is_russian || m.p2.is_russian ? 0.05 : 0);
-    if (!best || score > best.score) best = { score, match: m, r1, r2 };
+// Main-tour singles still to come that are not on the «Больше» schedule: the best-ranked pairs
+// of each tournament (today and tomorrow), three per tournament.
+function upcomingByTournament(matches) {
+  const now = Date.now();
+  const byKey = new Map();
+  const open = matches.filter((m) => !m.is_doubles && m.tournament.level === 'tour' && m.status === 'scheduled'
+    && !m.bolshe && Date.parse(m.start_at) > now);
+  open.sort((a, b) => ((a.p1.rank ?? 999) + (a.p2.rank ?? 999)) - ((b.p1.rank ?? 999) + (b.p2.rank ?? 999)));
+  for (const m of open) {
+    const key = `${m.tournament.tour}|${m.tournament.name}`;
+    const list = byKey.get(key) ?? [];
+    if (list.length < 3) list.push(m);
+    byKey.set(key, list);
   }
-  if (!best) return null;
-  const why = [];
-  if (best.match.p1.rank && best.match.p2.rank) why.push(`Встречаются №${best.r1} и №${best.r2} мирового рейтинга.`);
-  if (best.match.bolshe) why.push(`Эфир «Больше»${best.match.bolshe.commentator1 ? `, комментирует ${best.match.bolshe.commentator1}` : ''}.`);
-  return { match: best.match, why };
+  for (const list of byKey.values()) list.sort((a, b) => Date.parse(a.start_at) - Date.parse(b.start_at));
+  return byKey;
 }
 
 async function health(env) {
@@ -106,6 +108,8 @@ const SCHEDULE_EVERY_MS = 10 * 60 * 1000;
 const MATCHES_TODAY_EVERY_MS = 60 * 1000;
 const MATCHES_WINDOW_EVERY_MS = 5 * 60 * 1000;
 const MEDIA_EVERY_MS = 60 * 1000;
+const ODDS_LIVE_EVERY_MS = 60 * 1000;
+const ODDS_PREMATCH_EVERY_MS = 10 * 60 * 1000;
 // Flashscore keeps −7…+7 days; nearer days come round more often.
 const WINDOW_OFFSETS = [-1, 1, -2, 2, -1, 1, -3, 3, -4, 4, -1, 1, -5, 5, -6, 6, -7, 7];
 
@@ -152,6 +156,15 @@ async function maintain(env, { force = false } = {}) {
   if (env.MEDIA && await due(env, 'media_sync', MEDIA_EVERY_MS, force)) {
     await setState(env, 'media_sync', 'run');
     tasks.push(runJob(env, 'media', () => syncMedia(env)));
+  }
+  // Winline odds: in play every minute, pre-match every 10 minutes (the feed is ~6.5 MB).
+  if (await due(env, 'odds_live', ODDS_LIVE_EVERY_MS, force)) {
+    await setState(env, 'odds_live', 'run');
+    tasks.push(runJob(env, 'odds_live', () => syncOdds(env, 'live')));
+  }
+  if (await due(env, 'odds_prematch', ODDS_PREMATCH_EVERY_MS, force)) {
+    await setState(env, 'odds_prematch', 'run');
+    tasks.push(runJob(env, 'odds_prematch', () => syncOdds(env, 'prematch')));
   }
   if (env.TELEGRAM_BOT_TOKEN) {
     const menuWant = `${env.PUBLIC_URL}/app/`;
@@ -202,6 +215,22 @@ export default {
         const update = await request.json();
         ctx.waitUntil(handleTelegramUpdate(update, env).catch((error) => console.error('update failed', error?.stack ?? error)));
         return json({ ok: true });
+      }
+      // Fans: everything personal needs the signed Telegram data of the Mini App.
+      if (path === '/api/me' || path === '/api/votes' || path === '/api/follows') {
+        const user = await authUser(env, request);
+        if (!user) return json({ ok: false, error: 'open the app in Telegram' }, 401);
+        if (path === '/api/me') {
+          const date = url.searchParams.get('date') ?? todayMsk();
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return json({ ok: false, error: 'date must be YYYY-MM-DD' }, 400);
+          return json(await fanProfile(env, user, date));
+        }
+        if (request.method !== 'POST') return json({ ok: false, error: 'method not allowed' }, 405);
+        const body = await request.json().catch(() => ({}));
+        const result = path === '/api/votes'
+          ? await castVote(env, user, body.match_id, Number(body.pick))
+          : await setFollow(env, user, body.player_id, Boolean(body.on));
+        return json(result, result.ok ? 200 : result.status ?? 400);
       }
       if (request.method !== 'GET') return json({ ok: false, error: 'method not allowed' }, 405);
       if (path === '/') {
@@ -257,24 +286,20 @@ export default {
       }
       if (path === '/api/home') {
         const date = url.searchParams.get('date') ?? todayMsk();
-        const yesterday = new Date(Date.parse(`${date}T12:00:00Z`) - 86400e3).toISOString().slice(0, 10);
-        const [all, before, broadcasts] = await Promise.all([
+        const tomorrow = new Date(Date.parse(`${date}T12:00:00Z`) + 86400e3).toISOString().slice(0, 10);
+        const [all, ahead, broadcasts] = await Promise.all([
           matchesForDate(env.DB, date, {}),
-          matchesForDate(env.DB, yesterday, { russian: true }),
+          matchesForDate(env.DB, tomorrow, { level: 'tour' }),
           broadcastsForDate(env.DB, date),
         ]);
         const main = all.filter((m) => !m.is_doubles && ['tour', 'challenger'].includes(m.tournament.level));
+        const upcoming = upcomingByTournament([...all, ...ahead]);
         return json({
           date,
-          tournaments: summarizeTournaments(all, broadcasts),
+          tournaments: summarizeTournaments(all, broadcasts).map((t) => ({ ...t, upcoming: upcoming.get(`${t.tour}|${t.name}`) ?? [] })),
           bolshe: all.filter((m) => m.bolshe),
           broadcasts,
           russians: main.filter((m) => m.p1.is_russian || m.p2.is_russian),
-          russians_yesterday: before.filter((m) => !m.is_doubles && ['tour', 'challenger'].includes(m.tournament.level)
-            && ['finished', 'retired', 'walkover'].includes(m.status)),
-          match_of_day: pickMatchOfDay(all),
-          live: main.filter((m) => m.status === 'live').slice(0, 20),
-          tour: all.filter((m) => m.tournament.level === 'tour' && !m.is_doubles),
         }, 200, 20);
       }
       if (path === '/api/levels') {
