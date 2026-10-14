@@ -322,3 +322,32 @@ h1 { font-size: 22px; margin: 6px 0 4px; }
 .ach-bar i { display: block; height: 100%; background: var(--accent); }
 .ach-goal { font-size: 11px; line-height: 1.3; }
 .ach-about { font-size: 11px; color: var(--hint); line-height: 1.3; }
+
+/* --- 2026-10-14: «Турниры» tab, bracket game --- */
+.tabs { grid-template-columns: repeat(5, 1fr); }
+.bk-cta { color: var(--link); font-weight: 600; font-size: 14px; }
+.bk-mine { font-size: 14px; }
+.bk-mine b { font-size: 18px; }
+.bk-note { background: var(--bg2); border-radius: 12px; padding: 10px 12px; font-size: 13px; line-height: 1.45; margin-bottom: 10px; }
+.bk-rounds { margin-bottom: 10px; }
+.bk-rounds small { color: inherit; opacity: .7; font-size: 11px; }
+.bk-list { display: flex; flex-direction: column; gap: 8px; }
+.bk-match { background: var(--bg2); border-radius: 14px; padding: 8px 10px; }
+.bk-meta { display: flex; justify-content: space-between; font-size: 12px; color: var(--hint); margin-bottom: 4px; }
+.bk-side { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto auto; gap: 8px; align-items: center; width: 100%; text-align: left;
+  border: 1px solid transparent; background: none; color: var(--text); padding: 6px 6px; border-radius: 10px; font-size: 15px; cursor: pointer; }
+.bk-side:disabled { cursor: default; }
+.bk-side.picked { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.bk-side.won .bk-name { font-weight: 700; }
+.bk-side.lost { opacity: .55; }
+.bk-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bk-name small { color: var(--hint); }
+.bk-ok { color: var(--win); font-weight: 800; }
+.bk-no { color: var(--live); font-weight: 800; }
+.bk-send { position: sticky; bottom: calc(64px + env(safe-area-inset-bottom)); padding: 10px 0; background: linear-gradient(transparent, var(--bg) 30%); }
+.bk-send button { width: 100%; height: 48px; border: 0; border-radius: 14px; background: var(--accent); color: var(--accent-text); font-weight: 700; font-size: 16px; cursor: pointer; }
+.bk-send button:disabled { opacity: .5; cursor: default; }
+.bk-table { background: var(--bg2); border-radius: 14px; padding: 4px 12px; }
+.bk-row { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 8px; padding: 8px 0; border-bottom: 1px solid color-mix(in srgb, var(--hint) 15%, transparent); }
+.bk-row:last-child { border-bottom: 0; }
+.bk-row.me { font-weight: 700; }

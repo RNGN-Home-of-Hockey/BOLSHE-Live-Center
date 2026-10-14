@@ -13,6 +13,7 @@
 import { ACHIEVEMENTS, achievementLevel } from '../../src/game/achievements.js';
 import { LEGEND_STEP, LEVELS, XP_RULES, levelFor } from '../../src/game/levels.js';
 import { explainTournament } from '../../src/insights/tournaments.js';
+import { bracketView, listBrackets, submitBracket, syncBrackets } from './brackets.js';
 import { authUser, castVote, fanProfile, setFollow } from './fans.js';
 import { matchCard } from './match-details.js';
 import { mediaCounts, serveMedia, syncMedia } from './media.js';
@@ -112,6 +113,7 @@ const MATCHES_WINDOW_EVERY_MS = 5 * 60 * 1000;
 const MEDIA_EVERY_MS = 60 * 1000;
 const ODDS_LIVE_EVERY_MS = 60 * 1000;
 const ODDS_PREMATCH_EVERY_MS = 10 * 60 * 1000;
+const BRACKETS_EVERY_MS = 10 * 60 * 1000;
 // Flashscore keeps −7…+7 days; nearer days come round more often.
 const WINDOW_OFFSETS = [-1, 1, -2, 2, -1, 1, -3, 3, -4, 4, -1, 1, -5, 5, -6, 6, -7, 7];
 
@@ -168,6 +170,11 @@ async function maintain(env, { force = false } = {}) {
     await setState(env, 'odds_prematch', 'run');
     tasks.push(runJob(env, 'odds_prematch', () => syncOdds(env, 'prematch')));
   }
+  // Draws of the running tournaments for the bracket game, and the fans' points.
+  if (await due(env, 'brackets', BRACKETS_EVERY_MS, force)) {
+    await setState(env, 'brackets', 'run');
+    tasks.push(runJob(env, 'brackets', () => syncBrackets(env)));
+  }
   if (env.TELEGRAM_BOT_TOKEN) {
     const menuWant = `${env.PUBLIC_URL}/app/`;
     const menu = await getState(env, 'menu_button_for');
@@ -219,6 +226,21 @@ export default {
         return json({ ok: true });
       }
       // Fans: everything personal needs the signed Telegram data of the Mini App.
+      // Bracket game: reading is open to all (a signed-in fan also gets their own bracket),
+      // sending needs the signed Telegram data.
+      if (path === '/api/brackets') return json({ brackets: await listBrackets(env, await authUser(env, request)) });
+      const bracketPath = path.match(/^\/api\/brackets\/([A-Za-z0-9]+_[A-Za-z0-9]+)$/);
+      if (bracketPath) {
+        const user = await authUser(env, request);
+        if (request.method === 'POST') {
+          if (!user) return json({ ok: false, error: 'open the app in Telegram' }, 401);
+          const body = await request.json().catch(() => ({}));
+          const result = await submitBracket(env, bracketPath[1], user, body.picks);
+          return json(result, result.ok ? 200 : result.status ?? 400);
+        }
+        const view = await bracketView(env, bracketPath[1], user);
+        return view ? json(view) : json({ ok: false, error: 'not found' }, 404);
+      }
       if (path === '/api/me' || path === '/api/votes' || path === '/api/follows') {
         const user = await authUser(env, request);
         if (!user) return json({ ok: false, error: 'open the app in Telegram' }, 401);
@@ -309,9 +331,13 @@ export default {
         ]);
         const main = all.filter((m) => !m.is_doubles && ['tour', 'challenger'].includes(m.tournament.level));
         const upcoming = upcomingByTournament([...all, ...ahead]);
+        const { results: open } = await env.DB.prepare("SELECT bracket_key, name FROM brackets WHERE status = 'open'").all();
+        const openBrackets = new Map(open.map((b) => [b.name, b.bracket_key]));
         return json({
           date,
-          tournaments: summarizeTournaments(all, broadcasts).map((t) => ({ ...t, upcoming: upcoming.get(`${t.tour}|${t.name}`) ?? [] })),
+          tournaments: summarizeTournaments(all, broadcasts).map((t) => ({
+            ...t, upcoming: upcoming.get(`${t.tour}|${t.name}`) ?? [], bracket_key: openBrackets.get(`${t.tour} ${t.name}`) ?? null,
+          })),
           bolshe: all.filter((m) => m.bolshe),
           broadcasts,
           russians: main.filter((m) => m.p1.is_russian || m.p2.is_russian),

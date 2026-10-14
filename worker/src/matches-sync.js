@@ -4,6 +4,8 @@ import { mediaUrl } from '../../src/lib/media.js';
 import { fetchDay } from '../../src/sources/flashscore-matches.js';
 import { shapeOdds } from './odds-sync.js';
 
+const qualifying = (t) => /квалификац|qualif/i.test(`${t.tournament ?? ''} ${t.name ?? ''}`);
+
 const mskDate = (iso) => (iso ? new Date(Date.parse(iso) + 3 * 3600 * 1000).toISOString().slice(0, 10) : null);
 
 function hash(text) {
@@ -24,9 +26,13 @@ export async function syncMatchDays(env, offsets) {
     const { tournaments, matches } = await fetchDay(offset);
     seen += matches.length;
     const statements = tournaments.map((t) => db.prepare(`INSERT INTO tournaments
-        (tournament_key, name, category, tour, level, discipline, surface, tournament, country, url, first_seen)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(tournament_key) DO NOTHING`)
-      .bind(t.key, t.name, t.category, t.tour, t.level, t.discipline, t.surface, t.tournament, t.country, t.url, now));
+        (tournament_key, name, category, tour, level, discipline, surface, tournament, country, url, first_seen, fs_tournament_id, fs_stage_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(tournament_key) DO UPDATE SET
+        fs_tournament_id = COALESCE(excluded.fs_tournament_id, tournaments.fs_tournament_id),
+        fs_stage_id = COALESCE(excluded.fs_stage_id, tournaments.fs_stage_id)`)
+      // Qualifying shares the tournament key with the main draw: only the main draw's ids are kept.
+      .bind(t.key, t.name, t.category, t.tour, t.level, t.discipline, t.surface, t.tournament, t.country, t.url, now,
+        qualifying(t) ? null : t.fs_tournament_id ?? null, qualifying(t) ? null : t.fs_stage_id ?? null));
     const ids = matches.map((m) => m.match_id);
     const known = new Map();
     for (let i = 0; i < ids.length; i += 90) {

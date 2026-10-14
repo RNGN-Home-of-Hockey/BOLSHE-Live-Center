@@ -429,11 +429,12 @@ function tournamentsBlock(d) {
   const tour = d.tournaments.filter((t) => t.level === 'tour');
   const challengers = d.tournaments.filter((t) => t.level === 'challenger').length;
   if (!tour.length && !challengers) return '';
-  const card = (t) => `<a class="tour-card" href="#/matches?level=tour">
+  const card = (t) => `<a class="tour-card" href="${t.bracket_key ? `#/bracket/${encodeURIComponent(t.bracket_key)}` : '#/matches?level=tour'}">
     <div class="tt"><b>${esc(`${t.tour ?? ''} ${tierNumber(t)}${t.name ?? ''}`.replace(/\s+/g, ' ').trim())}</b>${t.live ? `<span class="live"><span class="dot"></span>${t.live} ${plural(t.live, 'идёт', 'идут', 'идут')}</span>` : ''}</div>
     <div>${[SURFACE[t.surface], t.round].filter(Boolean).map((x) => `<span class="tag">${esc(x)}</span>`).join('')}</div>
     <div class="nums"><div><b>${t.matches}</b><span>${plural(t.matches, 'матч', 'матча', 'матчей')} сегодня</span></div>
       <div><b>${t.bolshe}</b><span>в эфире «Больше»</span></div><div><b>${t.russians}</b><span>${plural(t.russians, 'наш', 'наших', 'наших')}</span></div></div>
+    ${t.bracket_key ? '<div class="bk-cta">🏆 Сетка турнира: угадай победителей до финала →</div>' : ''}
     ${t.upcoming?.length ? `<div class="ahead">Главные матчи впереди — не в графике «Больше»</div>
       ${t.upcoming.map((m) => `<div class="up"><span class="t">${esc(dayWord(m.start_at))}<br>${esc(localTime(m.start_at))}</span>
         <span class="who">${esc(lastName(m.p1))}${m.p1.rank ? ` (№${m.p1.rank})` : ''} — ${esc(lastName(m.p2))}${m.p2.rank ? ` (№${m.p2.rank})` : ''}${oddsRow(m)}</span></div>`).join('')}` : ''}
@@ -673,6 +674,132 @@ async function profile(token) {
   paint(me?.xp ?? 0);
 }
 
+// ---------- tournaments: the bracket game ----------
+// Same rules as src/game/bracket.js: picks are "<round>:<match>" → draw position of the winner.
+const ROUND_POINTS = [32, 16, 8, 4, 2];
+const roundPoints = (draw, r) => ROUND_POINTS[draw.rounds.length - 1 - r] ?? 1;
+const slotKey = (r, k) => `${r}:${k}`;
+function drawSides(draw, picks) {
+  const winnerOf = (r, k) => {
+    const m = draw.rounds[r].matches[k];
+    if (m?.w != null) return m.w;
+    const p = picks[slotKey(r, k)];
+    return p == null ? null : Number(p);
+  };
+  return draw.rounds.map((round, r) => round.matches.map((m, k) => [
+    m.h ?? (r > 0 ? winnerOf(r - 1, 2 * k) : null),
+    m.a ?? (r > 0 ? winnerOf(r - 1, 2 * k + 1) : null),
+  ]));
+}
+// A changed pick drops later picks of a player who no longer gets there.
+function cleanPicks(draw, picks) {
+  const out = { ...picks };
+  draw.rounds.forEach((round, r) => round.matches.forEach((m, k) => {
+    const key = slotKey(r, k);
+    if (out[key] == null) return;
+    const [h, a] = drawSides(draw, out)[r][k];
+    if (out[key] !== h && out[key] !== a) delete out[key];
+  }));
+  return out;
+}
+const openKeys = (draw) => draw.rounds.flatMap((round, r) => round.matches.map((m, k) => (m.w == null ? slotKey(r, k) : null))).filter(Boolean);
+
+const RULES = 'Выбери победителя каждого оставшегося матча — до финала. Отправить сетку можно один раз: потом до конца турнира её не поменять. Очки дают матчи, которые начались после отправки: финал — 32, полуфинал — 16, четвертьфинал — 8, 1/8 — 4, 1/16 — 2, ранние круги — 1.';
+
+async function tournamentsTab(token) {
+  const [d] = await Promise.all([api('/api/brackets'), loadMe(mskDay(0))]);
+  if (stale(token)) return;
+  const open = d.brackets.filter((b) => b.status === 'open');
+  const done = d.brackets.filter((b) => b.status !== 'open');
+  const card = (b) => `<a class="tour-card" href="#/bracket/${encodeURIComponent(b.bracket_key)}">
+    <div class="tt"><b>${esc(b.name)}</b><span class="muted small">${b.fans} ${plural(b.fans, 'участник', 'участника', 'участников')}</span></div>
+    <div>${[SURFACE[b.surface], b.status === 'open' ? `идёт ${b.round ?? ''}` : 'завершён'].filter(Boolean).map((x) => `<span class="tag">${esc(x)}</span>`).join('')}</div>
+    ${b.mine ? `<div class="bk-mine"><b>${b.mine.points}</b> ${plural(b.mine.points, 'очко', 'очка', 'очков')} · угадано ${b.mine.correct} из ${b.mine.decided}${b.status === 'open' ? ` · можно набрать до ${b.mine.possible}` : ''}</div>`
+      : b.status === 'open' ? `<div class="bk-cta">Заполнить сетку → осталось ${b.open_matches} ${plural(b.open_matches, 'матч', 'матча', 'матчей')}</div>` : ''}
+    ${b.champion ? `<div class="muted small">Чемпион: ${esc(b.champion)}</div>` : ''}
+  </a>`;
+  view.innerHTML = `<h1>Турниры</h1>
+    <p class="muted small" style="margin:0 2px 12px">${esc(RULES)}</p>
+    ${open.length ? `<div class="tours">${open.map(card).join('')}</div>` : '<div class="empty">Сейчас сеток нет — они появятся с началом основной сетки турнира</div>'}
+    ${done.length ? `<h2>Завершённые</h2><div class="tours">${done.map(card).join('')}</div>` : ''}`;
+}
+
+const bracketDrafts = {};
+function loadDraft(key) {
+  if (bracketDrafts[key]) return bracketDrafts[key];
+  try { bracketDrafts[key] = JSON.parse(localStorage.getItem(`bolshe-bracket-${key}`) || '{}'); } catch { bracketDrafts[key] = {}; }
+  return bracketDrafts[key];
+}
+function saveDraft(key, picks) {
+  bracketDrafts[key] = picks;
+  try { localStorage.setItem(`bolshe-bracket-${key}`, JSON.stringify(picks)); } catch { /* ignore */ }
+}
+const bracketRound = {};
+
+async function bracketScreen(key, token) {
+  const [d] = await Promise.all([api(`/api/brackets/${encodeURIComponent(key)}`), loadMe(mskDay(0))]);
+  if (stale(token)) return;
+  const draw = d.draw;
+  const sent = d.entry;
+  const editable = !sent && d.status === 'open' && Boolean(tg?.initData);
+  const picks = sent ? sent.picks : cleanPicks(draw, loadDraft(key));
+  const sides = drawSides(draw, picks);
+  const open = openKeys(draw);
+  const filled = open.filter((k) => picks[k] != null).length;
+  const current = Math.max(0, draw.rounds.findIndex((round) => round.matches.some((m) => m.w == null)));
+  const r = bracketRound[key] ?? current;
+  const player = (pos) => draw.players.find((p) => p.pos === pos);
+  const sideRow = (pos, m, k, other) => {
+    const p = pos == null ? null : player(pos);
+    const myPick = picks[slotKey(r, k)];
+    const won = m.w != null && m.w === pos;
+    const lost = m.w != null && pos != null && m.w !== pos;
+    const picked = myPick != null && myPick === pos;
+    const mark = picked && m.w != null ? (won ? '<span class="bk-ok">✓</span>' : '<span class="bk-no">✗</span>') : '';
+    const name = p ? `${esc(lastName({ name: p.name_ru }))}${p.seed ? ` <small>(${esc(p.seed)})</small>` : p.tag ? ` <small>(${esc(p.tag)})</small>` : ''}` : `<span class="muted">${r > 0 ? 'победитель прошлого круга' : '—'}</span>`;
+    const canPick = editable && m.w == null && pos != null && other !== undefined;
+    return `<button class="bk-side${won ? ' won' : ''}${lost ? ' lost' : ''}${picked ? ' picked' : ''}" type="button"${canPick ? ` data-pick="${slotKey(r, k)}" data-pos="${pos}"` : ' disabled'}>
+      ${p ? avatar(p.photo, 'ava') : '<span class="ava ph"></span>'}<span class="bk-name">${name}</span>${p?.rank ? `<small class="muted">№${p.rank}</small>` : ''}${mark}</button>`;
+  };
+  const round = draw.rounds[r];
+  const status = !tg?.initData && !sent
+    ? '<div class="bk-note">Заполнять сетку можно в приложении в Telegram.</div>'
+    : sent
+      ? `<div class="bk-note"><b>Твоя сетка отправлена</b> ${esc(new Date(sent.submitted_at).toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }))}.
+        Очки: <b>${sent.points}</b> · угадано ${sent.correct} из ${sent.decided}${d.status === 'open' ? ` · ещё можно набрать до ${sent.possible}` : ''}${d.place ? ` · место ${d.place} из ${d.table.length}` : ''}</div>`
+      : d.status === 'open' ? `<div class="bk-note">${esc(RULES)}</div>` : '<div class="bk-note">Турнир завершён.</div>';
+  view.innerHTML = `<h1>${esc(d.name)}</h1>
+    <div class="muted small" style="margin:-2px 2px 10px">Сетка · ${esc(SURFACE[d.surface] ?? '')}${d.status === 'open' ? ` · идёт ${esc(draw.rounds[current].title)}` : ' · турнир завершён'}</div>
+    ${status}
+    <div class="days bk-rounds">${draw.rounds.map((x, i) => `<button class="day${i === r ? ' on' : ''}" type="button" data-round="${i}">${esc(x.short)} <small>+${roundPoints(draw, i)}</small></button>`).join('')}</div>
+    <div class="bk-list">${round.matches.map((m, k) => {
+      const [h, a] = sides[r][k];
+      const when = m.w != null ? '' : m.status === 'live' ? '<span class="live">● идёт</span>' : m.start ? esc(`${dayWord(m.start)} ${localTime(m.start)}`) : '';
+      return `<div class="bk-match"><div class="bk-meta"><span>${esc(round.title)} · матч ${k + 1}</span><span>${when}</span></div>${sideRow(h, m, k, a)}${sideRow(a, m, k, h)}</div>`;
+    }).join('')}</div>
+    ${editable ? `<div class="bk-send"><button type="button" data-send${filled < open.length ? ' disabled' : ''}>${filled < open.length ? `Заполнено ${filled} из ${open.length}` : 'Отправить сетку'}</button></div>` : ''}
+    ${d.table.length ? `<h2>Таблица</h2><div class="bk-table">${d.table.slice(0, 20).map((t) => `<div class="bk-row${t.me ? ' me' : ''}"><span>${t.place}</span><span>${esc(t.name)}${t.me ? ' (ты)' : ''}</span><b>${t.points}</b></div>`).join('')}</div>` : ''}`;
+  view.querySelectorAll('[data-round]').forEach((b) => b.addEventListener('click', () => {
+    bracketRound[key] = Number(b.dataset.round);
+    bracketScreen(key, token).catch(() => {});
+  }));
+  view.querySelectorAll('[data-pick]').forEach((b) => b.addEventListener('click', () => {
+    saveDraft(key, cleanPicks(draw, { ...picks, [b.dataset.pick]: Number(b.dataset.pos) }));
+    tg?.HapticFeedback?.selectionChanged?.();
+    bracketScreen(key, token).catch(() => {});
+  }));
+  view.querySelector('[data-send]')?.addEventListener('click', async (e) => {
+    const go = () => post(`/api/brackets/${encodeURIComponent(key)}`, { picks: cleanPicks(draw, loadDraft(key)) })
+      .then(() => { toast('Сетка отправлена'); return bracketScreen(key, token); })
+      .catch((error) => toast(error.message));
+    e.currentTarget.disabled = true;
+    const text = 'Отправить сетку? После отправки её нельзя будет поменять до конца турнира.';
+    if (tg?.showConfirm) tg.showConfirm(text, (yes) => (yes ? go() : bracketScreen(key, token)));
+    else if (window.confirm(text)) go();
+    else e.currentTarget.disabled = false;
+  });
+}
+
 // ---------- settings ----------
 function settings() {
   view.innerHTML = `<h1>Настройки</h1>
@@ -703,9 +830,12 @@ async function route() {
   const [path, query = ''] = (location.hash.slice(1) || '/').split('?');
   const params = new URLSearchParams(query);
   const parts = path.split('/').filter(Boolean);
-  const tab = { '': 'home', matches: 'matches', match: 'matches', players: 'players', player: 'players', profile: 'profile', settings: 'profile' }[parts[0] ?? ''] ?? 'home';
+  const tab = {
+    '': 'home', matches: 'matches', match: 'matches', tournaments: 'tournaments', bracket: 'tournaments',
+    players: 'players', player: 'players', profile: 'profile', settings: 'profile',
+  }[parts[0] ?? ''] ?? 'home';
   document.querySelectorAll('.tabs a').forEach((a) => a.classList.toggle('on', a.dataset.tab === tab));
-  const detail = parts[0] === 'match' || parts[0] === 'player' || parts[0] === 'settings';
+  const detail = ['match', 'player', 'settings', 'bracket'].includes(parts[0]);
   if (tg?.BackButton) { if (detail) tg.BackButton.show(); else tg.BackButton.hide(); }
   if (!view.innerHTML) view.innerHTML = '<div class="loading">Загружаем…</div>';
   try {
@@ -715,6 +845,8 @@ async function route() {
     else if (parts[0] === 'players') await players(params, token);
     else if (parts[0] === 'profile') await profile(token);
     else if (parts[0] === 'settings') settings();
+    else if (parts[0] === 'tournaments') await tournamentsTab(token);
+    else if (parts[0] === 'bracket' && parts[1]) await bracketScreen(decodeURIComponent(parts[1]), token);
     else await home(params, token);
   } catch (error) {
     if (stale(token)) return;

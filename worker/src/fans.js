@@ -67,7 +67,13 @@ async function xpTable(db) {
     FROM votes v LEFT JOIN matches m ON m.match_id = v.match_id LEFT JOIN tally t ON t.match_id = v.match_id
     GROUP BY v.user_id`)
     .bind(XP_RULES.prediction_made, XP_RULES.winner_correct, XP_RULES.against_majority_share, XP_RULES.against_majority_multiplier).all();
-  return results;
+  // Bracket points count as XP too.
+  const xp = new Map(results.map((r) => [Number(r.user_id), r.xp]));
+  try {
+    const { results: brackets } = await db.prepare('SELECT user_id, SUM(points) AS p FROM bracket_entries GROUP BY user_id').all();
+    for (const b of brackets) xp.set(Number(b.user_id), (xp.get(Number(b.user_id)) ?? 0) + (b.p ?? 0));
+  } catch { /* no brackets table yet */ }
+  return [...xp].map(([user_id, total]) => ({ user_id, xp: total }));
 }
 
 const DONE = ['finished', 'retired', 'walkover'];

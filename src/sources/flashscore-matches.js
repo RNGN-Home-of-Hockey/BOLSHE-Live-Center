@@ -82,7 +82,11 @@ export function parseDayFeed(text) {
   for (const record of String(text ?? '').split('¬~')) {
     const f = fields(record);
     if (f.ZA) {
-      league = { key: f.ZEE || f.ZC || f.ZA, name: f.ZA, url: f.ZL ?? null, ...parseLeague(f.ZA) };
+      league = {
+        key: f.ZEE || f.ZC || f.ZA, name: f.ZA, url: f.ZL ?? null, ...parseLeague(f.ZA),
+        // this year's edition and its stage — the draw feed (flashscore-draw.js) needs both
+        fs_tournament_id: f.ZE || null, fs_stage_id: f.ZC || null,
+      };
       tournaments.set(league.key, league);
       continue;
     }
