@@ -22,6 +22,7 @@ import { syncOdds } from './odds-sync.js';
 import { winlineLink } from './winline-link.js';
 import { getPlayer, searchPlayers } from './players.js';
 import { broadcastsForDate, syncSchedule } from './schedule-sync.js';
+import { playerInsights, refreshPlayerStats, statsList, syncMatchStats } from './stats.js';
 import { ensureMenuButton, ensureWebhook, handleTelegramUpdate, webhookSecret } from './telegram.js';
 
 const json = (data, status = 200, cacheSeconds = 0) => new Response(JSON.stringify(data), {
@@ -114,6 +115,8 @@ const MEDIA_EVERY_MS = 60 * 1000;
 const ODDS_LIVE_EVERY_MS = 60 * 1000;
 const ODDS_PREMATCH_EVERY_MS = 10 * 60 * 1000;
 const BRACKETS_EVERY_MS = 10 * 60 * 1000;
+const MATCH_STATS_EVERY_MS = 10 * 60 * 1000;
+const PLAYER_STATS_EVERY_MS = 60 * 60 * 1000;
 // Flashscore keeps −7…+7 days; nearer days come round more often.
 const WINDOW_OFFSETS = [-1, 1, -2, 2, -1, 1, -3, 3, -4, 4, -1, 1, -5, 5, -6, 6, -7, 7];
 
@@ -174,6 +177,15 @@ async function maintain(env, { force = false } = {}) {
   if (await due(env, 'brackets', BRACKETS_EVERY_MS, force)) {
     await setState(env, 'brackets', 'run');
     tasks.push(runJob(env, 'brackets', () => syncBrackets(env)));
+  }
+  // Match statistics of finished singles matches, and the players' 52-week summary with 0–10 scores.
+  if (await due(env, 'match_stats', MATCH_STATS_EVERY_MS, force)) {
+    await setState(env, 'match_stats', 'run');
+    tasks.push(runJob(env, 'match_stats', () => syncMatchStats(env)));
+  }
+  if (await due(env, 'player_stats', PLAYER_STATS_EVERY_MS, force)) {
+    await setState(env, 'player_stats', 'run');
+    tasks.push(runJob(env, 'player_stats', () => refreshPlayerStats(env)));
   }
   if (env.TELEGRAM_BOT_TOKEN) {
     const menuWant = `${env.PUBLIC_URL}/app/`;
@@ -290,7 +302,12 @@ export default {
       }
       if (path.startsWith('/api/players/')) {
         const player = await getPlayer(env.DB, decodeURIComponent(path.slice('/api/players/'.length)));
-        return player ? json({ player }, 200, 60) : json({ ok: false, error: 'not found' }, 404);
+        return player ? json({ player, insights: await playerInsights(env, player) }, 200, 60) : json({ ok: false, error: 'not found' }, 404);
+      }
+      if (path === '/api/stats') {
+        return json(await statsList(env, {
+          tour: (url.searchParams.get('tour') ?? 'ATP').toUpperCase(), sort: url.searchParams.get('sort') ?? 'serve_rating', limit: url.searchParams.get('limit') ?? 100,
+        }), 200, 300);
       }
       if (path === '/api/broadcasts') {
         const date = url.searchParams.get('date') ?? todayMsk();

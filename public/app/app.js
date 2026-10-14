@@ -577,12 +577,7 @@ async function players(params, token) {
       bindFanActions(res, reload);
       return;
     }
-    const [ru, atp, wta] = await Promise.all([
-      api('/api/players?russian=1&limit=12'), api('/api/players?tour=ATP&limit=10'), api('/api/players?tour=WTA&limit=10'),
-    ]);
-    if (stale(token)) return;
-    res.innerHTML = `<h2>Наши</h2>${playerRows(ru.players)}<h2>Топ-10 ATP</h2>${playerRows(atp.players)}<h2>Топ-10 WTA</h2>${playerRows(wta.players)}`;
-    bindFanActions(res, reload);
+    await statsBoard(res, token, reload);
   }
   async function reload() {
     await loadMe(mskDay(0));
@@ -592,6 +587,65 @@ async function players(params, token) {
   input.addEventListener('input', () => { clearTimeout(debounce); debounce = setTimeout(() => load(input.value).catch(() => {}), 250); });
   await loadMe(mskDay(0));
   await load(q);
+}
+
+// ---------- statistics: round charts "из 10" and the sortable players list ----------
+const fmtStat = (field, v) => (v == null ? '—' : field.fmt === 'pct' ? `${Math.round(v)}%` : field.fmt === 'int' ? String(Math.round(v)) : v.toFixed(1));
+function donut(score, size = 64) {
+  const r = 26;
+  const c = 2 * Math.PI * r;
+  const v = Math.max(0, Math.min(10, score ?? 0));
+  const tone = score == null ? 'none' : v >= 7 ? 'hi' : v >= 4 ? 'mid' : 'lo';
+  return `<svg class="donut ${tone}" viewBox="0 0 64 64" width="${size}" height="${size}" aria-hidden="true">
+    <circle cx="32" cy="32" r="${r}" class="d-bg"></circle>
+    <circle cx="32" cy="32" r="${r}" class="d-fg" stroke-dasharray="${((v / 10) * c).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 32 32)"></circle>
+    <text x="32" y="37" text-anchor="middle">${score == null ? '—' : v.toFixed(1)}</text></svg>`;
+}
+
+let statsTour = 'ATP';
+let statsSort = 'rank';
+async function statsBoard(res, token, reload) {
+  const ranked = statsSort === 'rank';
+  const d = ranked ? await api(`/api/players?tour=${statsTour}&limit=100`) : await api(`/api/stats?tour=${statsTour}&sort=${encodeURIComponent(statsSort)}&limit=100`);
+  const fields = d.fields ?? (await api(`/api/stats?tour=${statsTour}&limit=1`)).fields;
+  if (stale(token)) return;
+  const field = fields.find((f) => f.key === statsSort);
+  const rows = ranked
+    ? d.players.map((p, i) => `<a class="stat-row" href="#/player/${encodeURIComponent(p.player_id)}"><span class="pos">${p.singles_rank ?? i + 1}</span>${avatar(p.photo_url, 'ava')}
+        <span class="nm"><b>${esc(p.name_ru)}</b>${p.is_russian ? ' <small class="ours-tag">наш</small>' : ''}<small class="muted">${p.elo ? `Эло ${Math.round(p.elo)}` : ''}</small></span><span></span>${followButton(p.player_id, true) || '<span></span>'}</a>`).join('')
+    : d.players.map((p, i) => `<a class="stat-row" href="#/player/${encodeURIComponent(p.player_id)}"><span class="pos">${i + 1}</span>${avatar(p.photo, 'ava')}
+        <span class="nm"><b>${esc(p.name)}</b>${p.is_russian ? ' <small class="ours-tag">наш</small>' : ''}<small class="muted">${p.rank ? `№${p.rank} · ` : ''}${p.wins}–${p.losses}</small></span>
+        <span class="val"><b>${fmtStat(field, p.value)}</b>${donut(p.score, 34)}</span>${followButton(p.player_id, true) || '<span></span>'}</a>`).join('');
+  res.innerHTML = `<div class="days">${['ATP', 'WTA'].map((t) => `<button class="day${t === statsTour ? ' on' : ''}" type="button" data-tour="${t}">${t}</button>`).join('')}</div>
+    <label class="sort-row">Сортировать: <select data-sort>
+      <option value="rank"${ranked ? ' selected' : ''}>Рейтинг</option>
+      ${fields.map((f) => `<option value="${f.key}"${f.key === statsSort ? ' selected' : ''}>${esc(f.label)}</option>`).join('')}
+    </select></label>
+    ${ranked ? '' : `<p class="muted small" style="margin:6px 2px 8px">${esc(field.label)} за последние 52 недели — игроки топ-${d.top} ${esc(statsTour)}, не меньше ${d.min_matches} матчей. Кружок — оценка из 10: место среди топ-200.</p>`}
+    <div class="stat-list">${rows || '<div class="empty">Статистика собирается — загляни чуть позже</div>'}</div>`;
+  res.querySelectorAll('[data-tour]').forEach((b) => b.addEventListener('click', () => { statsTour = b.dataset.tour; statsBoard(res, token, reload).catch(() => {}); }));
+  res.querySelector('[data-sort]').addEventListener('change', (e) => { statsSort = e.target.value; statsBoard(res, token, reload).catch(() => {}); });
+  bindFanActions(res, reload);
+}
+
+// The player's insights: the main numbers as round charts "из 10" (place among the tour) and
+// every statistic with its value.
+const INSIGHT_KEYS = ['serve_rating', 'return_rating', 'pressure_rating', 'aces_pm', 'bp_conv_pct', 'bp_saved_pct', 'win_pct'];
+function insightsBlock(ins) {
+  if (!ins) return '';
+  if (!ins.metrics || ins.matches < ins.min_matches) {
+    return `<h2>Инсайты</h2><div class="empty">Мало матчей со статистикой (${ins.matches ?? 0}) — инсайты появятся после ${ins.min_matches}-го.</div>`;
+  }
+  const byKey = new Map(ins.fields.map((f) => [f.key, f]));
+  const cell = (label, score, value) => `<div class="ins">${donut(score)}<b>${esc(label)}</b><small>${esc(value)}</small></div>`;
+  const cells = INSIGHT_KEYS.map((k) => cell(byKey.get(k).short, ins.scores[k], fmtStat(byKey.get(k), ins.metrics[k])));
+  if (ins.elo_score != null) cells.push(cell('Эло', ins.elo_score, 'среди топ-300'));
+  return `<h2>Инсайты</h2>
+    <p class="muted small" style="margin:-4px 2px 10px">Из 10 — место среди игроков тура за 52 недели (${ins.matches} ${plural(ins.matches, 'матч', 'матча', 'матчей')} со статистикой): 10 — лучший.</p>
+    <div class="ins-grid">${cells.join('')}</div>
+    <h2>Вся статистика</h2>
+    <div class="stat-all">${ins.fields.map((f) => `<div class="sa-row"><span>${esc(f.label)}</span><b>${fmtStat(f, ins.metrics[f.key])}</b>
+      <i class="sa-bar"><i style="width:${Math.round((ins.scores[f.key] ?? 0) * 10)}%"></i></i></div>`).join('')}</div>`;
 }
 
 const age = (birth) => {
@@ -604,7 +658,7 @@ const age = (birth) => {
 };
 
 async function player(id, token) {
-  const [{ player: p }, { matches: list }] = await Promise.all([
+  const [{ player: p, insights }, { matches: list }] = await Promise.all([
     api(`/api/players/${encodeURIComponent(id)}`), api(`/api/players/${encodeURIComponent(id)}/matches`), loadMe(mskDay(0)),
   ]);
   if (stale(token)) return;
@@ -619,6 +673,7 @@ async function player(id, token) {
       <div><b>${p.elo ? Math.round(p.elo) : '—'}</b><span>Эло</span></div>
       <div><b>${p.doubles_rank ?? '—'}</b><span>пары</span></div>
     </div>
+    ${insightsBlock(insights)}
     <h2>Матчи</h2>${list.length ? list.map(matchCard).join('') : '<div class="empty">Свежих матчей нет — история появится по мере игр</div>'}`;
   bindFanActions(view, () => player(id, token));
 }
