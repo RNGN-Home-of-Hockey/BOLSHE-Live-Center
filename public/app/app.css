@@ -289,3 +289,20 @@ h1 { font-size: 22px; margin: 6px 0 4px; }
 
 .toast { position: fixed; left: 50%; bottom: calc(80px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: #101318; color: #ffffff;
   padding: 10px 16px; border-radius: 12px; font-size: 14px; z-index: 20; max-width: 90vw; }
+
+/* --- 2026-10-14: settings (theme), «Мои игроки» two rows, follow stars, Winline links --- */
+:root[data-theme="light"] { --bg: #ffffff; --bg2: #f2f3f5; --text: #111111; --hint: #8a8f98; --link: #2f7cf6; color-scheme: light; }
+:root[data-theme="dark"] { --bg: #111214; --bg2: #1c1d21; --text: #f1f1f3; --hint: #8e929b; --link: #6ea8ff; color-scheme: dark; }
+.top-actions { display: flex; gap: 8px; }
+.gear { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+.mine .extra-pl { display: none; }
+.mine.open .extra-pl { display: flex; }
+.more-btn { display: block; width: 100%; margin-top: 8px; border: 0; border-radius: 12px; padding: 10px; background: var(--bg2); color: var(--link); font-size: 14px; cursor: pointer; }
+.follow.star { padding: 4px 9px; font-size: 16px; line-height: 1; }
+.vs .follow.star { margin-top: 6px; }
+.player-row { grid-template-columns: 40px 1fr auto auto; }
+.odds, .wlbox { cursor: pointer; }
+.bday { margin: -2px 0 10px; }
+.switch-row { display: flex; align-items: center; gap: 10px; padding: 12px; background: var(--bg2); border-radius: 12px; }
+.switch-row input { width: 20px; height: 20px; accent-color: var(--accent); }
+:root[data-theme="dark"] .level-card { border: 1px solid #2c2620; }

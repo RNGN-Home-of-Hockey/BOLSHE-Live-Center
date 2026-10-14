@@ -17,6 +17,7 @@ import { matchCard } from './match-details.js';
 import { mediaCounts, serveMedia, syncMedia } from './media.js';
 import { matchesForDate, matchesOfPlayer, syncMatchDays } from './matches-sync.js';
 import { syncOdds } from './odds-sync.js';
+import { winlineLink } from './winline-link.js';
 import { getPlayer, searchPlayers } from './players.js';
 import { broadcastsForDate, syncSchedule } from './schedule-sync.js';
 import { ensureMenuButton, ensureWebhook, handleTelegramUpdate, webhookSecret } from './telegram.js';
@@ -233,6 +234,19 @@ export default {
         return json(result, result.ok ? 200 : result.status ?? 400);
       }
       if (request.method !== 'GET') return json({ ok: false, error: 'method not allowed' }, 405);
+      if (path === '/go/winline') {
+        return new Response(null, {
+          status: 302,
+          headers: { location: await winlineLink(env, url.searchParams.get('m')), 'cache-control': 'no-store', 'referrer-policy': 'no-referrer' },
+        });
+      }
+      // «Больше» broadcasts of one day (the home screen's "Завтра" button).
+      if (path === '/api/bolshe') {
+        const date = url.searchParams.get('date') ?? todayMsk();
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return json({ ok: false, error: 'date must be YYYY-MM-DD' }, 400);
+        const [bolshe, broadcasts] = await Promise.all([matchesForDate(env.DB, date, { bolshe: true }), broadcastsForDate(env.DB, date)]);
+        return json({ date, bolshe, broadcasts }, 200, 30);
+      }
       if (path === '/') {
         return json({ service: 'BOLSHE Live Center', endpoints: ['/health', '/api/players?q=', '/api/players/<id>', '/api/broadcasts?date=', '/api/levels?xp='] });
       }

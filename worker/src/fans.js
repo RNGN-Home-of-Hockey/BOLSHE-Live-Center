@@ -104,7 +104,7 @@ export async function fanProfile(env, user, date) {
     WHERE v.user_id = ? AND m.date_msk BETWEEN ? AND ?`).bind(user.id, near(-1), near(1)).all();
   const { results: followed } = await db.prepare(`SELECT p.player_id, p.name_ru, p.fs_id, p.photo_url,
       (SELECT r2_key || '?v=' || version FROM media WHERE media_key = 'head/' || p.fs_id AND status = 'ok') AS head
-    FROM follows f JOIN players p ON p.player_id = f.player_id WHERE f.user_id = ? ORDER BY f.created_at LIMIT 9`).bind(user.id).all();
+    FROM follows f JOIN players p ON p.player_id = f.player_id WHERE f.user_id = ? ORDER BY f.created_at LIMIT 30`).bind(user.id).all();
   const now = Date.now();
   const myPlayers = [];
   for (const p of followed) myPlayers.push(playerCard(p, p.fs_id ? await matchesOfPlayer(db, p.fs_id, 8) : [], now));

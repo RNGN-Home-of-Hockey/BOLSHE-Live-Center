@@ -34,6 +34,22 @@ const longDate = (date) => {
 const SURFACE = { hard: 'хард', clay: 'грунт', grass: 'трава', carpet: 'ковёр' };
 const STATUS = { finished: 'Завершён', retired: 'Отказ', walkover: 'Неявка', cancelled: 'Отменён', postponed: 'Перенесён', interrupted: 'Прерван' };
 
+// Theme: as in Telegram (default), light or dark — picked in Настройки, kept on the phone.
+const THEMES = [['auto', 'Как в Telegram'], ['light', 'Светлая'], ['dark', 'Тёмная']];
+let themeMode = 'auto';
+try { themeMode = localStorage.getItem('bolshe-theme') || 'auto'; } catch { /* storage may be blocked */ }
+function applyTheme(mode) {
+  const root = document.documentElement;
+  if (mode === 'light' || mode === 'dark') root.dataset.theme = mode;
+  else delete root.dataset.theme;
+  try {
+    const bg = getComputedStyle(root).getPropertyValue('--bg').trim();
+    if (mode === 'auto') { tg?.setHeaderColor?.('bg_color'); tg?.setBackgroundColor?.('bg_color'); }
+    else if (/^#[0-9a-f]{6}$/i.test(bg)) { tg?.setHeaderColor?.(bg); tg?.setBackgroundColor?.(bg); }
+  } catch { /* older Telegram clients */ }
+}
+applyTheme(themeMode);
+
 let noSpoilers = false;
 try { noSpoilers = localStorage.getItem('bolshe-no-spoilers') === '1'; } catch { /* storage may be blocked */ }
 const spoilerBtn = document.getElementById('spoilerToggle');
@@ -102,21 +118,33 @@ const tierNumber = (t) => { const n = String(t?.tier_label ?? '').match(/\d{3,4}
 // ---------- Winline odds ----------
 const WINLINE_LOGO = '/app/winline.png';
 // "П1 2.90 · П2 1.41" with the small logo; after the match the winner's price is marked
-// (not while the no-spoilers switch is on).
+// (not while the no-spoilers switch is on). A tap opens the match on Winline with our promo code.
 function oddsRow(m) {
   const o = m.odds;
   if (!o) return '';
   const done = DONE.includes(m.status) && showScore(m);
   const chip = (side, v) => `<span class="odd${done && m.winner === side ? ' won' : ''}">П${side} <b>${Number(v).toFixed(2)}</b></span>`;
-  return `<span class="odds"><img src="${WINLINE_LOGO}" alt="Winline">${chip(1, o.p1)}${chip(2, o.p2)}</span>`;
+  return `<span class="odds" data-wl="${esc(m.match_id)}" role="link" title="Открыть матч в Winline"><img src="${WINLINE_LOGO}" alt="Winline">${chip(1, o.p1)}${chip(2, o.p2)}</span>`;
 }
 function oddsBox(m) {
   const o = m.odds;
   if (!o) return '';
   const done = DONE.includes(m.status) && showScore(m);
   const cell = (side, p, v) => `<div class="o${done && m.winner === side ? ' won' : ''}"><span>${esc(p.name)}</span><b>${Number(v).toFixed(2)}</b></div>`;
-  return `<div class="wlbox"><img src="${WINLINE_LOGO}" alt="Winline">${cell(1, m.p1, o.p1)}${cell(2, m.p2, o.p2)}</div>`;
+  return `<div class="wlbox" data-wl="${esc(m.match_id)}" role="link" title="Открыть матч в Winline"><img src="${WINLINE_LOGO}" alt="Winline">${cell(1, m.p1, o.p1)}${cell(2, m.p2, o.p2)}</div>`;
 }
+// Odds sit inside links to our match page, so they take the tap first (capture phase).
+function openExternal(url) {
+  if (tg?.openLink) tg.openLink(url);
+  else window.open(url, '_blank', 'noopener');
+}
+document.addEventListener('click', (event) => {
+  const el = event.target.closest?.('[data-wl]');
+  if (!el) return;
+  event.preventDefault();
+  event.stopPropagation();
+  openExternal(`${location.origin}/go/winline?m=${encodeURIComponent(el.dataset.wl)}`);
+}, true);
 
 // ---------- fans: Telegram sign-in, votes, follows ----------
 let me = null;
@@ -159,6 +187,14 @@ function voteBlock(m) {
   if (!v.total) return '<div class="vote"><div class="vote-note">Голосование закрылось с началом матча — голосов не было</div></div>';
   return `<div class="vote">${splitBar(m, v)}<div class="vote-note">Голосование закрылось с началом матча${pick ? `. Твой выбор: ${esc(lastName(pick === 1 ? m.p1 : m.p2))}` : ''}</div></div>`;
 }
+// ☆/★ to add a player to «Мои игроки» (inside Telegram only). Compact = a star alone.
+function followButton(playerId, compact = false) {
+  if (!me || !playerId) return '';
+  const on = me.follows.includes(playerId);
+  const label = compact ? (on ? '★' : '☆') : (on ? '★ В моих игроках' : '☆ Следить');
+  return `<button class="follow${on ? ' on' : ''}${compact ? ' star' : ''}" type="button" data-follow="${esc(playerId)}"${on ? ' data-on="0"' : ''} title="${on ? 'Убрать из «Моих игроков»' : 'Добавить в «Мои игроки»'}">${label}</button>`;
+}
+
 function bindFanActions(root, rerender) {
   root.querySelectorAll('[data-vote]').forEach((b) => b.addEventListener('click', async (e) => {
     e.preventDefault();
@@ -261,6 +297,8 @@ const DONE = ['finished', 'retired', 'walkover'];
 const startOf = (m) => Date.parse(m.bolshe?.starts_at ?? '') || Date.parse(m.start_at ?? '') || 0;
 const startIso = (m) => new Date(startOf(m)).toISOString();
 let earlyOpen = false; // «Ранние эфиры» opened once stay open on refresh
+let broadcastDay = null; // 'today' | 'tomorrow' picked by the user; null = by the clock
+let minePlayersOpen = false; // «Мои игроки»: more than two rows shown
 
 function ratingCard() {
   if (!me) {
@@ -305,14 +343,17 @@ function airCard(m) {
 function myPlayersBlock(d) {
   const cards = me?.my_players ?? [];
   if (cards.length) {
-    return `<div class="seccap"><span>Мои игроки</span><a href="#/players">изменить</a></div><div class="mine">${cards.map((p) => {
+    // Two rows of three; the rest opens with a button.
+    const more = cards.length - 6;
+    return `<div class="seccap"><span>Мои игроки</span><a href="#/players">добавить</a></div><div class="mine${minePlayersOpen ? ' open' : ''}">${cards.map((p, i) => {
       const status = p.live ? `<span class="st live-st">LIVE ${showScore({ status: 'live' }) ? esc(p.live.score) : ''}</span>`
         : p.last && showScore({ status: 'finished' }) ? `<span class="st ${p.last.won ? 'win' : 'loss'}">${p.last.won ? 'Победа' : 'Поражение'} ${esc(p.last.score)}</span>`
           : '<span class="st idle">Не играет</span>';
       const line1 = p.live ? `с ${esc(lastName({ name: p.live.opponent }))}` : p.last ? `с ${esc(lastName({ name: p.last.opponent }))}` : 'матчей нет';
       const line2 = p.next ? `${esc(dayWord(p.next.start_at))} — ${esc(lastName({ name: p.next.opponent }))}` : '';
-      return `<a class="pl-card" href="#/player/${encodeURIComponent(p.player_id)}">${avatar(p.photo, 'head')}<b>${esc(lastName({ name: p.name }))}</b>${status}<small>${line1}${line2 ? `<br>${line2}` : ''}</small></a>`;
-    }).join('')}</div>`;
+      return `<a class="pl-card${i >= 6 ? ' extra-pl' : ''}" href="#/player/${encodeURIComponent(p.player_id)}">${avatar(p.photo, 'head')}<b>${esc(lastName({ name: p.name }))}</b>${status}<small>${line1}${line2 ? `<br>${line2}` : ''}</small></a>`;
+    }).join('')}</div>
+    ${more > 0 ? `<button class="more-btn" type="button" data-more-players>${minePlayersOpen ? 'Свернуть' : `Показать ещё ${more}`}</button>` : ''}`;
   }
   // Nobody followed yet: our players of the day to pick from.
   const seen = new Set();
@@ -350,19 +391,29 @@ function broadcastRow({ m, b }) {
     <span class="sc">${esc(score)}</span>${extra ? `<span class="extra">${extra}</span>` : ''}</a>`;
 }
 
-function broadcastsBlock(d) {
+// The day's «Больше» broadcasts as rows: Flashscore-linked matches and the rest of the schedule.
+function broadcastRows(src) {
   const pairKey = (a, c) => [a, c].sort().join('|');
-  const shown = new Set(d.bolshe.map((m) => pairKey(m.p1.player_id, m.p2.player_id)));
-  const rows = [
-    ...d.bolshe.map((m) => ({ at: startOf(m), done: DONE.includes(m.status) || m.status === 'cancelled', m })),
-    ...d.broadcasts.filter((b) => b.status !== 'cancelled' && !shown.has(pairKey(b.player1_id, b.player2_id)))
+  const shown = new Set(src.bolshe.map((m) => pairKey(m.p1.player_id, m.p2.player_id)));
+  return [
+    ...src.bolshe.map((m) => ({ at: startOf(m), done: DONE.includes(m.status) || m.status === 'cancelled', m })),
+    ...src.broadcasts.filter((b) => b.status !== 'cancelled' && !shown.has(pairKey(b.player1_id, b.player2_id)))
       .map((b) => ({ at: Date.parse(b.starts_at ?? '') || 0, done: (Date.parse(b.starts_at ?? '') || 0) < Date.now() - 2 * 3600e3, b })),
   ].sort((a, c) => a.at - c.at);
-  if (!rows.length) return '<div class="seccap"><span>Прямые трансляции «Больше» сегодня</span></div><div class="empty">Сегодня эфиров нет</div>';
+}
+
+// Two buttons, «Сегодня» and «Завтра»: once today's broadcasts are over, tomorrow opens by itself.
+function broadcastsBlock(src, day) {
+  const switcher = `<div class="seccap"><span>Прямые трансляции «Больше»</span></div>
+    <div class="days bday">${[['today', 'Сегодня'], ['tomorrow', 'Завтра']].map(([k, label]) => `<button class="day${k === day ? ' on' : ''}" type="button" data-bday="${k}">${label}</button>`).join('')}</div>`;
+  const rows = broadcastRows(src);
+  if (!rows.length) {
+    return `${switcher}<div class="empty">${day === 'today' ? 'Сегодня эфиров нет' : 'График на завтра ещё не опубликован — обычно он появляется вечером'}</div>`;
+  }
   const doneRows = rows.filter((r) => r.done);
-  const hidden = !earlyOpen && doneRows.length > 4 ? doneRows.slice(0, doneRows.length - 4) : [];
+  const hidden = day === 'today' && !earlyOpen && doneRows.length > 4 ? doneRows.slice(0, doneRows.length - 4) : [];
   // "Сейчас" sits before the first broadcast that is still ahead by the clock.
-  const nowIndex = rows.findIndex((r) => r.at > Date.now() && !r.m?.status?.match(/live|finished|retired|walkover/));
+  const nowIndex = day === 'today' ? rows.findIndex((r) => r.at > Date.now() && !r.m?.status?.match(/live|finished|retired|walkover/)) : -1;
   const parts = [];
   if (hidden.length) {
     parts.push(`<button class="more-early" type="button" data-early>Ранние эфиры ${esc(localTime(new Date(hidden[0].at).toISOString()))}–${esc(localTime(new Date(hidden.at(-1).at).toISOString()))}: ещё ${hidden.length} →</button>`);
@@ -371,9 +422,7 @@ function broadcastsBlock(d) {
     if (i === nowIndex && i > 0) parts.push(`<div class="now"><span>Сейчас ${esc(localTime(new Date().toISOString()))}</span><i></i></div>`);
     parts.push(`<div class="brow${hidden.includes(r) ? ' early' : ''}">${broadcastRow(r)}</div>`);
   });
-  return `<div class="seccap"><span>Прямые трансляции «Больше» сегодня</span></div>
-    <div class="note">Время по твоему часовому поясу (${esc(tzLabel())}) · коэффициенты <img src="${WINLINE_LOGO}" alt="Winline"></div>
-    <div class="blist">${parts.join('')}</div>`;
+  return `${switcher}<div class="blist">${parts.join('')}</div>`;
 }
 
 function tournamentsBlock(d) {
@@ -401,23 +450,31 @@ async function home(params, token) {
   const coming = d.bolshe.filter((m) => m.status === 'scheduled').sort((a, c) => startOf(a) - startOf(c));
   const air = live.length ? live : coming.slice(0, 2);
   const name = me?.user?.first_name || tg?.initDataUnsafe?.user?.first_name || '';
-  const sub = [
-    live.length ? `Сейчас в эфире «Больше» ${live.length} ${plural(live.length, 'матч', 'матча', 'матчей')}` : '',
-    coming.length ? `${live.length ? 'впереди ещё' : 'Сегодня впереди'} ${coming.length} — успей с прогнозом` : '',
-  ].filter(Boolean).join(', ') || 'Эфиры «Больше» на сегодня закончились — смотри результаты ниже';
+  const todayOver = broadcastRows(d).every((r) => r.done);
+  const day = broadcastDay ?? (todayOver ? 'tomorrow' : 'today');
+  const src = day === 'tomorrow' ? await api(`/api/bolshe?date=${mskDay(1)}`).catch(() => ({ bolshe: [], broadcasts: [] })) : d;
+  if (stale(token)) return;
   view.innerHTML = `
-    <div class="hello"><div class="hi">Привет${name ? `, ${esc(name)}` : ''}!</div><p>${esc(sub)}.</p></div>
+    <div class="hello"><div class="hi">Привет${name ? `, ${esc(name)}` : ''}!</div></div>
     ${ratingCard()}
     ${air.length ? `<div class="seccap"><span>${live.length ? 'Сейчас в эфире «Больше»' : 'Скоро в эфире «Больше»'}</span>${air.length > 1 ? `<span class="r">${air.length} ${plural(air.length, 'матч', 'матча', 'матчей')} ›</span>` : ''}</div>
       <div class="air-strip">${air.map(airCard).join('')}</div>` : ''}
     ${myPlayersBlock(d)}
-    ${broadcastsBlock(d)}
+    ${broadcastsBlock(src, day)}
     ${tournamentsBlock(d)}`;
   bindFanActions(view, () => home(params, token));
   view.querySelector('[data-early]')?.addEventListener('click', (e) => {
     earlyOpen = true;
     view.querySelectorAll('.brow.early').forEach((r) => r.classList.remove('early'));
     e.currentTarget.remove();
+  });
+  view.querySelectorAll('[data-bday]').forEach((b) => b.addEventListener('click', () => {
+    broadcastDay = b.dataset.bday;
+    home(params, token).catch(() => {});
+  }));
+  view.querySelector('[data-more-players]')?.addEventListener('click', () => {
+    minePlayersOpen = !minePlayersOpen;
+    home(params, token).catch(() => {});
   });
   refreshEvery(60000, () => home(params, token));
 }
@@ -476,7 +533,7 @@ async function match(id, token) {
   const setLine = m.status !== 'scheduled' && showScore(m) ? m.sets.map((s) => `${s.p1}:${s.p2}`).join('  ') : '';
   const player = (p) => {
     const inner = `${avatar(p.photo, 'pa')}<div class="nm">${esc(p.name)}</div><div class="rk">${p.rank ? `№${p.rank}` : ''}</div>`;
-    return p.player_id ? `<a class="pl" href="#/player/${encodeURIComponent(p.player_id)}">${inner}</a>` : `<div class="pl">${inner}</div>`;
+    return p.player_id ? `<div><a class="pl" href="#/player/${encodeURIComponent(p.player_id)}">${inner}</a>${followButton(p.player_id, true)}</div>` : `<div class="pl">${inner}</div>`;
   };
   const lastBlock = (p, list) => (list.length ? `<h2>${esc(p.short ?? p.name)}: последние матчи</h2><div class="hero list">${list.map((x) => resultLine(x, p.fs_id)).join('')}</div>` : '');
   const cover = m.bolshe?.cover
@@ -502,7 +559,7 @@ async function match(id, token) {
 
 // ---------- players ----------
 function playerRows(list) {
-  return list.map((p) => `<a class="player-row" href="#/player/${encodeURIComponent(p.player_id)}">${avatar(p.photo_url, '')}<span><b>${esc(p.name_ru)}</b><br><span class="muted small">${esc(p.tour)} · ${esc(p.country_code ?? '')}</span></span><span class="rk">${p.singles_rank ? `№${p.singles_rank}` : p.doubles_rank ? `пары №${p.doubles_rank}` : ''}</span></a>`).join('');
+  return list.map((p) => `<a class="player-row" href="#/player/${encodeURIComponent(p.player_id)}">${avatar(p.photo_url, '')}<span><b>${esc(p.name_ru)}</b><br><span class="muted small">${esc(p.tour)} · ${esc(p.country_code ?? '')}</span></span><span class="rk">${p.singles_rank ? `№${p.singles_rank}` : p.doubles_rank ? `пары №${p.doubles_rank}` : ''}</span>${followButton(p.player_id, true) || '<span></span>'}</a>`).join('');
 }
 
 async function players(params, token) {
@@ -516,6 +573,7 @@ async function players(params, token) {
       const d = await api(`/api/players?q=${encodeURIComponent(text)}&limit=30`);
       if (stale(token)) return;
       res.innerHTML = `<h2>Найдено</h2>${playerRows(d.players) || '<div class="empty">Никого не нашли</div>'}`;
+      bindFanActions(res, reload);
       return;
     }
     const [ru, atp, wta] = await Promise.all([
@@ -523,9 +581,15 @@ async function players(params, token) {
     ]);
     if (stale(token)) return;
     res.innerHTML = `<h2>Наши</h2>${playerRows(ru.players)}<h2>Топ-10 ATP</h2>${playerRows(atp.players)}<h2>Топ-10 WTA</h2>${playerRows(wta.players)}`;
+    bindFanActions(res, reload);
+  }
+  async function reload() {
+    await loadMe(mskDay(0));
+    await load(input.value);
   }
   let debounce;
   input.addEventListener('input', () => { clearTimeout(debounce); debounce = setTimeout(() => load(input.value).catch(() => {}), 250); });
+  await loadMe(mskDay(0));
   await load(q);
 }
 
@@ -548,7 +612,7 @@ async function player(id, token) {
     <div class="profile-head">${avatar(p.photo_url, '')}<div><h1>${esc(p.name_ru)}</h1>
       <div class="muted">${esc(p.name_latin ?? '')} · ${esc(p.tour)}${p.country_code ? ` · ${esc(p.country_code)}` : ''}${a != null ? ` · ${a} лет` : ''}</div>
       ${p.sportsru_url ? `<a href="${esc(p.sportsru_url)}" target="_blank" rel="noopener" class="small">sports.ru</a>` : ''}
-      ${me ? (me.follows.includes(p.player_id) ? `<button class="follow on" type="button" data-follow="${esc(p.player_id)}" data-on="0">★ В моих игроках</button>` : `<button class="follow" type="button" data-follow="${esc(p.player_id)}">☆ Следить</button>`) : ''}</div></div>
+      ${followButton(p.player_id)}</div></div>
     <div class="kv">
       <div><b>${p.singles_rank ?? '—'}</b><span>рейтинг</span></div>
       <div><b>${p.elo ? Math.round(p.elo) : '—'}</b><span>Эло</span></div>
@@ -602,6 +666,27 @@ async function profile(token) {
   paint(me?.xp ?? 0);
 }
 
+// ---------- settings ----------
+function settings() {
+  view.innerHTML = `<h1>Настройки</h1>
+    <h2>Тема</h2>
+    <div class="days">${THEMES.map(([k, label]) => `<button class="day${themeMode === k ? ' on' : ''}" type="button" data-theme-pick="${k}">${label}</button>`).join('')}</div>
+    <h2>Без спойлеров</h2>
+    <label class="switch-row"><input type="checkbox" id="noSpoilersBox"${noSpoilers ? ' checked' : ''}> Скрывать счёт и победителей</label>
+    <p class="muted small">Время матчей и эфиров показывается по часовому поясу телефона (${esc(tzLabel())}).</p>`;
+  view.querySelectorAll('[data-theme-pick]').forEach((b) => b.addEventListener('click', () => {
+    themeMode = b.dataset.themePick;
+    try { localStorage.setItem('bolshe-theme', themeMode); } catch { /* ignore */ }
+    applyTheme(themeMode);
+    settings();
+  }));
+  view.querySelector('#noSpoilersBox').addEventListener('change', (e) => {
+    noSpoilers = e.target.checked;
+    try { localStorage.setItem('bolshe-no-spoilers', noSpoilers ? '1' : '0'); } catch { /* ignore */ }
+    paintSpoiler();
+  });
+}
+
 // ---------- router ----------
 async function route() {
   clearInterval(timer);
@@ -611,9 +696,9 @@ async function route() {
   const [path, query = ''] = (location.hash.slice(1) || '/').split('?');
   const params = new URLSearchParams(query);
   const parts = path.split('/').filter(Boolean);
-  const tab = { '': 'home', matches: 'matches', match: 'matches', players: 'players', player: 'players', profile: 'profile' }[parts[0] ?? ''] ?? 'home';
+  const tab = { '': 'home', matches: 'matches', match: 'matches', players: 'players', player: 'players', profile: 'profile', settings: 'profile' }[parts[0] ?? ''] ?? 'home';
   document.querySelectorAll('.tabs a').forEach((a) => a.classList.toggle('on', a.dataset.tab === tab));
-  const detail = parts[0] === 'match' || parts[0] === 'player';
+  const detail = parts[0] === 'match' || parts[0] === 'player' || parts[0] === 'settings';
   if (tg?.BackButton) { if (detail) tg.BackButton.show(); else tg.BackButton.hide(); }
   if (!view.innerHTML) view.innerHTML = '<div class="loading">Загружаем…</div>';
   try {
@@ -622,6 +707,7 @@ async function route() {
     else if (parts[0] === 'matches') await matches(params, token);
     else if (parts[0] === 'players') await players(params, token);
     else if (parts[0] === 'profile') await profile(token);
+    else if (parts[0] === 'settings') settings();
     else await home(params, token);
   } catch (error) {
     if (stale(token)) return;
