@@ -22,6 +22,15 @@ database_name = "bolshe-live-center"
 database_id = "40576f9c-1573-42c9-ad58-06750c4392e4"
 migrations_dir = "migrations"
 
+# Covers of «Больше» broadcasts and player heads, stored for good (see worker/src/media.js).
+[[r2_buckets]]
+binding = "MEDIA"
+bucket_name = "bolshe-live-media"
+
+# Cloudflare Images: cuts VK covers down to 640×360 JPEG before they are stored.
+[images]
+binding = "IMAGES"
+
 [triggers]
 crons = ["*/10 * * * *"]
 

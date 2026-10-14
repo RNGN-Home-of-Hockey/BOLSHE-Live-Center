@@ -48,9 +48,27 @@ async function api(path) {
   return res.json();
 }
 
+// A player's head: our stored copy (/media/heads/…) or a neutral silhouette when there is no photo.
+const silhouette = (cls) => `<span class="${cls} ph" aria-hidden="true"></span>`;
 function avatar(src, cls = 'ava') {
-  return src ? `<img class="${cls}" src="${esc(src)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : `<span class="${cls}"></span>`;
+  return src ? `<img class="${cls}" src="${esc(src)}" alt="" loading="lazy" referrerpolicy="no-referrer" data-head>` : silhouette(cls);
 }
+
+// The picture of a «Больше» broadcast: our stored VK cover; under it (and instead of it when
+// there is none) both players' heads on the brand colours.
+function coverBox(cover, p1, p2, cls = '') {
+  return `<div class="cover ${cls}"><div class="heads">${avatar(p1?.photo, 'head')}<span class="vs-mark">vs</span>${avatar(p2?.photo, 'head')}</div>
+    ${cover ? `<img class="cover-img" src="${esc(cover)}" alt="" loading="lazy" data-cover>` : ''}</div>`;
+}
+
+// A picture that fails to load is replaced once (a cover simply goes away and shows the heads
+// under it); nothing is ever retried in a loop.
+document.addEventListener('error', (event) => {
+  const img = event.target;
+  if (!(img instanceof HTMLImageElement)) return;
+  if (img.hasAttribute('data-cover')) img.remove();
+  else if (img.hasAttribute('data-head')) img.outerHTML = silhouette(img.className);
+}, true);
 
 const showScore = (m) => !noSpoilers || m.status === 'scheduled';
 const lastName = (p) => {
@@ -84,8 +102,9 @@ function statusLabel(m) {
 function matchCard(m) {
   const t = m.tournament;
   const hidden = noSpoilers && m.status !== 'scheduled' ? '<div class="hidden-score">Счёт скрыт</div>' : '';
+  const thumb = m.bolshe?.cover ? `<img class="thumb" src="${esc(m.bolshe.cover)}" alt="" loading="lazy" data-cover>` : '';
   const bolshe = m.bolshe
-    ? `<div class="bolshe"><span><span class="badge">Больше</span> ${esc(m.bolshe.commentator1 ?? '')}</span>${m.bolshe.vk_url ? '<span>▶ VK</span>' : ''}</div>`
+    ? `<div class="bolshe"><span class="who">${thumb}<span class="badge">Больше</span> ${esc(m.bolshe.commentator1 ?? '')}</span>${m.bolshe.vk_url ? '<span>▶ VK</span>' : ''}</div>`
     : '';
   return `<a class="card" href="#/match/${encodeURIComponent(m.match_id)}">
     <div class="meta"><span>${esc(t.tour ?? '')} ${esc(t.name ?? '')}${t.surface ? ` · ${SURFACE[t.surface]}` : ''}</span>${statusLabel(m)}</div>
@@ -162,6 +181,7 @@ function matchOfDay(mod) {
   const side = (p) => `<div class="pl">${avatar(p.photo, 'pa')}<div class="nm">${esc(lastName(p))}</div><div class="rk">${p.rank ? `№${p.rank}` : ''}</div></div>`;
   const center = m.status === 'scheduled' ? mskTime(m.start_at) : m.status === 'live' ? (showScore(m) ? `${m.sets_p1}:${m.sets_p2}` : 'LIVE') : (showScore(m) ? `${m.sets_p1}:${m.sets_p2}` : '—');
   return `<h2>Матч дня</h2><a class="hero mod" href="#/match/${encodeURIComponent(m.match_id)}">
+    ${m.bolshe?.cover ? coverBox(m.bolshe.cover, m.p1, m.p2, 'in-hero') : ''}
     <div class="muted small">${esc(m.tournament.tour ?? '')} ${esc(m.tournament.name ?? '')}${m.status === 'live' ? ' · <span class="live">LIVE</span>' : ''}</div>
     <div class="vs">${side(m.p1)}<div class="score">${esc(center)}</div>${side(m.p2)}</div>
     ${mod.why.length ? `<p class="why">${mod.why.map(esc).join(' ')}</p>` : ''}<div class="more">Сравнение и факты →</div></a>`;
@@ -180,10 +200,29 @@ async function home(params, token) {
   const pairKey = (a, b) => [a, b].sort().join('|');
   const shown = new Set(d.bolshe.map((m) => pairKey(m.p1.player_id, m.p2.player_id)));
   const otherBroadcasts = d.broadcasts.filter((b) => b.status !== 'cancelled' && !shown.has(pairKey(b.player1_id, b.player2_id)));
-  // The «Больше» schedule reads top to bottom by broadcast time, finished or not.
-  const broadcastLines = [
-    ...d.bolshe.map((m) => ({ time: m.bolshe?.time_msk ?? mskTime(m.start_at), html: compactLine(m) })),
-    ...otherBroadcasts.map((b) => ({ time: b.time_msk ?? '', html: `<div class="line"><span class="when">${esc(b.time_msk ?? '')}</span><span class="who">${esc(b.player1_name ?? b.player1_ru)} — ${esc(b.player2_name ?? b.player2_ru ?? '')}<small>${esc(b.commentator1 ?? '')}</small></span><span class="sc"></span></div>` })),
+  // The «Больше» schedule reads left to right by broadcast time, finished or not: our VK cover
+  // of each broadcast, or both players' heads when there is no cover yet.
+  const tile = ({ href, external, cover, p1, p2, when, names, commentator }) => `<a class="bc" href="${esc(href ?? '#/')}"${external ? ' target="_blank" rel="noopener"' : ''}>
+    ${coverBox(cover, p1, p2)}<div class="bc-when">${when}</div><div class="bc-names">${esc(names)}</div>
+    ${commentator ? `<div class="muted small">${esc(commentator)}</div>` : ''}</a>`;
+  const broadcastTiles = [
+    ...d.bolshe.map((m) => ({
+      time: m.bolshe?.time_msk ?? mskTime(m.start_at),
+      html: tile({
+        href: `#/match/${encodeURIComponent(m.match_id)}`, cover: m.bolshe?.cover, p1: m.p1, p2: m.p2,
+        when: m.status === 'live' ? `<span class="live">● LIVE</span>${showScore(m) ? ` · ${m.sets_p1 ?? 0}:${m.sets_p2 ?? 0}` : ''}`
+          : m.status === 'scheduled' ? esc(m.bolshe?.time_msk ?? mskTime(m.start_at)) : `${esc(STATUS[m.status] ?? '')}${showScore(m) ? ` · ${m.sets_p1 ?? 0}:${m.sets_p2 ?? 0}` : ''}`,
+        names: `${lastName(m.p1)} — ${lastName(m.p2)}`, commentator: m.bolshe?.commentator1,
+      }),
+    })),
+    ...otherBroadcasts.map((b) => ({
+      time: b.time_msk ?? '',
+      html: tile({
+        href: b.vk_url, external: Boolean(b.vk_url), cover: b.cover,
+        p1: { photo: b.player1_photo }, p2: { photo: b.player2_photo }, when: esc(b.time_msk ?? ''),
+        names: `${b.player1_name ?? b.player1_ru} — ${b.player2_name ?? b.player2_ru ?? ''}`, commentator: b.commentator1,
+      }),
+    })),
   ].sort((a, b) => String(a.time).localeCompare(String(b.time)));
   view.innerHTML = `
     <div class="hello"><div class="date">${esc(longDate(date))}</div><p>${esc(lead)}</p></div>
@@ -192,7 +231,7 @@ async function home(params, token) {
       ${d.tournaments.some((t) => t.level === 'challenger') ? `<a class="tcard slim" href="#/matches?level=challenger">Ещё ${d.tournaments.filter((t) => t.level === 'challenger').length} челленджеров — второй уровень тура →</a>` : ''}` : ''}
     <h2>Наши сегодня</h2>${d.russians.length ? `<div class="lines">${d.russians.map(compactLine).join('')}</div>` : '<div class="empty">Сегодня россияне не играют</div>'}
     ${d.russians_yesterday.length ? `<h2>Наши вчера</h2><div class="lines">${d.russians_yesterday.map(compactLine).join('')}</div>` : ''}
-    <h2>Эфиры «Больше» сегодня</h2>${broadcastLines.length ? `<div class="lines">${broadcastLines.map((x) => x.html).join('')}</div>` : '<div class="empty">Сегодня эфиров нет</div>'}
+    <h2>Эфиры «Больше» сегодня</h2>${broadcastTiles.length ? `<div class="shelf">${broadcastTiles.map((x) => x.html).join('')}</div>` : '<div class="empty">Сегодня эфиров нет</div>'}
     ${tipOfDay(date)}
     <div class="links"><a href="#/matches">Все матчи дня →</a><a href="#/players">Найти игрока →</a></div>`;
   timer = setInterval(() => home(params, token).catch(() => {}), 60000);
@@ -255,7 +294,11 @@ async function match(id, token) {
     return p.player_id ? `<a class="pl" href="#/player/${encodeURIComponent(p.player_id)}">${inner}</a>` : `<div class="pl">${inner}</div>`;
   };
   const lastBlock = (p, list) => (list.length ? `<h2>${esc(p.short ?? p.name)}: последние матчи</h2><div class="hero list">${list.map((x) => resultLine(x, p.fs_id)).join('')}</div>` : '');
+  const cover = m.bolshe?.cover
+    ? (m.bolshe.vk_url ? `<a class="cover-link" href="${esc(m.bolshe.vk_url)}" target="_blank" rel="noopener">${coverBox(m.bolshe.cover, m.p1, m.p2, 'big')}</a>` : coverBox(m.bolshe.cover, m.p1, m.p2, 'big'))
+    : '';
   view.innerHTML = `
+    ${cover}
     <div class="muted small">${esc(t.tour ?? '')} ${esc(t.name ?? '')}${t.surface ? ` · ${SURFACE[t.surface]}` : ''} · ${status}</div>
     <div class="hero">
       <div class="vs">${player(m.p1)}<div class="score">${esc(scoreBig)}</div>${player(m.p2)}</div>

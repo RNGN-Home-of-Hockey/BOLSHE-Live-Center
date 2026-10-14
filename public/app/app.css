@@ -166,3 +166,35 @@ h1 { font-size: 22px; margin: 6px 0 4px; }
 .compare .cmp-row b.up { color: var(--win); font-weight: 800; }
 .compare .chance { margin: 10px 0 4px; }
 .compare .facts { margin-top: 10px; }
+
+/* --- 2026-10-14: covers of «Больше» broadcasts (our stored VK pictures) and players' heads --- */
+:root { --brand: #6b2ead; --brand-lime: #e1fb38; }
+/* The silhouette must win over the size/colour rules of every place a head appears. */
+.ph { display: inline-block; border-radius: 50%; background-color: color-mix(in srgb, var(--hint) 22%, transparent);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='15' r='7' fill='%239aa0a8'/%3E%3Cpath d='M6 38c1.5-8 7-12 14-12s12.5 4 14 12z' fill='%239aa0a8'/%3E%3C/svg%3E") !important;
+  background-position: center !important; background-size: 78% !important; background-repeat: no-repeat !important; }
+.player-row .ph { width: 40px; height: 40px; }
+.profile-head .ph { width: 88px; height: 88px; }
+
+.cover { position: relative; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden;
+  background: radial-gradient(120% 90% at 50% 110%, var(--brand-lime) 0 18%, transparent 19%), linear-gradient(135deg, var(--brand), #8d4fe0); }
+.cover .heads { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 6%; }
+.cover .head { width: 34%; max-width: 120px; aspect-ratio: 1; border-radius: 50%; object-fit: cover;
+  background-color: rgba(255, 255, 255, .16); border: 2px solid rgba(255, 255, 255, .55); }
+.cover .vs-mark { color: var(--brand-lime); font-weight: 900; font-size: 15px; letter-spacing: .02em; }
+.cover .cover-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.cover.big { margin-bottom: 10px; }
+.cover.in-hero { margin: -4px -4px 10px; }
+.cover-link { display: block; }
+
+.shelf { display: grid; grid-auto-flow: column; grid-auto-columns: 78%; gap: 10px; overflow-x: auto;
+  scroll-snap-type: x mandatory; padding-bottom: 4px; scrollbar-width: none; }
+.shelf::-webkit-scrollbar { display: none; }
+.bc { display: block; scroll-snap-align: start; color: var(--text); background: var(--bg2); border-radius: var(--radius); padding: 6px 6px 10px; }
+.bc .cover { border-radius: 10px; }
+.bc-when { margin: 8px 4px 0; font-size: 13px; color: var(--hint); font-variant-numeric: tabular-nums; }
+.bc-names { margin: 2px 4px 0; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bc .small { margin: 2px 4px 0; }
+
+.bolshe .who { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+.bolshe .thumb { width: 64px; height: 36px; border-radius: 6px; object-fit: cover; flex: none; }

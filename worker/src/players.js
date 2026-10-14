@@ -1,8 +1,13 @@
 // Player search and permanent name edits in D1.
 
+import { mediaUrl } from '../../src/lib/media.js';
 import { nameTokens, shortRu, tokenKey } from '../../src/lib/names.js';
 
 const RANK_ORDER = 'ORDER BY (p.singles_rank IS NULL), p.singles_rank, (p.doubles_rank IS NULL), p.doubles_rank';
+
+// Our stored copy of the player's head (worker/src/media.js) wins over the outside link.
+const HEAD = "(SELECT r2_key || '?v=' || version FROM media WHERE media_key = 'head/' || p.fs_id AND status = 'ok') AS head";
+const withHead = ({ head, ...p }) => ({ ...p, photo_url: mediaUrl(head) ?? p.photo_url });
 
 export async function searchPlayers(db, query, { tour = null, russian = false, limit = 20 } = {}) {
   const tokens = nameTokens(query).slice(0, 4);
@@ -17,15 +22,16 @@ export async function searchPlayers(db, query, { tour = null, russian = false, l
     args.push(tour);
   }
   if (russian) where.push('p.is_russian = 1');
-  const sql = `SELECT p.* FROM players p ${where.length ? `WHERE ${where.join(' AND ')}` : ''} ${RANK_ORDER} LIMIT ?`;
+  const sql = `SELECT p.*, ${HEAD} FROM players p ${where.length ? `WHERE ${where.join(' AND ')}` : ''} ${RANK_ORDER} LIMIT ?`;
   args.push(Math.min(Math.max(Number(limit) || 20, 1), 100));
   const { results } = await db.prepare(sql).bind(...args).all();
-  return results;
+  return results.map(withHead);
 }
 
 export async function getPlayer(db, playerId) {
-  const player = await db.prepare('SELECT * FROM players WHERE player_id = ?').bind(playerId).first();
-  if (!player) return null;
+  const row = await db.prepare(`SELECT p.*, ${HEAD} FROM players p WHERE p.player_id = ?`).bind(playerId).first();
+  if (!row) return null;
+  const player = withHead(row);
   const { results: aliases } = await db.prepare('SELECT alias, source FROM player_aliases WHERE player_id = ?').bind(playerId).all();
   const override = await db.prepare('SELECT * FROM player_name_overrides WHERE player_id = ?').bind(playerId).first();
   return { ...player, aliases, name_override: override ?? null };

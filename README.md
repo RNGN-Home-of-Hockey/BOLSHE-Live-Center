@@ -25,6 +25,7 @@ Telegram-приложение (бот + Mini App) для теннисного п
 | Карточка «Теннис для чайников» | `src/insights/preview.js`, `/api/matches/<id>` | рейтинг, шансы по Эло, форма, покрытие, личные встречи, возраст, фаворит |
 | **Приложение (тестовая копия)** | `public/app/` → https://bolshe-live-center.znamteam-903.workers.dev/app/ | Главная, Матчи, Игроки, Профиль; кнопка «Приложение» в боте |
 | Фото и даты рождения | `scripts/fetch-player-profiles.mjs` | 909 ключевых игроков (топ-300, наши, пары топ-100) |
+| **Обложки эфиров «Больше» и головы игроков** | `worker/src/media.js` → R2 `bolshe-live-media`, `/media/covers/…`, `/media/heads/…` | обложка из VK уменьшается до 640×360 и хранится навсегда; нет обложки — головы обоих игроков |
 
 Что делаем дальше — [docs/ROADMAP.md](docs/ROADMAP.md). Что за продукт — [docs/PRODUCT.md](docs/PRODUCT.md).
 Обсуждение идей и отзывы тестировщиков — ветка [`discussion`](../../tree/discussion).

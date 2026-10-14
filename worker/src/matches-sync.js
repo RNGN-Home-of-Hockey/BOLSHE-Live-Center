@@ -1,5 +1,6 @@
 // Copies Flashscore day feeds into D1 (tournaments, matches). Only changed matches are written.
 
+import { mediaUrl } from '../../src/lib/media.js';
 import { fetchDay } from '../../src/sources/flashscore-matches.js';
 
 const mskDate = (iso) => (iso ? new Date(Date.parse(iso) + 3 * 3600 * 1000).toISOString().slice(0, 10) : null);
@@ -66,7 +67,10 @@ const PLAYER_COLS = (alias) => ['player_id', 'name_ru', 'name_ru_short', 'single
 
 export const MATCH_SELECT = `SELECT m.*, t.name AS tournament_name, t.tournament, t.tour, t.level, t.discipline, t.surface, t.country AS tournament_country,
     ${PLAYER_COLS('a')}, ${PLAYER_COLS('b')},
-    (SELECT json_object('commentator1', br.commentator1, 'commentator2', br.commentator2, 'vk_url', br.vk_url, 'time_msk', br.time_msk)
+    (SELECT r2_key || '?v=' || version FROM media WHERE media_key = 'head/' || m.p1_fs_id AND status = 'ok') AS p1_head,
+    (SELECT r2_key || '?v=' || version FROM media WHERE media_key = 'head/' || m.p2_fs_id AND status = 'ok') AS p2_head,
+    (SELECT json_object('commentator1', br.commentator1, 'commentator2', br.commentator2, 'vk_url', br.vk_url, 'time_msk', br.time_msk,
+        'cover', (SELECT r2_key || '?v=' || version FROM media WHERE media_key = 'cover/' || br.vk_video AND status = 'ok'))
        FROM broadcasts br
       WHERE br.date_msk = m.date_msk AND br.status != 'removed'
         AND ((br.player1_id = a.player_id AND br.player2_id = b.player_id) OR (br.player1_id = b.player_id AND br.player2_id = a.player_id))
@@ -84,7 +88,7 @@ function side(row, alias, n) {
     short: row[`${alias}_name_ru_short`] ?? row[`p${n}_name`],
     rank: row[`${alias}_singles_rank`] ?? null,
     doubles_rank: row[`${alias}_doubles_rank`] ?? null,
-    photo: row[`${alias}_photo_url`] ?? row[`p${n}_photo`] ?? null,
+    photo: mediaUrl(row[`p${n}_head`]) ?? row[`${alias}_photo_url`] ?? row[`p${n}_photo`] ?? null,
     is_russian: Boolean(row[`${alias}_is_russian`]),
     country: row[`${alias}_country_code`] ?? null,
   };
@@ -109,9 +113,11 @@ export function shapeMatch(row) {
     },
     p1: side(row, 'a', 1),
     p2: side(row, 'b', 2),
-    bolshe: row.bolshe ? JSON.parse(row.bolshe) : null,
+    bolshe: row.bolshe ? withCover(JSON.parse(row.bolshe)) : null,
   };
 }
+
+const withCover = (b) => ({ ...b, cover: mediaUrl(b.cover) });
 
 const STATUS_ORDER = "CASE m.status WHEN 'live' THEN 0 WHEN 'scheduled' THEN 1 ELSE 2 END";
 

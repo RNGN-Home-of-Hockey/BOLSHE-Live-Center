@@ -6,6 +6,7 @@
 //             and their meetings — enough for "form" and "head to head" on the match card.
 
 import { fetchText } from '../lib/http.js';
+import { flashscorePhotoUrl } from '../lib/media.js';
 import { FLASHSCORE_FSIGN, FLASHSCORE_RU } from './flashscore.js';
 
 const MSK_TZ = 3;
@@ -105,8 +106,8 @@ export function parseDayFeed(text) {
       p2_fs_id: f.PY ?? null,
       p1_name: f.AE ?? null,
       p2_name: f.AF ?? null,
-      p1_photo: f.OA ? `https://static.flashscore.com/res/image/data/${f.OA}` : null,
-      p2_photo: f.OB ? `https://static.flashscore.com/res/image/data/${f.OB}` : null,
+      p1_photo: flashscorePhotoUrl(f.OA),
+      p2_photo: flashscorePhotoUrl(f.OB),
       sets_p1: num(f.AG),
       sets_p2: num(f.AH),
       sets,

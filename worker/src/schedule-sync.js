@@ -2,6 +2,7 @@
 // Only changed rows are written (row_hash), so a 10-minute cron stays cheap.
 
 import { fetchBroadcasts } from '../../src/sources/schedule.js';
+import { mediaUrl } from '../../src/lib/media.js';
 import { tokenKey } from '../../src/lib/names.js';
 
 function rowHash(row) {
@@ -43,7 +44,8 @@ export async function syncSchedule(env) {
       ON CONFLICT(broadcast_key) DO UPDATE SET sheet_row = excluded.sheet_row, date_msk = excluded.date_msk, time_msk = excluded.time_msk,
         starts_at = excluded.starts_at, tournament = excluded.tournament, round = excluded.round, note = excluded.note, status = excluded.status,
         player1_ru = excluded.player1_ru, player2_ru = excluded.player2_ru, player1_id = excluded.player1_id, player2_id = excluded.player2_id,
-        is_doubles = excluded.is_doubles, commentator1 = excluded.commentator1, commentator2 = excluded.commentator2, vk_url = excluded.vk_url,
+        is_doubles = excluded.is_doubles, commentator1 = excluded.commentator1, commentator2 = excluded.commentator2,
+        vk_video = CASE WHEN broadcasts.vk_url IS excluded.vk_url THEN broadcasts.vk_video ELSE NULL END, vk_url = excluded.vk_url,
         vk_post_id = excluded.vk_post_id, row_hash = excluded.row_hash, updated_at = excluded.updated_at`)
       .bind(row.broadcast_key, row.sheet_row, row.date_msk, row.time_msk, row.starts_at, row.tournament, row.round, row.note,
         row.status, row.player1_ru, row.player2_ru, p1, p2, row.is_doubles ? 1 : 0, row.commentator1, row.commentator2,
@@ -61,14 +63,25 @@ export async function syncSchedule(env) {
   return { rows: rows.length, written: statements.length };
 }
 
+const STORED = (key) => `(SELECT r2_key || '?v=' || version FROM media WHERE media_key = ${key} AND status = 'ok')`;
+
+// A broadcast carries our stored cover, or else both players' heads (worker/src/media.js).
 export async function broadcastsForDate(db, date) {
   const { results } = await db.prepare(`SELECT b.date_msk, b.time_msk, b.starts_at, b.tournament, b.round, b.status, b.is_doubles,
       b.player1_ru, b.player2_ru, b.player1_id, b.player2_id, b.commentator1, b.commentator2, b.vk_url,
-      p1.name_ru AS player1_name, p1.singles_rank AS player1_rank, p2.name_ru AS player2_name, p2.singles_rank AS player2_rank
+      p1.name_ru AS player1_name, p1.singles_rank AS player1_rank, p2.name_ru AS player2_name, p2.singles_rank AS player2_rank,
+      ${STORED("'cover/' || b.vk_video")} AS cover,
+      ${STORED("'head/' || p1.fs_id")} AS player1_head, p1.photo_url AS player1_photo_src,
+      ${STORED("'head/' || p2.fs_id")} AS player2_head, p2.photo_url AS player2_photo_src
     FROM broadcasts b
     LEFT JOIN players p1 ON p1.player_id = b.player1_id
     LEFT JOIN players p2 ON p2.player_id = b.player2_id
     WHERE b.date_msk = ? AND b.status != 'removed'
     ORDER BY b.time_msk`).bind(date).all();
-  return results;
+  return results.map(({ cover, player1_head, player1_photo_src, player2_head, player2_photo_src, ...b }) => ({
+    ...b,
+    cover: mediaUrl(cover),
+    player1_photo: mediaUrl(player1_head) ?? player1_photo_src ?? null,
+    player2_photo: mediaUrl(player2_head) ?? player2_photo_src ?? null,
+  }));
 }

@@ -4,12 +4,15 @@
 //   GET  /api/players/<player_id>        one player with all spellings
 //   GET  /api/broadcasts?date=YYYY-MM-DD «Больше» tennis broadcasts of a day (Moscow date)
 //   GET  /api/levels?xp=1234             tennis levels and XP rules
+//   GET  /media/covers/<vk id>.jpg       our stored cover of a «Больше» broadcast (640×360)
+//   GET  /media/heads/<flashscore id>.png our stored head of a player
 //   POST /telegram/webhook               Telegram updates (secret header required)
 // Cron (every 10 min): schedule sheet -> broadcasts; registers the bot webhook once the token exists.
 
 import { LEGEND_STEP, LEVELS, XP_RULES, levelFor } from '../../src/game/levels.js';
 import { explainTournament } from '../../src/insights/tournaments.js';
 import { matchCard } from './match-details.js';
+import { mediaCounts, serveMedia, syncMedia } from './media.js';
 import { matchesForDate, matchesOfPlayer, syncMatchDays } from './matches-sync.js';
 import { getPlayer, searchPlayers } from './players.js';
 import { broadcastsForDate, syncSchedule } from './schedule-sync.js';
@@ -76,6 +79,7 @@ async function health(env) {
     broadcasts: await one('SELECT COUNT(*) AS n FROM broadcasts'),
     name_decisions: await one('SELECT COUNT(*) AS n FROM player_name_overrides'),
     bot_users: await one('SELECT COUNT(*) AS n FROM bot_users'),
+    media: await mediaCounts(env.DB),
     bot_token_set: Boolean(env.TELEGRAM_BOT_TOKEN),
     schedule_configured: Boolean(env.SCHEDULE_SHEET_ID),
     last_runs: runs,
@@ -101,6 +105,7 @@ async function runJob(env, job, fn) {
 const SCHEDULE_EVERY_MS = 10 * 60 * 1000;
 const MATCHES_TODAY_EVERY_MS = 60 * 1000;
 const MATCHES_WINDOW_EVERY_MS = 5 * 60 * 1000;
+const MEDIA_EVERY_MS = 60 * 1000;
 // Flashscore keeps −7…+7 days; nearer days come round more often.
 const WINDOW_OFFSETS = [-1, 1, -2, 2, -1, 1, -3, 3, -4, 4, -1, 1, -5, 5, -6, 6, -7, 7];
 
@@ -143,6 +148,11 @@ async function maintain(env, { force = false } = {}) {
     await setState(env, 'matches_window', String(index + 1));
     tasks.push(runJob(env, 'matches_window', () => syncMatchDays(env, [WINDOW_OFFSETS[index]])));
   }
+  // Covers of «Больше» broadcasts and player heads into our bucket, a few every minute.
+  if (env.MEDIA && await due(env, 'media_sync', MEDIA_EVERY_MS, force)) {
+    await setState(env, 'media_sync', 'run');
+    tasks.push(runJob(env, 'media', () => syncMedia(env)));
+  }
   if (env.TELEGRAM_BOT_TOKEN) {
     const menuWant = `${env.PUBLIC_URL}/app/`;
     const menu = await getState(env, 'menu_button_for');
@@ -177,6 +187,10 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const path = url.pathname.replace(/\/+$/, '') || '/';
+    // Pictures are served straight from the bucket and do not wake the upkeep (a screen asks for dozens).
+    if (path.startsWith('/media/')) {
+      return request.method === 'GET' || request.method === 'HEAD' ? serveMedia(env, path) : json({ ok: false }, 405);
+    }
     ctx.waitUntil(maintain(env).catch((error) => console.error('maintain failed', error?.stack ?? error)));
     try {
       if (path === '/telegram/webhook') {
