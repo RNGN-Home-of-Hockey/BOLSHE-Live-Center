@@ -122,3 +122,47 @@ h1 { font-size: 22px; margin: 6px 0 4px; }
 .badges small { color: var(--hint); }
 .loading { text-align: center; color: var(--hint); padding: 30px 0; }
 .vs .pl .pa { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; display: inline-block; background: color-mix(in srgb, var(--hint) 25%, transparent); }
+
+/* --- 2026-10-14: home as an introduction, comparison table, day picker --- */
+.small { font-size: 13px; }
+.live { color: var(--live); font-weight: 700; }
+.day.pick { position: relative; overflow: hidden; display: inline-flex; align-items: center; gap: 4px; }
+.day.pick input { position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
+
+.hello { padding: 4px 2px 2px; }
+.hello .date { font-size: 22px; font-weight: 800; }
+.hello p { margin: 6px 0 0; color: var(--hint); }
+
+.tcard { display: block; background: var(--bg2); border-radius: var(--radius); padding: 12px; margin-bottom: 8px; color: var(--text); }
+.tcard .tt { font-weight: 700; font-size: 16px; }
+.tcard p { margin: 6px 0; font-size: 14px; }
+.tcard.slim { color: var(--link); font-size: 14px; }
+.tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.tag { font-size: 12px; padding: 2px 8px; border-radius: 999px; background: var(--bg); color: var(--hint); }
+
+.hero.mod { display: block; color: var(--text); }
+.hero.mod .why { margin: 10px 0 0; font-size: 14px; }
+.hero.mod .more { margin-top: 8px; color: var(--link); font-size: 14px; }
+
+.lines { background: var(--bg2); border-radius: var(--radius); padding: 2px 12px; }
+.line { display: grid; grid-template-columns: 52px 1fr auto; gap: 8px; align-items: center; padding: 9px 0; color: var(--text);
+  border-bottom: 1px solid color-mix(in srgb, var(--hint) 15%, transparent); }
+.line:last-child { border-bottom: 0; }
+.line .when { font-size: 13px; color: var(--hint); font-variant-numeric: tabular-nums; }
+.line .who small { display: block; color: var(--hint); font-size: 12px; }
+.line .sc { font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.tip { background: var(--bg2); border-radius: var(--radius); padding: 12px; margin-top: 18px; }
+.tip .cap { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--hint); }
+.tip b { display: block; margin-top: 4px; }
+.tip p { margin: 4px 0 0; font-size: 14px; }
+.links { display: flex; gap: 16px; margin: 16px 2px 0; font-size: 14px; }
+
+.compare .cmp-head, .compare .cmp-row { display: grid; grid-template-columns: 1fr 1.4fr 1fr; align-items: center; text-align: center; gap: 6px; }
+.compare .cmp-head { font-weight: 700; padding-bottom: 6px; border-bottom: 1px solid color-mix(in srgb, var(--hint) 20%, transparent); }
+.compare .cmp-row { padding: 8px 0; border-bottom: 1px solid color-mix(in srgb, var(--hint) 12%, transparent); }
+.compare .cmp-row span { font-size: 12px; color: var(--hint); }
+.compare .cmp-row b { font-weight: 600; font-variant-numeric: tabular-nums; }
+.compare .cmp-row b.up { color: var(--win); font-weight: 800; }
+.compare .chance { margin: 10px 0 4px; }
+.compare .facts { margin-top: 10px; }

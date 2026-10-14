@@ -115,7 +115,9 @@ export function shapeMatch(row) {
 
 const STATUS_ORDER = "CASE m.status WHEN 'live' THEN 0 WHEN 'scheduled' THEN 1 ELSE 2 END";
 
-export async function matchesForDate(db, date, { level = null, tour = null, russian = false, bolshe = false, limit = 500 } = {}) {
+// A busy day has 500+ matches (mostly ITF): the limit must stay above that, or early finished
+// matches fall off the end of the list.
+export async function matchesForDate(db, date, { level = null, tour = null, russian = false, bolshe = false, limit = 3000 } = {}) {
   const where = ['m.date_msk = ?'];
   const args = [date];
   if (level) { where.push('t.level = ?'); args.push(level); }

@@ -3,6 +3,7 @@ import { test } from 'node:test';
 
 import { matchStatus, parseDayFeed, parseH2HFeed, parseLeague } from '../src/sources/flashscore-matches.js';
 import { buildPreview, eloChance, formOf } from '../src/insights/preview.js';
+import { explainTournament, tournamentTier } from '../src/insights/tournaments.js';
 
 // Shape copied from the real Flashscore feeds (values shortened, ids synthetic).
 const DAY = [
@@ -95,4 +96,24 @@ test('preview for beginners: ranks, Elo chance, form without this match, head to
   assert.match(text, /Личные встречи: Самсонова ведёт 1–0\. Последняя — Бад Хомбург 2026, победитель — Самсонова\./);
   assert.match(text, /Возраст: Синякова — 30 лет, Самсонова — 27 лет\./);
   assert.match(text, /Явный фаворит — Самсонова\./);
+  // Side-by-side table under the score: rank, age, head to head, chances, form, surface.
+  assert.deepEqual(preview.table.map((r) => r.key), ['rank', 'age', 'h2h', 'chance', 'form'], 'no surface row: the sample has no matches on hard');
+  const row = Object.fromEntries(preview.table.map((r) => [r.key, r]));
+  assert.deepEqual([row.rank.p1, row.rank.p2, row.rank.better], ['№60', '№28', 2]);
+  assert.deepEqual([row.age.p1, row.age.p2], [30, 27]);
+  assert.deepEqual([row.h2h.p1, row.h2h.p2, row.h2h.better], [0, 1, 2]);
+  assert.equal(row.chance.label, 'Шансы по Эло на харде');
+  assert.deepEqual(preview.facts, ['Явный фаворит — Самсонова.', 'Последняя встреча — Бад Хомбург 2026, победитель — Самсонова.']);
+});
+
+test('tournament tiers explained for the home screen', () => {
+  assert.equal(tournamentTier({ tour: 'ATP', level: 'tour', tournament: 'Шанхай' }), '1000');
+  assert.equal(tournamentTier({ tour: 'WTA', level: 'tour', tournament: 'Ухань' }), '1000');
+  assert.equal(tournamentTier({ tour: 'WTA', level: 'tour', tournament: 'Открытый чемпионат США' }), 'slam');
+  assert.equal(tournamentTier({ tour: 'ATP', level: 'tour', tournament: 'Алматы' }, 'ATP 250 Алматы'), '250');
+  assert.equal(tournamentTier({ tour: 'ATP', level: 'tour', tournament: 'Неизвестно' }), 'tour');
+  assert.equal(tournamentTier({ tour: 'ATP', level: 'challenger', tournament: 'Jinan' }), 'challenger');
+  const e = explainTournament({ tour: 'ATP', level: 'tour', tournament: 'Шанхай' });
+  assert.equal(e.tier_label, 'серия 1000');
+  assert.match(e.about, /1000 очков/);
 });

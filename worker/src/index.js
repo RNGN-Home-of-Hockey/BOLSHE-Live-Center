@@ -8,6 +8,7 @@
 // Cron (every 10 min): schedule sheet -> broadcasts; registers the bot webhook once the token exists.
 
 import { LEGEND_STEP, LEVELS, XP_RULES, levelFor } from '../../src/game/levels.js';
+import { explainTournament } from '../../src/insights/tournaments.js';
 import { matchCard } from './match-details.js';
 import { matchesForDate, matchesOfPlayer, syncMatchDays } from './matches-sync.js';
 import { getPlayer, searchPlayers } from './players.js';
@@ -24,6 +25,45 @@ const json = (data, status = 200, cacheSeconds = 0) => new Response(JSON.stringi
 });
 
 const todayMsk = () => new Date(Date.now() + 3 * 3600 * 1000).toISOString().slice(0, 10);
+
+// Main-tour and challenger singles of the day, one entry per tournament, explained in plain words.
+function summarizeTournaments(matches, broadcasts) {
+  const byKey = new Map();
+  for (const m of matches) {
+    const t = m.tournament;
+    if (m.is_doubles || !['tour', 'challenger'].includes(t.level)) continue;
+    const key = `${t.tour}|${t.name}`;
+    const entry = byKey.get(key) ?? { tour: t.tour, name: t.name, level: t.level, surface: t.surface, country: t.country, matches: 0, live: 0, bolshe: 0, russians: 0 };
+    entry.matches += 1;
+    if (m.status === 'live') entry.live += 1;
+    if (m.bolshe) entry.bolshe += 1;
+    if (m.p1.is_russian || m.p2.is_russian) entry.russians += 1;
+    byKey.set(key, entry);
+  }
+  return [...byKey.values()].map((e) => {
+    const hint = broadcasts.find((b) => b.tournament && e.name && b.tournament.toLowerCase().includes(e.name.toLowerCase()))?.tournament;
+    return { ...e, ...explainTournament({ ...e, tournament: e.name }, hint) };
+  }).sort((a, b) => (a.level === b.level ? b.matches - a.matches : a.level === 'tour' ? -1 : 1));
+}
+
+// The most interesting singles match still to watch: best-ranked pair, a bonus for a «Больше»
+// broadcast and for a Russian player. Returns the match and why it was picked.
+function pickMatchOfDay(matches) {
+  const open = matches.filter((m) => !m.is_doubles && m.tournament.level === 'tour' && ['scheduled', 'live'].includes(m.status));
+  const pool = open.length ? open : matches.filter((m) => !m.is_doubles && m.tournament.level === 'tour');
+  let best = null;
+  for (const m of pool) {
+    const r1 = m.p1.rank ?? 500;
+    const r2 = m.p2.rank ?? 500;
+    const score = 1 / r1 + 1 / r2 + (m.bolshe ? 0.05 : 0) + (m.p1.is_russian || m.p2.is_russian ? 0.05 : 0);
+    if (!best || score > best.score) best = { score, match: m, r1, r2 };
+  }
+  if (!best) return null;
+  const why = [];
+  if (best.match.p1.rank && best.match.p2.rank) why.push(`Встречаются №${best.r1} и №${best.r2} мирового рейтинга.`);
+  if (best.match.bolshe) why.push(`Эфир «Больше»${best.match.bolshe.commentator1 ? `, комментирует ${best.match.bolshe.commentator1}` : ''}.`);
+  return { match: best.match, why };
+}
 
 async function health(env) {
   const one = async (sql) => (await env.DB.prepare(sql).first())?.n ?? 0;
@@ -61,7 +101,8 @@ async function runJob(env, job, fn) {
 const SCHEDULE_EVERY_MS = 10 * 60 * 1000;
 const MATCHES_TODAY_EVERY_MS = 60 * 1000;
 const MATCHES_WINDOW_EVERY_MS = 5 * 60 * 1000;
-const WINDOW_OFFSETS = [-1, 1, -2, 2, -3, 3];
+// Flashscore keeps −7…+7 days; nearer days come round more often.
+const WINDOW_OFFSETS = [-1, 1, -2, 2, -1, 1, -3, 3, -4, 4, -1, 1, -5, 5, -6, 6, -7, 7];
 
 async function due(env, key, everyMs, force) {
   const last = await getState(env, key);
@@ -179,12 +220,21 @@ export default {
       if (path === '/api/matches') {
         const date = url.searchParams.get('date') ?? todayMsk();
         if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return json({ ok: false, error: 'date must be YYYY-MM-DD' }, 400);
-        const matches = await matchesForDate(env.DB, date, {
+        const filters = {
           level: url.searchParams.get('level') || null,
           tour: (url.searchParams.get('tour') ?? '').toUpperCase() || null,
           russian: url.searchParams.get('russian') === '1',
           bolshe: url.searchParams.get('bolshe') === '1',
-        });
+        };
+        let matches = await matchesForDate(env.DB, date, filters);
+        // A day picked in the app that the rotation has not reached yet is fetched right away
+        // (Flashscore keeps −7…+7 days); at most once per 10 minutes per day.
+        const offset = Math.round((Date.parse(`${date}T00:00:00Z`) - Date.parse(`${todayMsk()}T00:00:00Z`)) / 86400e3);
+        if (!matches.length && Math.abs(offset) <= 7 && await due(env, `matches_day_${date}`, 10 * 60 * 1000, false)) {
+          await setState(env, `matches_day_${date}`, 'on_demand');
+          await runJob(env, 'matches_on_demand', () => syncMatchDays(env, [offset]));
+          matches = await matchesForDate(env.DB, date, filters);
+        }
         return json({ date, matches }, 200, 20);
       }
       if (path.startsWith('/api/matches/')) {
@@ -193,13 +243,22 @@ export default {
       }
       if (path === '/api/home') {
         const date = url.searchParams.get('date') ?? todayMsk();
-        const all = await matchesForDate(env.DB, date, {});
+        const yesterday = new Date(Date.parse(`${date}T12:00:00Z`) - 86400e3).toISOString().slice(0, 10);
+        const [all, before, broadcasts] = await Promise.all([
+          matchesForDate(env.DB, date, {}),
+          matchesForDate(env.DB, yesterday, { russian: true }),
+          broadcastsForDate(env.DB, date),
+        ]);
         const main = all.filter((m) => !m.is_doubles && ['tour', 'challenger'].includes(m.tournament.level));
         return json({
           date,
+          tournaments: summarizeTournaments(all, broadcasts),
           bolshe: all.filter((m) => m.bolshe),
-          broadcasts: await broadcastsForDate(env.DB, date),
+          broadcasts,
           russians: main.filter((m) => m.p1.is_russian || m.p2.is_russian),
+          russians_yesterday: before.filter((m) => !m.is_doubles && ['tour', 'challenger'].includes(m.tournament.level)
+            && ['finished', 'retired', 'walkover'].includes(m.status)),
+          match_of_day: pickMatchOfDay(all),
           live: main.filter((m) => m.status === 'live').slice(0, 20),
           tour: all.filter((m) => m.tournament.level === 'tour' && !m.is_doubles),
         }, 200, 20);

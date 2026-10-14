@@ -55,11 +55,24 @@ function blocksFor(h2h, surfaceTitle) {
 export const lastFor = (blocks, fsId) => blocks.last.find((b) => b.matches.length
   && b.matches.every((m) => m.p1_fs_id === fsId || m.p2_fs_id === fsId))?.matches ?? [];
 
+// Returns `table` (rows for the side-by-side comparison under the score), `facts` (short sentences
+// under the table) and `lines` (everything as sentences, for the bot).
 export function buildPreview({ match, p1, p2, h2h, now = new Date() }) {
   const lines = [];
+  const table = [];
+  const facts = [];
+  const better = (a, b, higherIsBetter = true) => (a == null || b == null || a === b ? null : (a > b) === higherIsBetter ? 1 : 2);
   const n1 = surname(p1, match.p1_name);
   const n2 = surname(p2, match.p2_name);
   const surface = match.surface ?? null;
+
+  if (p1?.singles_rank || p2?.singles_rank) {
+    table.push({ key: 'rank', label: 'Рейтинг', p1: p1?.singles_rank ? `№${p1.singles_rank}` : '—', p2: p2?.singles_rank ? `№${p2.singles_rank}` : '—',
+      better: better(p1?.singles_rank ?? 99999, p2?.singles_rank ?? 99999, false) });
+  }
+  const a1 = age(p1?.birth_date, now);
+  const a2 = age(p2?.birth_date, now);
+  if (a1 != null || a2 != null) table.push({ key: 'age', label: 'Возраст', p1: a1 ?? '—', p2: a2 ?? '—', better: null });
 
   if (p1?.singles_rank && p2?.singles_rank) {
     lines.push(`Рейтинг: ${n1} — №${p1.singles_rank}, ${n2} — №${p2.singles_rank}.`);
@@ -79,6 +92,7 @@ export function buildPreview({ match, p1, p2, h2h, now = new Date() }) {
     chance = { p1: pct1, p2: 100 - pct1, by: surfKey && p1?.[surfKey] && p2?.[surfKey] ? `elo_${surface}` : 'elo' };
     const where = chance.by === 'elo' ? '' : ` на ${SURFACE_RU[surface]}`;
     lines.push(`Шансы по рейтингу Эло${where}: ${n1} ${pct1}% — ${n2} ${100 - pct1}%.`);
+    table.push({ key: 'chance', label: `Шансы по Эло${where}`, p1: `${pct1}%`, p2: `${100 - pct1}%`, better: better(pct1, 100 - pct1) });
     if (pct1 >= 55) favorite = 1;
     else if (pct1 <= 45) favorite = 2;
   }
@@ -87,6 +101,8 @@ export function buildPreview({ match, p1, p2, h2h, now = new Date() }) {
   const f1 = formOf(match.p1_fs_id, lastFor(all, match.p1_fs_id), match.match_id);
   const f2 = formOf(match.p2_fs_id, lastFor(all, match.p2_fs_id), match.match_id);
   if (f1.played && f2.played) {
+    table.push({ key: 'form', label: `Форма, побед из ${Math.max(f1.played, f2.played)}`, p1: `${f1.wins} из ${f1.played}`, p2: `${f2.wins} из ${f2.played}`,
+      better: better(f1.wins / f1.played, f2.wins / f2.played) });
     lines.push(`Форма: ${n1} — ${f1.wins} ${plural(f1.wins, 'победа', 'победы', 'побед')} в ${f1.played} последних матчах, ${n2} — ${f2.wins} из ${f2.played}.`);
   }
 
@@ -95,6 +111,8 @@ export function buildPreview({ match, p1, p2, h2h, now = new Date() }) {
     const s1 = formOf(match.p1_fs_id, lastFor(onSurface, match.p1_fs_id), match.match_id);
     const s2 = formOf(match.p2_fs_id, lastFor(onSurface, match.p2_fs_id), match.match_id);
     if (s1.played >= 3 && s2.played >= 3) {
+      const label = `На ${SURFACE_RU[surface]}`;
+      table.push({ key: 'surface', label, p1: `${s1.wins} из ${s1.played}`, p2: `${s2.wins} из ${s2.played}`, better: better(s1.wins / s1.played, s2.wins / s2.played) });
       lines.push(`На ${SURFACE_RU[surface]}: ${n1} — ${s1.wins} из ${s1.played}, ${n2} — ${s2.wins} из ${s2.played}.`);
     }
   }
@@ -108,21 +126,25 @@ export function buildPreview({ match, p1, p2, h2h, now = new Date() }) {
     const year = last.start_at ? new Date(last.start_at).getUTCFullYear() : '';
     const lead = w1 === w2 ? `поровну, ${w1}–${w2}` : `${w1 > w2 ? n1 : n2} ведёт ${Math.max(w1, w2)}–${Math.min(w1, w2)}`;
     lines.push(`Личные встречи: ${lead}. Последняя — ${last.tournament ?? ''} ${year}, победитель — ${lastWinner}.`.replace(/\s+/g, ' '));
+    table.splice(Math.min(2, table.length), 0, { key: 'h2h', label: 'Личные встречи', p1: w1, p2: w2, better: better(w1, w2) });
+    facts.push(`Последняя встреча — ${last.tournament ?? ''} ${year}, победитель — ${lastWinner}.`.replace(/\s+/g, ' '));
   } else if (all.last.length) {
     lines.push('Раньше друг с другом не играли.');
+    facts.push('Раньше друг с другом не играли.');
   }
 
-  const a1 = age(p1?.birth_date, now);
-  const a2 = age(p2?.birth_date, now);
   if (a1 != null && a2 != null) {
     lines.push(`Возраст: ${n1} — ${a1} ${plural(a1, 'год', 'года', 'лет')}, ${n2} — ${a2} ${plural(a2, 'год', 'года', 'лет')}.`);
   }
 
   if (favorite) {
     const strong = chance && Math.max(chance.p1, chance.p2) >= 65;
-    lines.push(strong ? `Явный фаворит — ${favorite === 1 ? n1 : n2}.` : `Чуть сильнее выглядит ${favorite === 1 ? n1 : n2}.`);
+    const verdict = strong ? `Явный фаворит — ${favorite === 1 ? n1 : n2}.` : `Чуть сильнее выглядит ${favorite === 1 ? n1 : n2}.`;
+    lines.push(verdict);
+    facts.unshift(verdict);
   } else if (chance) {
     lines.push('Шансы примерно равные.');
+    facts.unshift('Шансы примерно равные.');
   }
-  return { chance, favorite, lines };
+  return { chance, favorite, lines, table, facts };
 }
