@@ -12,6 +12,9 @@ const FEED = `<Winline>
    <Match Team1="Свитолина Э." Team2="Гуо Х." Id1="1" Id2="2" MatchDate="2026-10-15T07:10:00.000+03:00" MatchUrl="https://winline.ru/plus/101" islive="0" Id="101">
     <line freetext="1 сет Исход 12" name1="1" odd1="1.20" name2="2" odd2="4.00"></line>
     <line freetext="Победитель" name1="1" odd1="1.08" name2="2" odd2="8.00"></line>
+    <line freetext="Фора" value="-4.5" name1="1" odd1="1.50" name2="2" odd2="2.55"></line>
+    <line freetext="Фора" value="-5.5" name1="1" odd1="1.90" name2="2" odd2="1.88"></line>
+    <line freetext="1 сет Фора" value="-2.5" name1="1" odd1="1.85" name2="2" odd2="1.85"></line>
    </Match>
    <Match Team1="Ши Х." Team2="Фернандес Л.Э." MatchDate="2026-10-14T17:07:43.000+03:00" islive="1" Id="102">
     <line freetext="Победитель матча (Вкл. ОТ)" name1="1" odd1="3.50" name2="2" odd2="1.26"></line>
@@ -29,6 +32,7 @@ test('Winline feed: tennis only, match-winner odds, start in UTC', () => {
   assert.deepEqual(list[0], {
     wl_id: '101', tournament: 'Ухань, Китай', p1: 'Свитолина Э.', p2: 'Гуо Х.',
     start_at: '2026-10-15T04:10:00.000Z', live: false, url: 'https://winline.ru/plus/101', odds: [1.08, 8],
+    hcap: { value: -5.5, odds: [1.9, 1.88] }, // the most even games handicap; set handicaps are not used
   });
   assert.deepEqual(list[1].odds, [3.5, 1.26]);
   assert.equal(list[1].live, true);

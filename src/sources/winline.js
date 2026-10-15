@@ -26,12 +26,16 @@ export function parseWinlineTennis(xml) {
     const tournament = unescape(attr(t[1], 'Name'));
     for (const m of t[2].matchAll(/<Match\b([^>]*)>([\s\S]*?)<\/Match>/g)) {
       let odds = null;
+      let hcap = null;
       for (const l of m[2].matchAll(/<line\b([^>]*)>/g)) {
-        if (!WINNER.test(unescape(attr(l[1], 'freetext')))) continue;
+        const name = unescape(attr(l[1], 'freetext'));
         const o1 = Number(attr(l[1], 'odd1'));
         const o2 = Number(attr(l[1], 'odd2'));
-        if (o1 > 1 && o2 > 1) odds = [o1, o2];
-        break;
+        if (!(o1 > 1 && o2 > 1)) continue;
+        if (!odds && WINNER.test(name)) odds = [o1, o2];
+        // Games handicap (value = Winline Team1's games): several lines, the main one has the most even prices.
+        const value = Number(attr(l[1], 'value'));
+        if (name === 'Фора' && Number.isFinite(value) && (!hcap || Math.abs(o1 - o2) < Math.abs(hcap.odds[0] - hcap.odds[1]))) hcap = { value, odds: [o1, o2] };
       }
       const date = Date.parse(attr(m[1], 'MatchDate') ?? '');
       out.push({
@@ -43,6 +47,7 @@ export function parseWinlineTennis(xml) {
         live: attr(m[1], 'islive') === '1',
         url: attr(m[1], 'MatchUrl'),
         odds,
+        hcap,
       });
     }
   }

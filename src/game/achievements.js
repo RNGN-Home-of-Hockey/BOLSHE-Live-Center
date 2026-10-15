@@ -2,7 +2,7 @@
 // second — level 2, and so on ("5 верных подряд — 1-й уровень, 10 подряд — 2-й"). Every vote
 // moves some bar forward, so the profile always shows how far the next level is.
 // Input rows (one per vote, oldest first): {pick, winner, start_at, voted_at, surface, pre1, pre2,
-// n1, n2, n, ours, bolshe}; winner is null until the match is decided.
+// n1, n2, n, mine, bolshe}; winner is null until the match is decided; mine = a «Мой игрок» plays.
 
 export const ACHIEVEMENTS = [
   { key: 'streak', icon: '🔥', title: 'Горячая серия', unit: 'верных подряд', levels: [5, 10, 20, 35, 50],
@@ -19,8 +19,12 @@ export const ACHIEVEMENTS = [
     about: 'Сколько всего прогнозов сделано' },
   { key: 'bolshe', icon: '📺', title: 'Зритель «Больше»', unit: 'прогнозов на эфиры', levels: [10, 50, 150, 300, 600],
     about: 'Прогнозы на матчи, которые показывает «Больше»' },
-  { key: 'ours', icon: '🤝', title: 'За наших', unit: 'верных в матчах наших', levels: [5, 20, 50, 100, 200],
-    about: 'Верные прогнозы в матчах россиян' },
+  { key: 'loyal', icon: '🤝', title: 'Верность своим', unit: 'верных в матчах «Моих игроков»', levels: [5, 20, 50, 100, 200],
+    about: 'Верные прогнозы в матчах игроков, за которыми ты следишь' },
+  { key: 'app_days', icon: '📱', title: 'Каждый день с теннисом', unit: 'дней подряд в приложении', levels: [3, 7, 14, 30, 60],
+    about: 'Заходил в приложение каждый день — лучшая серия' },
+  { key: 'streams', icon: '▶️', title: 'Эфиры через приложение', unit: 'эфиров открыто', levels: [5, 20, 50, 100, 250],
+    about: 'Трансляции «Больше», открытые из приложения' },
   { key: 'clay', icon: '🧱', title: 'Король грунта', unit: 'верных на грунте', levels: [5, 20, 50, 100, 200],
     about: 'Верные прогнозы на грунтовых турнирах' },
   { key: 'hard', icon: '⚡', title: 'Мастер харда', unit: 'верных на харде', levels: [5, 20, 50, 100, 200],
@@ -53,8 +57,11 @@ function bestDayRun(days) {
 }
 
 // The numbers behind every achievement.
-export function fanMetrics(rows, { follows = 0, bracketPoints = 0 } = {}) {
-  const m = { streak: 0, correct: 0, upsets: 0, contrarian: 0, days: 0, votes: rows.length, bolshe: 0, ours: 0, clay: 0, hard: 0, grass: 0, follows, bracket: bracketPoints };
+export function fanMetrics(rows, { follows = 0, bracketPoints = 0, appDays = [], streams = 0 } = {}) {
+  const m = {
+    streak: 0, correct: 0, upsets: 0, contrarian: 0, days: 0, votes: rows.length, bolshe: 0, loyal: 0, clay: 0, hard: 0, grass: 0,
+    follows, bracket: bracketPoints, app_days: bestDayRun(appDays), streams,
+  };
   let run = 0;
   for (const r of [...rows].sort((a, b) => Date.parse(a.start_at ?? 0) - Date.parse(b.start_at ?? 0))) {
     if (r.bolshe) m.bolshe += 1;
@@ -68,7 +75,7 @@ export function fanMetrics(rows, { follows = 0, bracketPoints = 0 } = {}) {
     if (price >= UPSET_ODDS) m.upsets += 1;
     const share = r.n ? (r.pick === 1 ? r.n1 : r.n2) / r.n : 1;
     if (r.n >= MINORITY_VOTERS && share < MINORITY_SHARE) m.contrarian += 1;
-    if (r.ours) m.ours += 1;
+    if (r.mine) m.loyal += 1;
     if (r.surface === 'clay') m.clay += 1;
     else if (r.surface === 'hard') m.hard += 1;
     else if (r.surface === 'grass') m.grass += 1;

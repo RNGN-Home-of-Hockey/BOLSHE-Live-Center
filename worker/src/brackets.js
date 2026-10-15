@@ -112,10 +112,13 @@ export async function bracketView(env, key, user) {
   if (!b) return null;
   const draw = JSON.parse(b.draw_json);
   const entry = user ? await env.DB.prepare('SELECT * FROM bracket_entries WHERE bracket_key = ? AND user_id = ?').bind(key, user.id).first() : null;
-  const { results: table } = await env.DB.prepare(`SELECT e.user_id, e.points, e.correct, e.decided, e.possible, u.first_name, u.username
-    FROM bracket_entries e LEFT JOIN bot_users u ON u.telegram_user_id = e.user_id
+  const { results: table } = await env.DB.prepare(`SELECT e.user_id, e.points, e.correct, e.decided, e.possible, u.first_name, u.username,
+      COALESCE(f.public, 1) AS public
+    FROM bracket_entries e LEFT JOIN bot_users u ON u.telegram_user_id = e.user_id LEFT JOIN fan_prefs f ON f.user_id = e.user_id
     WHERE e.bracket_key = ? ORDER BY e.points DESC, e.correct DESC, e.submitted_at ASC LIMIT 50`).bind(key).all();
-  const label = (r) => (r.first_name ? r.first_name : r.username ? `@${r.username}` : `Болельщик ${String(r.user_id).slice(-4)}`);
+  // A fan who hid their results (Настройки) is shown without a name.
+  const label = (r) => (!r.public ? `Болельщик ${String(r.user_id).slice(-4)}`
+    : r.first_name ? r.first_name : r.username ? `@${r.username}` : `Болельщик ${String(r.user_id).slice(-4)}`);
   const myPlace = entry
     ? 1 + ((await env.DB.prepare(`SELECT COUNT(*) AS n FROM bracket_entries WHERE bracket_key = ? AND (points > ? OR (points = ? AND correct > ?))`)
       .bind(key, entry.points, entry.points, entry.correct).first())?.n ?? 0)

@@ -83,6 +83,31 @@ export function scoreBracket(draw, picks, submittedAt) {
   return { points, correct, decided, possible: points + possible };
 }
 
+// How a sent bracket is doing: picks made, still alive (not played yet and the player is still in),
+// guessed and played.
+export function bracketStatus(draw, picks) {
+  const eliminated = new Set();
+  draw.rounds.forEach((round) => round.matches.forEach((m) => {
+    if (m.w != null && m.h != null && m.a != null) eliminated.add(m.w === m.h ? m.a : m.h);
+  }));
+  let total = 0;
+  let alive = 0;
+  let correct = 0;
+  let decided = 0;
+  draw.rounds.forEach((round, r) => round.matches.forEach((m, k) => {
+    const pick = picks[slotKey(r, k)];
+    if (pick == null) return;
+    total += 1;
+    if (m.w != null) {
+      decided += 1;
+      if (m.w === pick) correct += 1;
+    } else if (!eliminated.has(pick)) {
+      alive += 1;
+    }
+  }));
+  return { total, alive, correct, decided };
+}
+
 // The round being played now (the first one with an undecided match).
 export function currentRound(draw) {
   const i = draw.rounds.findIndex((round) => round.matches.some((m) => m.w == null));

@@ -24,15 +24,17 @@ export async function syncOdds(env, kind) {
   const now = new Date().toISOString();
   const statements = links.map(({ wl, match_id: matchId, swapped }) => {
     const [o1, o2] = swapped ? [wl.odds[1], wl.odds[0]] : wl.odds;
+    // our player 1 gets h games; Winline gives the handicap of its Team1
+    const h = wl.hcap ? (swapped ? { value: -wl.hcap.value, o1: wl.hcap.odds[1], o2: wl.hcap.odds[0] } : { value: wl.hcap.value, o1: wl.hcap.odds[0], o2: wl.hcap.odds[1] }) : null;
     return kind === 'live'
       ? db.prepare(`INSERT INTO match_odds (match_id, wl_id, wl_url, live1, live2, live_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)
           ON CONFLICT(match_id) DO UPDATE SET wl_id = excluded.wl_id, wl_url = excluded.wl_url, live1 = excluded.live1,
             live2 = excluded.live2, live_at = excluded.live_at, updated_at = excluded.updated_at`)
         .bind(matchId, wl.wl_id, wl.url, o1, o2, now, now)
-      : db.prepare(`INSERT INTO match_odds (match_id, wl_id, wl_url, pre1, pre2, pre_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)
+      : db.prepare(`INSERT INTO match_odds (match_id, wl_id, wl_url, pre1, pre2, pre_at, hcap, hcap1, hcap2, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           ON CONFLICT(match_id) DO UPDATE SET wl_id = excluded.wl_id, wl_url = excluded.wl_url, pre1 = excluded.pre1,
-            pre2 = excluded.pre2, pre_at = excluded.pre_at, updated_at = excluded.updated_at`)
-        .bind(matchId, wl.wl_id, wl.url, o1, o2, now, now);
+            pre2 = excluded.pre2, pre_at = excluded.pre_at, hcap = excluded.hcap, hcap1 = excluded.hcap1, hcap2 = excluded.hcap2, updated_at = excluded.updated_at`)
+        .bind(matchId, wl.wl_id, wl.url, o1, o2, now, h?.value ?? null, h?.o1 ?? null, h?.o2 ?? null, now);
   });
   for (let i = 0; i < statements.length; i += 50) await db.batch(statements.slice(i, i + 50));
   return { kind, feed: feed.length, linked: links.length };
@@ -46,7 +48,8 @@ export function shapeOdds(row, status) {
   const liveFresh = row.live_at && Date.now() - Date.parse(row.live_at) < 10 * 60e3;
   const over = ['finished', 'retired', 'walkover', 'cancelled'].includes(status);
   if (status === 'live' && liveFresh && row.live1 && row.live2) return { p1: row.live1, p2: row.live2, kind: 'live', url: row.wl_url ?? null };
-  if (row.pre1 && row.pre2) return { p1: row.pre1, p2: row.pre2, kind: 'pre', url: row.wl_url ?? null };
+  const hcap = row.hcap != null && row.hcap1 && row.hcap2 ? { p1: row.hcap, o1: row.hcap1, o2: row.hcap2 } : null;
+  if (row.pre1 && row.pre2) return { p1: row.pre1, p2: row.pre2, kind: 'pre', url: row.wl_url ?? null, hcap };
   if (!over && row.live1 && row.live2) return { p1: row.live1, p2: row.live2, kind: 'live', url: row.wl_url ?? null };
   return null;
 }

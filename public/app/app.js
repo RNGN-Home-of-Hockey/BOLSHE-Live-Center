@@ -173,6 +173,17 @@ function splitBar(m, v) {
     <div class="split"><i style="width:${p1}%"></i><i style="width:${100 - p1}%"></i></div>
     <div class="split-pc"><span>${p1}% ${esc(lastName(m.p1))}</span><span>${esc(lastName(m.p2))} ${100 - p1}%</span></div>`;
 }
+// After the match, a fact about the fan's own vote: "Ты был среди 14% болельщиков, которые верили в Ли".
+function personalFact(m, v, pick) {
+  if (!pick || !DONE.includes(m.status) || !m.winner || !showScore(m) || !v.total) return '';
+  const share = Math.round((100 * (pick === 1 ? v.p1 : v.p2)) / v.total);
+  const right = m.winner === pick;
+  const name = lastName(pick === 1 ? m.p1 : m.p2);
+  const bold = right && share < 35 ? ' Смелый прогноз — так думали немногие!' : '';
+  const streak = right && me?.streak >= 3 ? ` Это ${me.streak}-й верный подряд.` : '';
+  return `<div class="fact ${right ? 'ok' : 'no'}">${right ? '🎯 Угадал!' : 'Не сыграло.'} Ты был среди ${share}% болельщиков, которые верили в ${esc(name)}.${bold}${streak}</div>`;
+}
+
 // "Кто выиграет?": buttons until the match starts, then the fans' split.
 function voteBlock(m) {
   const pick = me?.picks?.[m.match_id] ?? null;
@@ -181,11 +192,11 @@ function voteBlock(m) {
     if (!tg?.initData) return '<div class="vote"><div class="vote-cap">Кто выиграет?</div><div class="vote-note">Голосовать можно в приложении в Telegram</div></div>';
     const btn = (side, p) => `<button type="button" class="${pick === side ? 'on' : ''}" data-vote="${esc(m.match_id)}" data-pick="${side}">${esc(lastName(p))}</button>`;
     return `<div class="vote"><div class="vote-cap">Кто выиграет?${pick ? ' Голос принят — до начала можно передумать' : ''}</div>
-      <div class="vote-btns">${btn(1, m.p1)}${btn(2, m.p2)}</div>${pick && v.total ? splitBar(m, v) : ''}</div>`;
+      <div class="vote-btns">${btn(1, m.p1)}${btn(2, m.p2)}</div>${pick ? `<div class="vote-offer">${pickOffer(m, pick)}</div>` : ''}${pick && v.total ? splitBar(m, v) : ''}</div>`;
   }
   if (m.status === 'cancelled') return '';
   if (!v.total) return '<div class="vote"><div class="vote-note">Голосование закрылось с началом матча — голосов не было</div></div>';
-  return `<div class="vote">${splitBar(m, v)}<div class="vote-note">Голосование закрылось с началом матча${pick ? `. Твой выбор: ${esc(lastName(pick === 1 ? m.p1 : m.p2))}` : ''}</div></div>`;
+  return `<div class="vote">${splitBar(m, v)}${personalFact(m, v, pick)}<div class="vote-note">Голосование закрылось с началом матча${pick ? `. Твой выбор: ${esc(lastName(pick === 1 ? m.p1 : m.p2))}` : ''}</div></div>`;
 }
 // ☆/★ to add a player to «Мои игроки» (inside Telegram only). Compact = a star alone.
 function followButton(playerId, compact = false) {
@@ -355,19 +366,36 @@ function myPlayersBlock(d) {
     }).join('')}</div>
     ${more > 0 ? `<button class="more-btn" type="button" data-more-players>${minePlayersOpen ? 'Свернуть' : `Показать ещё ${more}`}</button>` : ''}`;
   }
-  // Nobody followed yet: our players of the day to pick from.
-  const seen = new Set();
-  const ours = [];
-  for (const m of d.russians) {
-    for (const p of [m.p1, m.p2]) {
-      if (p.is_russian && p.player_id && !seen.has(p.player_id) && ours.length < 3) { seen.add(p.player_id); ours.push(p); }
-    }
-  }
-  if (!ours.length) return '';
+  // Nobody followed yet: the best-ranked players of the day to pick from.
+  const picks = (d.featured ?? []).slice(0, 6);
+  if (!picks.length) return '';
   return `<div class="seccap"><span>Мои игроки</span></div>
     <div class="hint">Отметь игроков — здесь будут их матчи и результаты.</div>
-    <div class="mine">${ours.map((p) => `<div class="pl-card">${avatar(p.photo, 'head')}<b>${esc(lastName(p))}</b>
+    <div class="mine">${picks.map((p) => `<div class="pl-card">${avatar(p.photo, 'head')}<b>${esc(lastName(p))}</b>
       ${tg?.initData ? `<button class="follow" type="button" data-follow="${esc(p.player_id)}">☆ Следить</button>` : `<a class="small" href="#/player/${encodeURIComponent(p.player_id)}">открыть</a>`}</div>`).join('')}</div>`;
+}
+
+// "Кто выиграет?" with two buttons; once voted: the pick and the Winline offer for that player.
+function rowVote(m) {
+  const pick = me?.picks?.[m.match_id];
+  if (!pick) {
+    return `<span class="row-vote"><span class="rv-cap">Кто выиграет?</span>${[1, 2].map((s) => `<button type="button" data-vote="${esc(m.match_id)}" data-pick="${s}">${esc(lastName(s === 1 ? m.p1 : m.p2))}</button>`).join('')}</span>`;
+  }
+  return `<span class="row-picked">✓ Твой выбор: <b>${esc(lastName(pick === 1 ? m.p1 : m.p2))}</b></span>${pickOffer(m, pick)}`;
+}
+
+// The Winline price for the picked player: the win and the main games handicap ("фора −5,5 · 1.90").
+function pickOffer(m, pick) {
+  const o = m.odds;
+  if (!o) return '';
+  const price = pick === 1 ? o.p1 : o.p2;
+  let hcap = '';
+  if (o.hcap) {
+    const value = pick === 1 ? o.hcap.p1 : -o.hcap.p1;
+    const odd = pick === 1 ? o.hcap.o1 : o.hcap.o2;
+    hcap = `<span class="odd">фора ${value > 0 ? '+' : value < 0 ? '−' : ''}${String(Math.abs(value)).replace('.', ',')} · <b>${Number(odd).toFixed(2)}</b></span>`;
+  }
+  return `<span class="odds offer" data-wl="${esc(m.match_id)}" role="link" title="Открыть матч в Winline"><img src="${WINLINE_LOGO}" alt="Winline"><span class="odd">победа · <b>${Number(price).toFixed(2)}</b></span>${hcap}</span>`;
 }
 
 // One «Больше» broadcast row: time in the user's zone, cover thumb (or both heads), names, score,
@@ -384,7 +412,8 @@ function broadcastRow({ m, b }) {
   const when = m?.status === 'live' ? '<span class="live"><span class="dot"></span>LIVE</span>' : esc(localTime(m ? startIso(m) : b.starts_at));
   const score = m && m.status !== 'scheduled' && showScore(m) ? `${m.sets_p1 ?? 0}:${m.sets_p2 ?? 0}` : '';
   const small = [m ? m.tournament.name : b.tournament, (m ? m.bolshe?.commentator1 : b.commentator1)].filter(Boolean).join(' · ');
-  const extra = m ? `${oddsRow(m)}${m.status === 'scheduled' ? `<span class="vote-chip">${me?.picks?.[m.match_id] ? 'Твой прогноз принят' : 'Кто выиграет? →'}</span>` : ''}` : '';
+  // Matches to come: the vote right in the list, the Winline price only after the vote.
+  const extra = m ? (m.status === 'scheduled' && tg?.initData ? rowVote(m) : oddsRow(m)) : '';
   const href = m ? `#/match/${encodeURIComponent(m.match_id)}` : (b.vk_url ?? '#/');
   return `<a class="bline" href="${esc(href)}"${!m && b.vk_url ? ' target="_blank" rel="noopener"' : ''}><span class="t">${when}</span>${thumb}
     <span class="who">${w === 1 ? `<b>${esc(n1)}</b>` : esc(n1)} — ${w === 2 ? `<b>${esc(n2)}</b>` : esc(n2)}<small>${esc(small)}</small></span>
@@ -425,16 +454,27 @@ function broadcastsBlock(src, day) {
   return `${switcher}<div class="blist">${parts.join('')}</div>`;
 }
 
+// The fan's bracket of a tournament in one line: filled when, picks still alive, better than X%.
+function bracketLine(key) {
+  const b = me?.brackets?.find((x) => x.bracket_key === key);
+  if (!b) return '<div class="bk-cta">🏆 Сетка турнира: угадай победителей до финала →</div>';
+  const when = new Date(b.submitted_at).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
+  const parts = [
+    `живых прогнозов ${b.alive} из ${b.total}`,
+    b.decided ? `угадано ${b.correct} из ${b.decided}` : null,
+    b.better_than != null ? `лучше, чем у ${b.better_than}% участников` : 'ты среди первых участников',
+  ].filter(Boolean);
+  return `<div class="bk-done"><b>✓ Твоя сетка заполнена ${esc(when)}</b><span>${esc(parts.join(' · '))}</span></div>`;
+}
+
 function tournamentsBlock(d) {
   const tour = d.tournaments.filter((t) => t.level === 'tour');
   const challengers = d.tournaments.filter((t) => t.level === 'challenger').length;
   if (!tour.length && !challengers) return '';
   const card = (t) => `<a class="tour-card" href="${t.bracket_key ? `#/bracket/${encodeURIComponent(t.bracket_key)}` : '#/matches?level=tour'}">
-    <div class="tt"><b>${esc(`${t.tour ?? ''} ${tierNumber(t)}${t.name ?? ''}`.replace(/\s+/g, ' ').trim())}</b>${t.live ? `<span class="live"><span class="dot"></span>${t.live} ${plural(t.live, 'идёт', 'идут', 'идут')}</span>` : ''}</div>
+    <div class="tt">${t.logo ? `<img class="t-logo" src="${esc(t.logo)}" alt="" loading="lazy" data-cover>` : ''}<b>${esc(`${t.tour ?? ''} ${tierNumber(t)}${t.name ?? ''}`.replace(/\s+/g, ' ').trim())}</b>${t.live ? `<span class="live"><span class="dot"></span>${t.live} ${plural(t.live, 'идёт', 'идут', 'идут')}</span>` : ''}</div>
     <div>${[SURFACE[t.surface], t.round].filter(Boolean).map((x) => `<span class="tag">${esc(x)}</span>`).join('')}</div>
-    <div class="nums"><div><b>${t.matches}</b><span>${plural(t.matches, 'матч', 'матча', 'матчей')} сегодня</span></div>
-      <div><b>${t.bolshe}</b><span>в эфире «Больше»</span></div><div><b>${t.russians}</b><span>${plural(t.russians, 'наш', 'наших', 'наших')}</span></div></div>
-    ${t.bracket_key ? '<div class="bk-cta">🏆 Сетка турнира: угадай победителей до финала →</div>' : ''}
+    ${t.bracket_key ? bracketLine(t.bracket_key) : ''}
     ${t.upcoming?.length ? `<div class="ahead">Главные матчи впереди — не в графике «Больше»</div>
       ${t.upcoming.map((m) => `<div class="up"><span class="t">${esc(dayWord(m.start_at))}<br>${esc(localTime(m.start_at))}</span>
         <span class="who">${esc(lastName(m.p1))}${m.p1.rank ? ` (№${m.p1.rank})` : ''} — ${esc(lastName(m.p2))}${m.p2.rank ? ` (№${m.p2.rank})` : ''}${oddsRow(m)}</span></div>`).join('')}` : ''}
@@ -449,15 +489,17 @@ async function home(params, token) {
   if (stale(token)) return;
   const live = d.bolshe.filter((m) => m.status === 'live').sort((a, c) => startOf(a) - startOf(c));
   const coming = d.bolshe.filter((m) => m.status === 'scheduled').sort((a, c) => startOf(a) - startOf(c));
-  const air = live.length ? live : coming.slice(0, 2);
-  const name = me?.user?.first_name || tg?.initDataUnsafe?.user?.first_name || '';
+  // The tour the fan watches more (first-start answer) goes first.
+  const tourFirst = (list) => (me?.prefs?.tours && me.prefs.tours !== 'all'
+    ? [...list].sort((a, c) => (c.tournament.tour === me.prefs.tours) - (a.tournament.tour === me.prefs.tours)) : list);
+  const air = tourFirst(live.length ? live : coming.slice(0, 2));
+  // First start inside Telegram: a few questions to make the app the fan's own.
+  if (me && !me.prefs?.onboarded_at && !onboardingSkipped()) { location.hash = '#/welcome'; return; }
   const todayOver = broadcastRows(d).every((r) => r.done);
   const day = broadcastDay ?? (todayOver ? 'tomorrow' : 'today');
   const src = day === 'tomorrow' ? await api(`/api/bolshe?date=${mskDay(1)}`).catch(() => ({ bolshe: [], broadcasts: [] })) : d;
   if (stale(token)) return;
   view.innerHTML = `
-    <div class="hello"><div class="hi">Привет${name ? `, ${esc(name)}` : ''}!</div></div>
-    ${ratingCard()}
     ${air.length ? `<div class="seccap"><span>${live.length ? 'Сейчас в эфире «Больше»' : 'Скоро в эфире «Больше»'}</span>${air.length > 1 ? `<span class="r">${air.length} ${plural(air.length, 'матч', 'матча', 'матчей')} ›</span>` : ''}</div>
       <div class="air-strip">${air.map(airCard).join('')}</div>` : ''}
     ${myPlayersBlock(d)}
@@ -612,9 +654,9 @@ async function statsBoard(res, token, reload) {
   const field = fields.find((f) => f.key === statsSort);
   const rows = ranked
     ? d.players.map((p, i) => `<a class="stat-row" href="#/player/${encodeURIComponent(p.player_id)}"><span class="pos">${p.singles_rank ?? i + 1}</span>${avatar(p.photo_url, 'ava')}
-        <span class="nm"><b>${esc(p.name_ru)}</b>${p.is_russian ? ' <small class="ours-tag">наш</small>' : ''}<small class="muted">${p.elo ? `Эло ${Math.round(p.elo)}` : ''}</small></span><span></span>${followButton(p.player_id, true) || '<span></span>'}</a>`).join('')
+        <span class="nm"><b>${esc(p.name_ru)}</b><small class="muted">${p.elo ? `Эло ${Math.round(p.elo)}` : ''}</small></span><span></span>${followButton(p.player_id, true) || '<span></span>'}</a>`).join('')
     : d.players.map((p, i) => `<a class="stat-row" href="#/player/${encodeURIComponent(p.player_id)}"><span class="pos">${i + 1}</span>${avatar(p.photo, 'ava')}
-        <span class="nm"><b>${esc(p.name)}</b>${p.is_russian ? ' <small class="ours-tag">наш</small>' : ''}<small class="muted">${p.rank ? `№${p.rank} · ` : ''}${p.wins}–${p.losses}</small></span>
+        <span class="nm"><b>${esc(p.name)}</b><small class="muted">${p.rank ? `№${p.rank} · ` : ''}${p.wins}–${p.losses}</small></span>
         <span class="val"><b>${fmtStat(field, p.value)}</b>${donut(p.score, 34)}</span>${followButton(p.player_id, true) || '<span></span>'}</a>`).join('');
   res.innerHTML = `<div class="days">${['ATP', 'WTA'].map((t) => `<button class="day${t === statsTour ? ' on' : ''}" type="button" data-tour="${t}">${t}</button>`).join('')}</div>
     <label class="sort-row">Сортировать: <select data-sort>
@@ -706,27 +748,25 @@ function levelFor(levels, step, xp) {
   return { title: lv.title, subtitle: `Титулов Большого шлема: ${slams}`, next_title: `Легенда · ${slams + 1}-й шлем`, to_next: nextAt - xp, progress: (xp - (nextAt - step)) / step };
 }
 
+// Profile: the greeting and the rating card (moved here from the home screen), achievements,
+// and the ladder of levels.
 async function profile(token) {
   const [d] = await Promise.all([api('/api/levels?xp=0'), loadMe(mskDay(0))]);
   if (stale(token)) return;
-  const max = d.levels[d.levels.length - 1].from + d.legend_step;
+  const name = me?.user?.first_name || tg?.initDataUnsafe?.user?.first_name || '';
+  const xp = me?.xp ?? 0;
+  const surface = { hard: 'хард', clay: 'грунт', grass: 'трава', all: 'все покрытия' }[me?.prefs?.surface];
   view.innerHTML = `
-    <div class="level" id="lvl"></div>
-    <div class="muted small" style="margin:8px 2px">${me ? `Опыт: ${me.xp.toLocaleString('ru-RU')} XP · угадано ${me.guessed} из ${me.settled}${me.place ? ` · №${me.place} из ${me.fans}` : ''}. +10 XP за прогноз, +20 за верный.` : 'Голосуй «Кто выиграет?» в приложении в Telegram: +10 XP за прогноз, +20 за верный.'} Ползунок показывает, как растут уровни.</div>
+    <div class="hello"><div class="hi">Привет${name ? `, ${esc(name)}` : ''}!</div>
+      ${surface ? `<p>Любимое покрытие: ${esc(surface)}${me?.follows?.length ? ` · игроков в «Моих»: ${me.follows.length}` : ''}</p>` : ''}</div>
+    ${ratingCard()}
+    <div class="muted small" style="margin:8px 2px">+10 XP за прогноз, +20 за верный (вдвое, если угадал вопреки большинству), очки сеток турниров — тоже в опыт.</div>
     <h2>Достижения</h2>
     <div class="muted small" style="margin:-4px 2px 10px">У каждого достижения пять уровней — звёзды растут с каждым матчем.</div>
-    <div class="achs">${(me?.achievements ?? d.achievements ?? []).map(achievementCard).join('')}</div>`;
-  const box = view.querySelector('#lvl');
-  function paint(xp) {
-    const lv = levelFor(d.levels, d.legend_step, xp);
-    box.innerHTML = `<div class="cap">Твой профиль</div><div class="title">${esc(lv.title)}</div><div class="sub">${esc(lv.subtitle)}</div>
-      <div class="xp"><b>${xp.toLocaleString('ru-RU')} XP</b><span>До уровня «${esc(lv.next_title)}»: ${lv.to_next.toLocaleString('ru-RU')} XP</span></div>
-      <div class="progress"><i style="width:${Math.round(lv.progress * 100)}%"></i></div>
-      <input type="range" min="0" max="${max}" step="50" value="${xp}" aria-label="Опыт">
-      <div class="muted small" style="margin-top:6px">Передвинь ползунок, чтобы посмотреть, как меняется уровень.</div>`;
-    box.querySelector('input').addEventListener('input', (e) => paint(Number(e.target.value)));
-  }
-  paint(me?.xp ?? 0);
+    <div class="achs">${(me?.achievements ?? d.achievements ?? []).map(achievementCard).join('')}</div>
+    <h2>Уровни</h2>
+    <div class="ladder">${d.levels.map((l) => `<div class="${xp >= l.from ? 'on' : ''}"><b>${esc(l.title)}</b><small>${esc(l.subtitle)}</small><span>${l.from.toLocaleString('ru-RU')} XP</span></div>`).join('')}</div>
+    <a class="more-btn" href="#/settings" style="text-align:center">⚙️ Настройки</a>`;
 }
 
 // ---------- tournaments: the bracket game ----------
@@ -769,7 +809,7 @@ async function tournamentsTab(token) {
   const card = (b) => `<a class="tour-card" href="#/bracket/${encodeURIComponent(b.bracket_key)}">
     <div class="tt"><b>${esc(b.name)}</b><span class="muted small">${b.fans} ${plural(b.fans, 'участник', 'участника', 'участников')}</span></div>
     <div>${[SURFACE[b.surface], b.status === 'open' ? `идёт ${b.round ?? ''}` : 'завершён'].filter(Boolean).map((x) => `<span class="tag">${esc(x)}</span>`).join('')}</div>
-    ${b.mine ? `<div class="bk-mine"><b>${b.mine.points}</b> ${plural(b.mine.points, 'очко', 'очка', 'очков')} · угадано ${b.mine.correct} из ${b.mine.decided}${b.status === 'open' ? ` · можно набрать до ${b.mine.possible}` : ''}</div>`
+    ${b.mine ? `${bracketLine(b.bracket_key)}<div class="bk-mine"><b>${b.mine.points}</b> ${plural(b.mine.points, 'очко', 'очка', 'очков')}${b.status === 'open' ? ` · можно набрать до ${b.mine.possible}` : ''}</div>`
       : b.status === 'open' ? `<div class="bk-cta">Заполнить сетку → осталось ${b.open_matches} ${plural(b.open_matches, 'матч', 'матча', 'матчей')}</div>` : ''}
     ${b.champion ? `<div class="muted small">Чемпион: ${esc(b.champion)}</div>` : ''}
   </a>`;
@@ -855,14 +895,78 @@ async function bracketScreen(key, token) {
   });
 }
 
+// ---------- first start: a few questions that make the app the fan's own ----------
+function onboardingSkipped() {
+  try { return localStorage.getItem('bolshe-onboarded') === '1'; } catch { return false; }
+}
+
+async function welcome(token) {
+  if (!tg?.initData) { location.hash = '#/'; return; }
+  const [atp, wta] = await Promise.all([api('/api/players?tour=ATP&limit=12'), api('/api/players?tour=WTA&limit=12'), loadMe(mskDay(0))]);
+  if (stale(token)) return;
+  const state = { players: new Set(me?.follows ?? []), surface: me?.prefs?.surface ?? null, tours: me?.prefs?.tours ?? null, since: me?.prefs?.since ?? null };
+  const opt = (k, v, label) => `<button class="day${state[k] === v ? ' on' : ''}" type="button" data-opt="${k}" data-val="${v}">${label}</button>`;
+  view.innerHTML = `<h1>Давай знакомиться 👋</h1>
+    <p class="muted" style="margin:0 2px 8px">Пара вопросов — и приложение подстроится под тебя: твои игроки, твои матчи. Всё можно поменять потом.</p>
+    <h2>За кого болеешь?</h2>
+    <div class="pick-grid">${[...atp.players, ...wta.players].filter((p) => p.singles_rank).map((p) => `<button type="button" class="pick-pl${state.players.has(p.player_id) ? ' on' : ''}" data-pl="${esc(p.player_id)}">
+      ${avatar(p.photo_url, 'head')}<b>${esc(lastName({ name: p.name_ru }))}</b><small>${esc(p.tour)} · №${p.singles_rank}</small></button>`).join('')}</div>
+    <p class="muted small" style="margin:6px 2px">Других игроков найдёшь во вкладке «Игроки» — отметь звёздочкой.</p>
+    <h2>Любимое покрытие</h2><div class="days wrap">${opt('surface', 'hard', 'Хард')}${opt('surface', 'clay', 'Грунт')}${opt('surface', 'grass', 'Трава')}${opt('surface', 'all', 'Все')}</div>
+    <h2>Что смотришь чаще?</h2><div class="days wrap">${opt('tours', 'ATP', 'Мужчин')}${opt('tours', 'WTA', 'Женщин')}${opt('tours', 'all', 'И тех, и других')}</div>
+    <h2>Давно смотришь теннис?</h2><div class="days wrap">${opt('since', 'new', 'Только начинаю')}${opt('since', '2-5', '2–5 лет')}${opt('since', '5-10', '5–10 лет')}${opt('since', '10+', 'Больше 10 лет')}</div>
+    <div class="bk-send"><button type="button" data-done>Готово</button></div>
+    <button class="more-btn" type="button" data-skip>Пропустить</button>`;
+  view.querySelectorAll('[data-pl]').forEach((b) => b.addEventListener('click', () => {
+    const id = b.dataset.pl;
+    if (state.players.has(id)) state.players.delete(id); else state.players.add(id);
+    b.classList.toggle('on', state.players.has(id));
+    tg?.HapticFeedback?.selectionChanged?.();
+  }));
+  view.querySelectorAll('[data-opt]').forEach((b) => b.addEventListener('click', () => {
+    state[b.dataset.opt] = b.dataset.val;
+    view.querySelectorAll(`[data-opt="${b.dataset.opt}"]`).forEach((x) => x.classList.toggle('on', x === b));
+  }));
+  const finish = async (skip) => {
+    try { localStorage.setItem('bolshe-onboarded', '1'); } catch { /* ignore */ }
+    try {
+      const fresh = [...state.players].filter((id) => !(me?.follows ?? []).includes(id));
+      if (!skip && fresh.length) await post('/api/follows', { player_ids: fresh, on: true });
+      await post('/api/prefs', skip ? { onboarded: true } : { surface: state.surface, tours: state.tours, since: state.since, onboarded: true });
+    } catch (error) {
+      toast(error.message);
+    }
+    location.hash = '#/';
+  };
+  view.querySelector('[data-done]').addEventListener('click', () => finish(false));
+  view.querySelector('[data-skip]').addEventListener('click', () => finish(true));
+}
+
+// A «Больше» broadcast opened from the app counts for «Эфиры через приложение».
+document.addEventListener('click', (event) => {
+  const a = event.target.closest?.('a[href*="vk.com/video"], a[href*="vkvideo.ru/video"]');
+  if (!a || !tg?.initData) return;
+  const ref = a.getAttribute('href').match(/video(-?\d+_\d+)/)?.[1];
+  if (ref) fetch('/api/events', { method: 'POST', keepalive: true, headers: { 'content-type': 'application/json', ...authHeaders() }, body: JSON.stringify({ kind: 'vk', ref }) }).catch(() => {});
+}, true);
+
 // ---------- settings ----------
-function settings() {
+async function settings(token) {
+  await loadMe(mskDay(0));
+  if (token && stale(token)) return;
   view.innerHTML = `<h1>Настройки</h1>
     <h2>Тема</h2>
     <div class="days">${THEMES.map(([k, label]) => `<button class="day${themeMode === k ? ' on' : ''}" type="button" data-theme-pick="${k}">${label}</button>`).join('')}</div>
     <h2>Без спойлеров</h2>
     <label class="switch-row"><input type="checkbox" id="noSpoilersBox"${noSpoilers ? ' checked' : ''}> Скрывать счёт и победителей</label>
+    ${me ? `<h2>Мои результаты</h2>
+    <label class="switch-row"><input type="checkbox" id="publicBox"${me.prefs?.public === false ? '' : ' checked'}> Показывать моё имя в таблицах</label>
+    <p class="muted small">Если выключить, в таблицах ты будешь «Болельщик ####» — прогнозы и очки считаются как обычно.</p>
+    <a class="more-btn" href="#/welcome" style="text-align:center">Ответить на вопросы о себе заново</a>` : ''}
     <p class="muted small">Время матчей и эфиров показывается по часовому поясу телефона (${esc(tzLabel())}).</p>`;
+  view.querySelector('#publicBox')?.addEventListener('change', (e) => {
+    post('/api/prefs', { public: e.target.checked }).then(() => toast(e.target.checked ? 'Имя видно в таблицах' : 'Имя скрыто')).catch((error) => toast(error.message));
+  });
   view.querySelectorAll('[data-theme-pick]').forEach((b) => b.addEventListener('click', () => {
     themeMode = b.dataset.themePick;
     try { localStorage.setItem('bolshe-theme', themeMode); } catch { /* ignore */ }
@@ -899,7 +1003,8 @@ async function route() {
     else if (parts[0] === 'matches') await matches(params, token);
     else if (parts[0] === 'players') await players(params, token);
     else if (parts[0] === 'profile') await profile(token);
-    else if (parts[0] === 'settings') settings();
+    else if (parts[0] === 'settings') await settings(token);
+    else if (parts[0] === 'welcome') await welcome(token);
     else if (parts[0] === 'tournaments') await tournamentsTab(token);
     else if (parts[0] === 'bracket' && parts[1]) await bracketScreen(decodeURIComponent(parts[1]), token);
     else await home(params, token);

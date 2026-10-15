@@ -14,7 +14,7 @@ import { ACHIEVEMENTS, achievementLevel } from '../../src/game/achievements.js';
 import { LEGEND_STEP, LEVELS, XP_RULES, levelFor } from '../../src/game/levels.js';
 import { explainTournament } from '../../src/insights/tournaments.js';
 import { bracketView, listBrackets, submitBracket, syncBrackets } from './brackets.js';
-import { authUser, castVote, fanProfile, setFollow } from './fans.js';
+import { authUser, castVote, fanProfile, setFollow, setPrefs, trackEvent } from './fans.js';
 import { matchCard } from './match-details.js';
 import { mediaCounts, serveMedia, syncMedia } from './media.js';
 import { matchesForDate, matchesOfPlayer, syncMatchDays } from './matches-sync.js';
@@ -43,7 +43,7 @@ function summarizeTournaments(matches, broadcasts) {
     const t = m.tournament;
     if (m.is_doubles || !['tour', 'challenger'].includes(t.level)) continue;
     const key = `${t.tour}|${t.name}`;
-    const entry = byKey.get(key) ?? { tour: t.tour, name: t.name, level: t.level, surface: t.surface, country: t.country, matches: 0, live: 0, bolshe: 0, russians: 0 };
+    const entry = byKey.get(key) ?? { tour: t.tour, name: t.name, level: t.level, surface: t.surface, country: t.country, logo: t.logo ?? null, matches: 0, live: 0, bolshe: 0, russians: 0 };
     entry.matches += 1;
     if (m.status === 'live') entry.live += 1;
     if (m.bolshe) entry.bolshe += 1;
@@ -254,7 +254,7 @@ export default {
         const view = await bracketView(env, bracketPath[1], user);
         return view ? json(view) : json({ ok: false, error: 'not found' }, 404);
       }
-      if (path === '/api/me' || path === '/api/votes' || path === '/api/follows') {
+      if (['/api/me', '/api/votes', '/api/follows', '/api/prefs', '/api/events'].includes(path)) {
         const user = await authUser(env, request);
         if (!user) return json({ ok: false, error: 'open the app in Telegram' }, 401);
         if (path === '/api/me') {
@@ -264,9 +264,10 @@ export default {
         }
         if (request.method !== 'POST') return json({ ok: false, error: 'method not allowed' }, 405);
         const body = await request.json().catch(() => ({}));
-        const result = path === '/api/votes'
-          ? await castVote(env, user, body.match_id, Number(body.pick))
-          : await setFollow(env, user, body.player_id, Boolean(body.on));
+        const result = path === '/api/votes' ? await castVote(env, user, body.match_id, Number(body.pick))
+          : path === '/api/prefs' ? await setPrefs(env, user, body)
+            : path === '/api/events' ? await trackEvent(env, user, body)
+              : await setFollow(env, user, body.player_ids ?? body.player_id, Boolean(body.on));
         return json(result, result.ok ? 200 : result.status ?? 400);
       }
       if (request.method !== 'GET') return json({ ok: false, error: 'method not allowed' }, 405);
@@ -358,7 +359,9 @@ export default {
           })),
           bolshe: all.filter((m) => m.bolshe),
           broadcasts,
-          russians: main.filter((m) => m.p1.is_russian || m.p2.is_russian),
+          // Players to suggest for «Мои игроки»: the best-ranked of today's main-tour singles.
+          featured: [...new Map(main.filter((m) => m.tournament.level === 'tour').flatMap((m) => [m.p1, m.p2])
+            .filter((p) => p.player_id && p.rank).sort((a, b) => a.rank - b.rank).map((p) => [p.player_id, p])).values()].slice(0, 6),
         }, 200, 20);
       }
       if (path === '/api/levels') {

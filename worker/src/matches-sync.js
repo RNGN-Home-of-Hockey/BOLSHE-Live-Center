@@ -26,13 +26,14 @@ export async function syncMatchDays(env, offsets) {
     const { tournaments, matches } = await fetchDay(offset);
     seen += matches.length;
     const statements = tournaments.map((t) => db.prepare(`INSERT INTO tournaments
-        (tournament_key, name, category, tour, level, discipline, surface, tournament, country, url, first_seen, fs_tournament_id, fs_stage_id)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(tournament_key) DO UPDATE SET
+        (tournament_key, name, category, tour, level, discipline, surface, tournament, country, url, first_seen, fs_tournament_id, fs_stage_id, logo)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(tournament_key) DO UPDATE SET
         fs_tournament_id = COALESCE(excluded.fs_tournament_id, tournaments.fs_tournament_id),
-        fs_stage_id = COALESCE(excluded.fs_stage_id, tournaments.fs_stage_id)`)
+        fs_stage_id = COALESCE(excluded.fs_stage_id, tournaments.fs_stage_id),
+        logo = COALESCE(excluded.logo, tournaments.logo)`)
       // Qualifying shares the tournament key with the main draw: only the main draw's ids are kept.
       .bind(t.key, t.name, t.category, t.tour, t.level, t.discipline, t.surface, t.tournament, t.country, t.url, now,
-        qualifying(t) ? null : t.fs_tournament_id ?? null, qualifying(t) ? null : t.fs_stage_id ?? null));
+        qualifying(t) ? null : t.fs_tournament_id ?? null, qualifying(t) ? null : t.fs_stage_id ?? null, t.logo ?? null));
     const ids = matches.map((m) => m.match_id);
     const known = new Map();
     for (let i = 0; i < ids.length; i += 90) {
@@ -72,11 +73,12 @@ export async function syncMatchDays(env, offsets) {
 const PLAYER_COLS = (alias) => ['player_id', 'name_ru', 'name_ru_short', 'singles_rank', 'doubles_rank', 'photo_url', 'is_russian', 'country_code']
   .map((c) => `${alias}.${c} AS ${alias}_${c}`).join(', ');
 
-export const MATCH_SELECT = `SELECT m.*, t.name AS tournament_name, t.tournament, t.tour, t.level, t.discipline, t.surface, t.country AS tournament_country,
+export const MATCH_SELECT = `SELECT m.*, t.name AS tournament_name, t.tournament, t.tour, t.level, t.discipline, t.surface, t.country AS tournament_country, t.logo AS tournament_logo,
     ${PLAYER_COLS('a')}, ${PLAYER_COLS('b')},
     (SELECT r2_key || '?v=' || version FROM media WHERE media_key = 'head/' || m.p1_fs_id AND status = 'ok') AS p1_head,
     (SELECT r2_key || '?v=' || version FROM media WHERE media_key = 'head/' || m.p2_fs_id AND status = 'ok') AS p2_head,
-    (SELECT json_object('pre1', o.pre1, 'pre2', o.pre2, 'live1', o.live1, 'live2', o.live2, 'live_at', o.live_at, 'wl_url', o.wl_url)
+    (SELECT json_object('pre1', o.pre1, 'pre2', o.pre2, 'live1', o.live1, 'live2', o.live2, 'live_at', o.live_at, 'wl_url', o.wl_url,
+        'hcap', o.hcap, 'hcap1', o.hcap1, 'hcap2', o.hcap2)
        FROM match_odds o WHERE o.match_id = m.match_id) AS odds,
     (SELECT json_object('p1', SUM(v.pick = 1), 'p2', SUM(v.pick = 2), 'total', COUNT(*)) FROM votes v WHERE v.match_id = m.match_id) AS votes,
     (SELECT json_object('commentator1', br.commentator1, 'commentator2', br.commentator2, 'vk_url', br.vk_url, 'time_msk', br.time_msk,
@@ -120,7 +122,7 @@ export function shapeMatch(row) {
     is_doubles: Boolean(row.is_doubles),
     tournament: {
       key: row.tournament_key, name: row.tournament, full_name: row.tournament_name, tour: row.tour,
-      level: row.level, discipline: row.discipline, surface: row.surface, country: row.tournament_country,
+      level: row.level, discipline: row.discipline, surface: row.surface, country: row.tournament_country, logo: row.tournament_logo ?? null,
     },
     p1: side(row, 'a', 1),
     p2: side(row, 'b', 2),

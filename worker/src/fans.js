@@ -2,9 +2,12 @@
 // match starts), «Мои игроки», and the rating card (level, XP, place, guessed, streak).
 //   GET  /api/me?date=YYYY-MM-DD   header X-Telegram-Init-Data
 //   POST /api/votes   {match_id, pick: 1|2}
-//   POST /api/follows {player_id, on: true|false}
+//   POST /api/follows {player_id | player_ids: [...], on: true|false}
+//   POST /api/prefs   {public, surface, tours, since, onboarded}   (onboarding and settings)
+//   POST /api/events  {kind: 'vk', ref}                            (a «Больше» broadcast opened from the app)
 
 import { fanAchievements } from '../../src/game/achievements.js';
+import { bracketStatus } from '../../src/game/bracket.js';
 import { LEVELS, XP_RULES, levelFor } from '../../src/game/levels.js';
 import { mediaUrl } from '../../src/lib/media.js';
 import { verifyInitData } from '../../src/lib/telegram-auth.js';
@@ -39,16 +42,65 @@ export async function castVote(env, user, matchId, pick) {
   return { ok: true, match_id: matchId, pick, votes: await voteCounts(env.DB, matchId) };
 }
 
+// One player or a list (the first-start questions pick several at once).
 export async function setFollow(env, user, playerId, on) {
-  const player = await env.DB.prepare('SELECT player_id FROM players WHERE player_id = ?').bind(String(playerId ?? '')).first();
-  if (!player) return { ok: false, status: 404, error: 'player not found' };
-  if (on) {
-    await env.DB.prepare('INSERT OR IGNORE INTO follows (user_id, player_id, created_at) VALUES (?, ?, ?)')
-      .bind(user.id, player.player_id, new Date().toISOString()).run();
-  } else {
-    await env.DB.prepare('DELETE FROM follows WHERE user_id = ? AND player_id = ?').bind(user.id, player.player_id).run();
-  }
+  const ids = (Array.isArray(playerId) ? playerId : [playerId]).map((x) => String(x ?? '')).filter(Boolean).slice(0, 30);
+  if (!ids.length) return { ok: false, status: 400, error: 'player not found' };
+  const { results: known } = await env.DB.prepare(`SELECT player_id FROM players WHERE player_id IN (${ids.map(() => '?').join(',')})`).bind(...ids).all();
+  if (!known.length) return { ok: false, status: 404, error: 'player not found' };
+  const now = new Date().toISOString();
+  await env.DB.batch(known.map((p) => (on
+    ? env.DB.prepare('INSERT OR IGNORE INTO follows (user_id, player_id, created_at) VALUES (?, ?, ?)').bind(user.id, p.player_id, now)
+    : env.DB.prepare('DELETE FROM follows WHERE user_id = ? AND player_id = ?').bind(user.id, p.player_id))));
   return { ok: true, follows: await followIds(env.DB, user.id) };
+}
+
+const PREF_VALUES = { surface: ['hard', 'clay', 'grass', 'all'], tours: ['ATP', 'WTA', 'all'], since: ['new', '2-5', '5-10', '10+'] };
+
+// Settings and the first-start answers. Unknown values are ignored.
+export async function setPrefs(env, user, body) {
+  const old = await env.DB.prepare('SELECT * FROM fan_prefs WHERE user_id = ?').bind(user.id).first();
+  const pick = (k) => (PREF_VALUES[k].includes(body?.[k]) ? body[k] : old?.[k] ?? null);
+  const now = new Date().toISOString();
+  const row = {
+    public: typeof body?.public === 'boolean' ? (body.public ? 1 : 0) : old?.public ?? 1,
+    surface: pick('surface'), tours: pick('tours'), since: pick('since'),
+    onboarded_at: body?.onboarded ? old?.onboarded_at ?? now : old?.onboarded_at ?? null,
+  };
+  await env.DB.prepare(`INSERT INTO fan_prefs (user_id, public, surface, tours, since, onboarded_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(user_id) DO UPDATE SET public = excluded.public, surface = excluded.surface, tours = excluded.tours,
+      since = excluded.since, onboarded_at = excluded.onboarded_at, updated_at = excluded.updated_at`)
+    .bind(user.id, row.public, row.surface, row.tours, row.since, row.onboarded_at, now).run();
+  return { ok: true, prefs: { ...row, public: Boolean(row.public) } };
+}
+
+export async function trackEvent(env, user, body) {
+  if (body?.kind !== 'vk' || !body.ref) return { ok: false, status: 400, error: 'unknown event' };
+  await env.DB.prepare('INSERT OR IGNORE INTO fan_events (user_id, kind, ref, created_at) VALUES (?, ?, ?, ?)')
+    .bind(user.id, 'vk', String(body.ref).slice(0, 120), new Date().toISOString()).run();
+  return { ok: true };
+}
+
+const mskDay = (ms) => new Date(ms + 3 * 3600e3).toISOString().slice(0, 10);
+
+// The fan's brackets of running tournaments: picks still alive, guessed, and how the bracket
+// compares with the others ("лучше, чем у 60% участников").
+async function myBrackets(db, userId) {
+  try {
+    const { results } = await db.prepare(`SELECT e.bracket_key, e.picks_json, e.submitted_at, e.points, e.possible, b.draw_json,
+        (SELECT COUNT(*) FROM bracket_entries x WHERE x.bracket_key = e.bracket_key) AS fans,
+        (SELECT COUNT(*) FROM bracket_entries x WHERE x.bracket_key = e.bracket_key
+          AND (x.points < e.points OR (x.points = e.points AND x.possible < e.possible))) AS below
+      FROM bracket_entries e JOIN brackets b ON b.bracket_key = e.bracket_key
+      WHERE e.user_id = ? AND (b.status = 'open' OR b.updated_at > datetime('now', '-3 days'))`).bind(userId).all();
+    return results.map((r) => ({
+      bracket_key: r.bracket_key, submitted_at: r.submitted_at, points: r.points, possible: r.possible, fans: r.fans,
+      better_than: r.fans > 1 ? Math.round((100 * r.below) / (r.fans - 1)) : null,
+      ...bracketStatus(JSON.parse(r.draw_json), JSON.parse(r.picks_json)),
+    }));
+  } catch {
+    return [];
+  }
 }
 
 async function followIds(db, userId) {
@@ -127,7 +179,7 @@ export async function fanProfile(env, user, date) {
   const { results: voteRows } = await db.prepare(`WITH tally AS (
       SELECT match_id, SUM(pick = 1) AS n1, SUM(pick = 2) AS n2, COUNT(*) AS n FROM votes GROUP BY match_id)
     SELECT v.pick, v.created_at AS voted_at, m.winner, m.start_at, t.surface, o.pre1, o.pre2, tl.n1, tl.n2, tl.n,
-      (COALESCE(a.is_russian, 0) = 1 OR COALESCE(b.is_russian, 0) = 1) AS ours,
+      a.player_id AS p1_player, b.player_id AS p2_player,
       EXISTS (SELECT 1 FROM broadcasts br WHERE br.date_msk = m.date_msk AND br.status != 'removed'
         AND ((br.player1_id = a.player_id AND br.player2_id = b.player_id) OR (br.player1_id = b.player_id AND br.player2_id = a.player_id))) AS bolshe
     FROM votes v
@@ -138,6 +190,14 @@ export async function fanProfile(env, user, date) {
     LEFT JOIN match_odds o ON o.match_id = v.match_id
     LEFT JOIN tally tl ON tl.match_id = v.match_id
     WHERE v.user_id = ?`).bind(user.id).all();
+  const mySet = new Set(followed.map((p) => p.player_id));
+  // A day in the app (Moscow date) for «Каждый день с теннисом»; broadcasts opened from the app.
+  await db.prepare('INSERT OR IGNORE INTO fan_days (user_id, day) VALUES (?, ?)').bind(user.id, mskDay(Date.now())).run();
+  const [{ results: days }, streams, prefs] = await Promise.all([
+    db.prepare('SELECT day FROM fan_days WHERE user_id = ? ORDER BY day DESC LIMIT 120').bind(user.id).all(),
+    db.prepare("SELECT COUNT(*) AS n FROM fan_events WHERE user_id = ? AND kind = 'vk'").bind(user.id).first(),
+    db.prepare('SELECT * FROM fan_prefs WHERE user_id = ?').bind(user.id).first(),
+  ]);
   const now = Date.now();
   const myPlayers = [];
   for (const p of followed) myPlayers.push(playerCard(p, p.fs_id ? await matchesOfPlayer(db, p.fs_id, 8) : [], now));
@@ -154,8 +214,10 @@ export async function fanProfile(env, user, date) {
     picks: Object.fromEntries(picks.map((r) => [r.match_id, r.pick])),
     follows: followed.map((p) => p.player_id),
     my_players: myPlayers,
-    achievements: fanAchievements(voteRows.map((r) => ({ ...r, ours: Boolean(r.ours), bolshe: Boolean(r.bolshe) })), {
-      follows: followed.length, bracketPoints: await bracketPointsOf(db, user.id),
+    achievements: fanAchievements(voteRows.map((r) => ({ ...r, mine: mySet.has(r.p1_player) || mySet.has(r.p2_player), bolshe: Boolean(r.bolshe) })), {
+      follows: followed.length, bracketPoints: await bracketPointsOf(db, user.id), appDays: days.map((d) => d.day), streams: streams?.n ?? 0,
     }),
+    prefs: prefs ? { public: Boolean(prefs.public), surface: prefs.surface, tours: prefs.tours, since: prefs.since, onboarded_at: prefs.onboarded_at } : null,
+    brackets: await myBrackets(db, user.id),
   };
 }
