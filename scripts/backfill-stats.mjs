@@ -16,7 +16,7 @@ import { STAT_COLUMNS, fetchMatchStats, statsRows } from '../src/sources/flashsc
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = join(ROOT, 'data', 'local', 'backfill-stats');
-const ACCOUNT = '9032ec1bd3cb868d89a38453e4bd1a69';
+const ACCOUNT = 'f7f0376bf1c44c4e3cef4a24adf1b66a';
 const YEAR_AGO = Date.now() - 365 * 86400e3;
 
 function d1(sql) {

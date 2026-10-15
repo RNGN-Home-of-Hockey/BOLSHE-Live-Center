@@ -1,9 +1,9 @@
-# BOLSHE Live Center Worker (Cloudflare account of HOH, workers.dev subdomain znamteam-903).
+# BOLSHE Live Center Worker (Cloudflare account i.znamensky, workers.dev subdomain rngn; moved from
+# znamteam-903 on 2026-10-15 — the old address forwards every request here, the bot webhook included).
 # Secrets (never in this file): TELEGRAM_BOT_TOKEN, ADMIN_IDS, SCHEDULE_SHEET_ID.
 name = "bolshe-live-center"
-# Pinned: this PC sees two Cloudflare accounts; the Worker and its D1 live on the Znamteam one
-# until the planned move to i.znamensky (f7f0376b…, *.rngn.workers.dev).
-account_id = "9032ec1bd3cb868d89a38453e4bd1a69"
+# Pinned: this PC sees two Cloudflare accounts; the Worker, its D1 and R2 live on i.znamensky.
+account_id = "f7f0376bf1c44c4e3cef4a24adf1b66a"
 main = "worker/src/index.js"
 compatibility_date = "2026-09-01"
 workers_dev = true
@@ -19,7 +19,7 @@ directory = "./public"
 [[d1_databases]]
 binding = "DB"
 database_name = "bolshe-live-center"
-database_id = "40576f9c-1573-42c9-ad58-06750c4392e4"
+database_id = "d9bc4eb3-a1e7-49a0-8114-1e95c1f45e1e"
 migrations_dir = "migrations"
 
 # Covers of «Больше» broadcasts and player heads, stored for good (see worker/src/media.js).
