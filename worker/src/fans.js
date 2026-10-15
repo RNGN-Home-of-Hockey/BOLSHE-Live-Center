@@ -12,10 +12,13 @@ import { LEVELS, XP_RULES, levelFor } from '../../src/game/levels.js';
 import { QUESTION_XP } from '../../src/game/question.js';
 import { mediaUrl } from '../../src/lib/media.js';
 import { verifyInitData } from '../../src/lib/telegram-auth.js';
+import { webSessionUser } from './web-login.js';
 import { matchesOfPlayer } from './matches-sync.js';
 
+// Inside Telegram: the signed initData. On the website: the session of «Войти через Telegram».
 export async function authUser(env, request) {
-  const user = await verifyInitData(request.headers.get('x-telegram-init-data'), env.TELEGRAM_BOT_TOKEN);
+  const initData = request.headers.get('x-telegram-init-data');
+  const user = (initData ? await verifyInitData(initData, env.TELEGRAM_BOT_TOKEN) : null) ?? await webSessionUser(env, request);
   if (!user) return null;
   const now = new Date().toISOString();
   await env.DB.prepare(`INSERT INTO bot_users (telegram_user_id, first_name, username, first_seen, last_seen) VALUES (?, ?, ?, ?, ?)

@@ -13,6 +13,8 @@ PUBLIC_URL = "https://bolshe-live-center.znamteam-903.workers.dev"
 # The Mini App opens through the no-VPN door on the Moscow server (Caddy /etc/hoh-bolshe/bolshe.caddy forwards
 # every request here); the bot webhook stays on PUBLIC_URL.
 APP_URL = "https://bolshe.109-172-113-187.sslip.io"
+# Website sign-in goes through this bot (t.me/<BOT_USERNAME>?start=login_<code>).
+BOT_USERNAME = "bolshe_live_center_bot"
 SCHEDULE_GID = "548911490"
 
 # Mini App files (public/app/ -> /app/); everything else goes to the Worker.

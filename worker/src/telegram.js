@@ -2,6 +2,7 @@
 // (/name, /fix with ✅ / ✏️ / ⏭ buttons), channel boosts log, self-registered webhook.
 
 import { getPlayer, nameStats, nextUnverified, searchPlayers, setPlayerName } from './players.js';
+import { answerLogin, loginForBot } from './web-login.js';
 
 const SOURCE_LABEL = {
   override: 'ручная правка (файл)',
@@ -143,6 +144,25 @@ async function onMessage(env, msg) {
   const rest = text.slice(command.length).trim();
   const cmd = command.startsWith('/') ? command.slice(1).split('@')[0].toLowerCase() : null;
 
+  // Signing in on the website: /start login_<code> from the site's «Войти через Telegram».
+  if (cmd === 'start' && /^login_/.test(rest)) {
+    const login = await loginForBot(env, rest.slice('login_'.length));
+    if (login.error) return send(env, chatId, login.error);
+    return send(env, chatId, [
+      '🔐 <b>Вход на сайт «Больше! Теннис»</b>',
+      '',
+      `На сайте должен быть код <b>${login.check}</b>.`,
+      'Если код совпадает и это ты — нажми «Войти». Очки, прогнозы и сетки будут общими с приложением в Telegram.',
+      '',
+      'Не открывал(а) сайт? Нажми «Это не я».',
+    ].join('\n'), {
+      reply_markup: { inline_keyboard: [[
+        { text: '✅ Войти', callback_data: `wl:ok:${login.id}` },
+        { text: 'Это не я', callback_data: `wl:no:${login.id}` },
+      ]] },
+    });
+  }
+
   if (cmd === 'start' || cmd === 'help') {
     // Chat-scoped admin menu works only after the admin has opened the bot once.
     if (admin) await tg(env, 'setMyCommands', { scope: { type: 'chat', chat_id: chatId }, commands: ADMIN_COMMANDS });
@@ -216,6 +236,15 @@ async function onCallback(env, cq) {
   const from = cq.from ?? {};
   const chatId = cq.message?.chat?.id;
   await tg(env, 'answerCallbackQuery', { callback_query_id: cq.id });
+  // Website sign-in buttons — for every fan, not only admins.
+  const login = String(cq.data ?? '').match(/^wl:(ok|no):(\d+)$/);
+  if (login && chatId) {
+    const yes = login[1] === 'ok';
+    const done = await answerLogin(env, Number(login[2]), from, yes);
+    const text = !done ? 'Эта ссылка для входа уже не действует — нажми «Войти через Telegram» на сайте ещё раз.'
+      : yes ? '✅ Готово — сайт тебя узнал. Можно вернуться в браузер.' : 'Вход отменён. Никто не вошёл под твоим именем.';
+    return tg(env, 'editMessageText', { chat_id: chatId, message_id: cq.message.message_id, text });
+  }
   if (!chatId || !isAdmin(env, from.id)) return null;
   const adminInfo = { id: from.id, name: [from.first_name, from.username && `@${from.username}`].filter(Boolean).join(' ') };
   const [action, playerId] = String(cq.data ?? '').split(':');

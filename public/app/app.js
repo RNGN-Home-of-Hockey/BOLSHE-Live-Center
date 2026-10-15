@@ -25,6 +25,12 @@ if (tg) {
   document.documentElement.dataset.tg = '1';
 }
 
+// Signed in: inside Telegram by its signed data (initData); on the website by «Войти через
+// Telegram» (worker/src/web-login.js) — the same Telegram account, the same points and votes.
+let session = null; // {token, user} of the website sign-in
+try { session = tg?.initData ? null : JSON.parse(localStorage.getItem('bolshe-session') || 'null'); } catch { session = null; }
+const signedIn = () => Boolean(tg?.initData || session?.token);
+
 // ---------- helpers ----------
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const mskDay = (offset = 0) => new Date(Date.now() + 3 * 3600e3 + offset * 86400e3).toISOString().slice(0, 10);
@@ -58,7 +64,7 @@ const BALL = '<svg class="ball" viewBox="0 0 100 100" aria-hidden="true"><circle
 const LOGO_MARK = '<svg class="logo" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="20" fill="#d7f23a"/><path d="M15 11.5 26.5 20 15 28.5" fill="none" stroke="#15111c" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
 // Theme: the brand dark one by default; light, or as Telegram (light/dark of the client) in Настройки.
-const THEMES = [['dark', 'Тёмная'], ['light', 'Светлая'], ['auto', 'Как в Telegram']];
+const THEMES = [['dark', 'Тёмная'], ['light', 'Светлая'], ['auto', tg?.initData ? 'Как в Telegram' : 'Как на устройстве']];
 let themeMode = 'dark';
 try { themeMode = localStorage.getItem('bolshe-theme') || 'dark'; } catch { /* storage may be blocked */ }
 function applyTheme(mode) {
@@ -94,12 +100,13 @@ paintSpoiler();
 
 // The fan's own Telegram picture (or the first letter) in the header and the profile.
 function meAvatarInner() {
-  const u = tg?.initDataUnsafe?.user;
+  const u = tg?.initDataUnsafe?.user ?? session?.user;
   const letter = Array.from(String(u?.first_name ?? '').trim())[0];
   return u?.photo_url ? `<img src="${esc(u.photo_url)}" alt="" referrerpolicy="no-referrer">` : letter ? esc(letter.toUpperCase()) : ICON.user;
 }
 const meAvatar = (cls = 'me-ava') => `<span class="${cls}">${meAvatarInner()}</span>`;
-document.getElementById('meAva').innerHTML = meAvatarInner();
+const paintMeAva = () => { document.getElementById('meAva').innerHTML = meAvatarInner(); };
+paintMeAva();
 
 async function api(path) {
   const res = await fetch(path, { headers: authHeaders() });
@@ -166,7 +173,7 @@ function openExternal(url) {
 // A «Больше» broadcast opened from the app counts for «Эфиры через приложение».
 function trackVk(url) {
   const ref = String(url ?? '').match(/(?:vk\.com|vkvideo\.ru)\/video(-?\d+_\d+)/)?.[1];
-  if (!ref || !tg?.initData) return;
+  if (!ref || !signedIn()) return;
   fetch('/api/events', { method: 'POST', keepalive: true, headers: { 'content-type': 'application/json', ...authHeaders() }, body: JSON.stringify({ kind: 'vk', ref }) }).catch(() => {});
 }
 // Odds and «Смотреть» sit inside links to our match page, so they take the tap first (capture phase).
@@ -223,7 +230,8 @@ function share(text) {
 
 // ---------- fans: Telegram sign-in, votes, follows ----------
 let me = null;
-const authHeaders = () => (tg?.initData ? { 'x-telegram-init-data': tg.initData } : {});
+const authHeaders = () => (tg?.initData ? { 'x-telegram-init-data': tg.initData }
+  : session?.token ? { authorization: `Bearer ${session.token}` } : {});
 async function post(path, body) {
   const res = await fetch(path, { method: 'POST', headers: { 'content-type': 'application/json', ...authHeaders() }, body: JSON.stringify(body) });
   const data = await res.json().catch(() => ({}));
@@ -231,10 +239,91 @@ async function post(path, body) {
   return data;
 }
 async function loadMe(date) {
-  if (!tg?.initData) { me = null; return null; }
-  try { me = await api(`/api/me?date=${date}`); } catch { me = null; }
+  if (!signedIn()) { me = null; return null; }
+  try {
+    me = await api(`/api/me?date=${date}`);
+  } catch (error) {
+    me = null;
+    if (session && /HTTP 401/.test(error.message)) saveSession(null); // the website session has ended
+  }
   return me;
 }
+
+// ---------- «Войти через Telegram» on the website ----------
+const TG_ICON = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.4 4.2 2.9 11.3c-1.3.5-1.2 1.2-.2 1.5l4.7 1.5 1.8 5.6c.2.6.4.8.9.8.4 0 .6-.2.9-.5l2.3-2.2 4.7 3.5c.9.5 1.5.2 1.7-.8l3.1-14.6c.3-1.3-.5-1.9-1.4-1.5zM9.4 14l8.6-5.4c.4-.3.8-.1.5.2l-7.1 6.4-.3 3.2z"/></svg>';
+function saveSession(s) {
+  session = s;
+  try { if (s) localStorage.setItem('bolshe-session', JSON.stringify(s)); else localStorage.removeItem('bolshe-session'); } catch { /* storage may be blocked */ }
+  paintMeAva();
+}
+function loginButton(label = 'Войти через Telegram') {
+  return `<button class="cta tg-login" type="button" data-login><span class="ic">${TG_ICON}</span>${esc(label)}<span class="go">${ICON.arrow}</span></button>`;
+}
+// Where something needs the fan's account: one line and the button.
+const needLogin = (text) => `<div class="need-login"><div>${esc(text)}</div>${loginButton()}</div>`;
+
+let loginTimer = null;
+function closeLogin() {
+  clearInterval(loginTimer);
+  loginTimer = null;
+  document.querySelector('.sheet-back')?.remove();
+  try { sessionStorage.removeItem('bolshe-login'); } catch { /* ignore */ }
+}
+// The sheet: the 4 check digits, the button to the bot, and waiting for «Войти» there.
+function showLogin(d) {
+  document.querySelector('.sheet-back')?.remove();
+  const back = document.createElement('div');
+  back.className = 'sheet-back';
+  back.innerHTML = `<div class="sheet" role="dialog" aria-label="Вход через Telegram">
+    <button class="icon-btn sheet-x" type="button" data-login-close aria-label="Закрыть">✕</button>
+    <h2>Вход через Telegram</h2>
+    <ol class="login-steps"><li>Нажми кнопку — откроется наш бот.</li><li>Если бот попросит — нажми «Запустить».</li><li>Проверь, что в боте тот же код, и нажми «Войти».</li></ol>
+    <div class="login-code">${esc(d.check)}</div>
+    <a class="cta tg-login" href="${esc(d.bot_link)}" target="_blank" rel="noopener"><span class="ic">${TG_ICON}</span>Открыть бота<span class="go">${ICON.arrow}</span></a>
+    <a class="login-alt" href="${esc(d.app_link)}">Не открывается? Открыть приложение Telegram</a>
+    <div class="login-state">Ждём подтверждения в боте…</div></div>`;
+  document.body.appendChild(back);
+  back.addEventListener('click', (e) => { if (e.target === back || e.target.closest('[data-login-close]')) closeLogin(); });
+  const state = back.querySelector('.login-state');
+  const check = async () => {
+    let r;
+    try { r = await api(`/api/web-login?code=${encodeURIComponent(d.code)}`); } catch { return; }
+    if (r.state === 'ok') {
+      saveSession({ token: r.token, user: r.user });
+      closeLogin();
+      toast(`Вход выполнен${r.user?.first_name ? `: ${r.user.first_name}` : ''}`);
+      route();
+    } else if (r.state === 'expired' || r.state === 'declined') {
+      clearInterval(loginTimer);
+      try { sessionStorage.removeItem('bolshe-login'); } catch { /* ignore */ }
+      state.innerHTML = `${r.state === 'expired' ? 'Время на вход вышло.' : 'Вход отменён в боте.'} ${loginButton('Попробовать ещё раз')}`;
+    }
+  };
+  clearInterval(loginTimer);
+  loginTimer = setInterval(check, 2500);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && loginTimer) check(); });
+}
+async function startLogin() {
+  if (tg?.initData) return;
+  try {
+    const d = await post('/api/web-login', {});
+    try { sessionStorage.setItem('bolshe-login', JSON.stringify(d)); } catch { /* ignore */ }
+    showLogin(d);
+  } catch (error) {
+    toast(error.message);
+  }
+}
+document.addEventListener('click', (event) => {
+  if (!event.target.closest?.('[data-login]')) return;
+  event.preventDefault();
+  event.stopPropagation();
+  startLogin();
+}, true);
+// Back from Telegram after a page reload (phones do that): keep waiting for the same login.
+try {
+  const pending = JSON.parse(sessionStorage.getItem('bolshe-login') || 'null');
+  if (pending && !signedIn() && Date.parse(pending.expires_at) > Date.now()) showLogin(pending);
+} catch { /* ignore */ }
 function toast(text) {
   document.querySelectorAll('.toast').forEach((t) => t.remove());
   const el = document.createElement('div');
@@ -273,7 +362,7 @@ function voteBlock(m) {
   const pick = me?.picks?.[m.match_id] ?? null;
   const v = m.votes ?? { p1: 0, p2: 0, total: 0 };
   if (m.status === 'scheduled') {
-    if (!tg?.initData) return '<div class="vote"><div class="vote-cap">Кто выиграет?</div><div class="vote-note">Голосовать можно в приложении в Telegram</div></div>';
+    if (!signedIn()) return `<div class="vote"><div class="vote-cap">Кто выиграет?</div>${needLogin('Войди через Telegram, чтобы голосовать и копить опыт.')}</div>`;
     const btn = (side, p) => `<button type="button" class="${pick === side ? 'on' : ''}" data-vote="${esc(m.match_id)}" data-pick="${side}">${esc(lastName(p))}</button>`;
     return `<div class="vote"><div class="vote-cap">Кто выиграет?${pick ? ' Голос принят — до начала можно передумать' : ''}</div>
       <div class="vote-btns">${btn(1, m.p1)}${btn(2, m.p2)}</div>${pick ? `<div class="vote-offer">${pickOffer(m, pick)}</div>` : ''}${pick && v.total ? splitBar(m, v) : ''}</div>`;
@@ -431,7 +520,8 @@ function myPlayersBlock(d) {
   return `<div class="sec-title"><span>Твои игроки</span></div>
     <div class="hint">Отметь игроков — здесь будут их матчи и результаты.</div>
     <div class="mine">${picks.map((p) => `<div class="pl-card">${avatar(p.photo, 'head')}<b>${esc(lastName(p))}</b>
-      ${tg?.initData ? `<button class="follow" type="button" data-follow="${esc(p.player_id)}">☆ Следить</button>` : `<a class="small" href="#/player/${encodeURIComponent(p.player_id)}">открыть</a>`}</div>`).join('')}</div>`;
+      ${signedIn() ? `<button class="follow" type="button" data-follow="${esc(p.player_id)}">☆ Следить</button>` : `<a class="small" href="#/player/${encodeURIComponent(p.player_id)}">открыть</a>`}</div>`).join('')}</div>
+    ${signedIn() ? '' : `<div style="margin-top:10px">${loginButton('Войти, чтобы следить за игроками')}</div>`}`;
 }
 
 function questionCard(q) {
@@ -465,7 +555,7 @@ function broadcastRow({ m, b }) {
   const score = m && m.status !== 'scheduled' && showScore(m) ? `${m.sets_p1 ?? 0}:${m.sets_p2 ?? 0}` : '';
   const small = [m ? m.tournament.name : b.tournament, (m ? m.bolshe?.commentator1 : b.commentator1)].filter(Boolean).join(' · ');
   // Matches to come: the vote right in the list, the Winline price only after the vote.
-  const extra = m ? (m.status === 'scheduled' && tg?.initData ? rowVote(m) : oddsRow(m)) : '';
+  const extra = m ? (m.status === 'scheduled' && signedIn() ? rowVote(m) : oddsRow(m)) : '';
   const href = m ? `#/match/${encodeURIComponent(m.match_id)}` : null;
   const open = href ? `<a class="bline" href="${href}">` : `<div class="bline"${b.vk_url ? ` data-ext="${esc(b.vk_url)}" role="link"` : ''}>`;
   return `${open}<span class="t">${when}</span>${thumb}
@@ -599,7 +689,7 @@ async function home(params, token) {
 function questionBody(q) {
   const showBars = q.pick != null || !q.open;
   const pct = (i) => (q.total ? Math.round((100 * q.counts[i]) / q.total) : 0);
-  const canVote = q.open && Boolean(tg?.initData);
+  const canVote = q.open && signedIn();
   const opts = q.options.map((label, i) => {
     const cls = `${q.pick === i ? ' picked' : ''}${q.answer === i ? ' right' : ''}`;
     return `<button type="button" class="q-opt${cls}"${canVote ? ` data-q="${i}"` : ' disabled'}>${showBars ? `<i style="width:${pct(i)}%"></i>` : ''}
@@ -616,13 +706,13 @@ function questionBody(q) {
   } else if (q.open && q.pick != null) {
     note = 'Ответ можно поменять до конца дня. Засчитаем, когда всё решится на корте: +10 XP за «Да» или «Нет», ещё +20 — если угадаешь.';
   } else if (q.open) {
-    note = tg?.initData ? '+10 XP за «Да» или «Нет», ещё +20 — если угадаешь. «Затрудняюсь» — просто голос.' : 'Отвечать можно в приложении в Telegram.';
+    note = signedIn() ? '+10 XP за «Да» или «Нет», ещё +20 — если угадаешь. «Затрудняюсь» — просто голос.' : 'Войди через Telegram, чтобы ответить и получить опыт.';
   } else {
     note = 'Голосование закрыто — ждём, чем закончится на корте.';
   }
   return `<div class="q-text">${esc(q.question)}</div>
     <div class="q-art"><span class="wm">${esc(city)}</span>${avatar(q.player.photo, 'head')}<span class="who">${esc(q.tournament)}${q.player.rank ? ` · №${q.player.rank}` : ''}</span></div>
-    <div class="q-opts">${opts}</div>
+    <div class="q-opts">${opts}</div>${q.open && !signedIn() ? `<div style="margin-top:12px">${loginButton()}</div>` : ''}
     <div class="q-meta">${q.total.toLocaleString('ru-RU')} ${plural(q.total, 'голос', 'голоса', 'голосов')} · ${esc(note)}</div>`;
 }
 
@@ -987,7 +1077,7 @@ function levelFor(levels, step, xp) {
 async function profile(token) {
   const [d] = await Promise.all([api('/api/levels?xp=0'), loadMe(mskDay(0))]);
   if (stale(token)) return;
-  const u = tg?.initDataUnsafe?.user;
+  const u = tg?.initDataUnsafe?.user ?? session?.user;
   const name = me?.user?.first_name || u?.first_name || 'Болельщик';
   const username = me?.user?.username || u?.username;
   const xp = me?.xp ?? 0;
@@ -998,7 +1088,8 @@ async function profile(token) {
   const cur = d.levels.reduce((k, l, i) => (xp >= l.from ? i : k), 0);
   view.innerHTML = `
     <div class="page-head"><h1>Профиль</h1><a class="icon-btn" href="#/settings" aria-label="Настройки" title="Настройки">${ICON.gear}</a></div>
-    <div class="me-card">${meAvatar()}<div><b>${esc(name)}</b><span>${username ? `@${esc(username)}` : tg?.initData ? 'болельщик «Больше»' : 'Открой приложение в Telegram, чтобы копить опыт'}</span></div></div>
+    <div class="me-card">${meAvatar()}<div><b>${esc(name)}</b><span>${username ? `@${esc(username)}` : signedIn() ? 'болельщик «Больше»' : 'Войди, чтобы копить опыт и видеть свои очки'}</span></div></div>
+    ${signedIn() ? '' : `<div style="margin-top:12px">${loginButton()}</div>`}
     <div class="lv-card">${BALL}<div class="cap">Твой уровень</div><div class="title">${esc(lv.title)}</div>
       <div class="prog"><i style="width:${Math.round((lv.progress ?? 0) * 100)}%"></i></div>
       <div class="xp">${xp.toLocaleString('ru-RU')} / ${target.toLocaleString('ru-RU')} XP</div>
@@ -1124,7 +1215,7 @@ async function bracketScreen(key, token, params = new URLSearchParams()) {
     return;
   }
   const sent = d.entry;
-  const editable = !sent && d.status === 'open' && Boolean(tg?.initData);
+  const editable = !sent && d.status === 'open' && signedIn();
   const picks = sent ? sent.picks : cleanPicks(draw, loadDraft(key));
   const sides = drawSides(draw, picks);
   const open = openKeys(draw);
@@ -1144,8 +1235,8 @@ async function bracketScreen(key, token, params = new URLSearchParams()) {
       ${p ? avatar(p.photo, 'ava') : '<span class="ava ph"></span>'}<span class="bk-name">${name}</span>${p?.rank ? `<small class="muted">№${p.rank}</small>` : ''}${mark}</button>`;
   };
   const round = draw.rounds[r];
-  const status = !tg?.initData && !sent
-    ? '<div class="bk-note">Заполнять сетку можно в приложении в Telegram.</div>'
+  const status = !signedIn() && !sent
+    ? needLogin('Войди через Telegram, чтобы заполнить сетку и попасть в таблицу.')
     : sent
       ? `<div class="bk-note"><b>Твоя сетка отправлена</b> ${esc(new Date(sent.submitted_at).toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }))}.
         Очки: <b>${sent.points}</b> · угадано ${sent.correct} из ${sent.decided}${d.status === 'open' ? ` · ещё можно набрать до ${sent.possible}` : ''}${d.place ? ` · место ${d.place} из ${d.table.length}` : ''}</div>`
@@ -1187,7 +1278,7 @@ function onboardingSkipped() {
 }
 
 async function welcome(token) {
-  if (!tg?.initData) { location.hash = '#/'; return; }
+  if (!signedIn()) { location.hash = '#/'; return; }
   const [atp, wta] = await Promise.all([api('/api/players?tour=ATP&limit=12'), api('/api/players?tour=WTA&limit=12'), loadMe(mskDay(0))]);
   if (stale(token)) return;
   const state = { players: new Set(me?.follows ?? []), surface: me?.prefs?.surface ?? null, tours: me?.prefs?.tours ?? null, since: me?.prefs?.since ?? null };
@@ -1247,7 +1338,16 @@ async function settings(token) {
     <label class="switch-row"><input type="checkbox" id="publicBox"${me.prefs?.public === false ? '' : ' checked'}> Показывать моё имя в таблицах</label>
     <p class="muted small">Если выключить, в таблицах ты будешь «Болельщик ####» — прогнозы и очки считаются как обычно.</p>
     <a class="more-btn" href="#/welcome">Ответить на вопросы о себе заново</a>` : ''}
+    ${session ? `<h2>Вход на сайте</h2><p class="muted small">Ты вошёл через Telegram${session.user?.first_name ? ` как ${esc(session.user.first_name)}` : ''}.</p>
+    <button class="more-btn" type="button" data-logout>Выйти на этом устройстве</button>` : !signedIn() ? `<h2>Вход</h2>${loginButton()}` : ''}
     <p class="muted small">Время матчей и эфиров показывается по часовому поясу телефона (${esc(tzLabel())}).</p>`;
+  view.querySelector('[data-logout]')?.addEventListener('click', async () => {
+    await post('/api/web-logout', {}).catch(() => {});
+    saveSession(null);
+    me = null;
+    toast('Ты вышел на этом устройстве');
+    settings();
+  });
   view.querySelector('#publicBox')?.addEventListener('change', (e) => {
     post('/api/prefs', { public: e.target.checked }).then(() => toast(e.target.checked ? 'Имя видно в таблицах' : 'Имя скрыто')).catch((error) => toast(error.message));
   });
