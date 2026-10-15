@@ -154,7 +154,7 @@ async function onMessage(env, msg) {
     if (admin) lines.push('', HELP_ADMIN);
     else lines.push('', `Твой Telegram ID: <code>${from.id}</code>`);
     return send(env, chatId, lines.join('\n'), env.PUBLIC_URL ? {
-      reply_markup: { inline_keyboard: [[{ text: '🎾 Открыть приложение', web_app: { url: `${env.PUBLIC_URL}/app/` } }]] },
+      reply_markup: { inline_keyboard: [[{ text: '🎾 Открыть приложение', web_app: { url: appUrl(env) } }]] },
     } : {});
   }
 
@@ -267,11 +267,15 @@ export async function handleTelegramUpdate(update, env) {
   return null;
 }
 
+// Where the Mini App opens: APP_URL is the no-VPN door on the Moscow server (it forwards everything
+// to this Worker); the webhook stays on PUBLIC_URL.
+export const appUrl = (env) => `${env.APP_URL || env.PUBLIC_URL}/app/`;
+
 // Menu button next to the message field opens the Mini App.
 export async function ensureMenuButton(env) {
   if (!env.TELEGRAM_BOT_TOKEN || !env.PUBLIC_URL) return { skipped: 'no token' };
   const res = await tg(env, 'setChatMenuButton', {
-    menu_button: { type: 'web_app', text: 'Приложение', web_app: { url: `${env.PUBLIC_URL}/app/` } },
+    menu_button: { type: 'web_app', text: 'Приложение', web_app: { url: appUrl(env) } },
   });
   return { ok: Boolean(res.ok), error: res.ok ? null : res.description ?? null };
 }

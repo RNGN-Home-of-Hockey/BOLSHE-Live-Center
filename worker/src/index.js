@@ -25,7 +25,7 @@ import { getPlayer, searchPlayers } from './players.js';
 import { broadcastsForDate, syncSchedule } from './schedule-sync.js';
 import { answerQuestion, questionUpkeep, questionView, todayQuestion } from './question.js';
 import { playerInsights, refreshPlayerStats, statsList, syncMatchStats } from './stats.js';
-import { ensureMenuButton, ensureWebhook, handleTelegramUpdate, webhookSecret } from './telegram.js';
+import { appUrl, ensureMenuButton, ensureWebhook, handleTelegramUpdate, webhookSecret } from './telegram.js';
 
 const json = (data, status = 200, cacheSeconds = 0) => new Response(JSON.stringify(data), {
   status,
@@ -192,7 +192,7 @@ async function maintain(env, { force = false } = {}) {
     tasks.push(runJob(env, 'player_stats', () => refreshPlayerStats(env)));
   }
   if (env.TELEGRAM_BOT_TOKEN) {
-    const menuWant = `${env.PUBLIC_URL}/app/`;
+    const menuWant = appUrl(env);
     const menu = await getState(env, 'menu_button_for');
     if (menu?.value !== menuWant) {
       await setState(env, 'menu_button_for', menuWant);
