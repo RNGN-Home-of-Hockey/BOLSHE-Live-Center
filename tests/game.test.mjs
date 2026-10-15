@@ -14,7 +14,7 @@ test('levels go up with XP and thresholds grow', () => {
 
 test('progress and XP to the next level', () => {
   const l = levelFor(400);
-  assert.equal(l.title, 'Юниор');
+  assert.equal(l.title, 'Уайлд-кард');
   assert.equal(l.next_title, 'Квалификант');
   assert.equal(l.to_next, 200);
   assert.ok(Math.abs(l.progress - 1 / 3) < 1e-9);

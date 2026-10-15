@@ -7,6 +7,7 @@
 //   GET  /media/covers/<vk id>.jpg       our stored cover of a «Больше» broadcast (640×360)
 //   GET  /media/heads/<flashscore id>.png our stored head of a player
 //   GET  /api/me?date=  POST /api/votes  POST /api/follows   fans (header X-Telegram-Init-Data)
+//   GET  /api/question  POST /api/question {pick}            «Вопрос дня» (answering needs the header)
 //   POST /telegram/webhook               Telegram updates (secret header required)
 // Cron (every 10 min): schedule sheet -> broadcasts; registers the bot webhook once the token exists.
 
@@ -22,6 +23,7 @@ import { syncOdds } from './odds-sync.js';
 import { winlineLink } from './winline-link.js';
 import { getPlayer, searchPlayers } from './players.js';
 import { broadcastsForDate, syncSchedule } from './schedule-sync.js';
+import { answerQuestion, questionUpkeep, questionView, todayQuestion } from './question.js';
 import { playerInsights, refreshPlayerStats, statsList, syncMatchStats } from './stats.js';
 import { ensureMenuButton, ensureWebhook, handleTelegramUpdate, webhookSecret } from './telegram.js';
 
@@ -173,10 +175,11 @@ async function maintain(env, { force = false } = {}) {
     await setState(env, 'odds_prematch', 'run');
     tasks.push(runJob(env, 'odds_prematch', () => syncOdds(env, 'prematch')));
   }
-  // Draws of the running tournaments for the bracket game, and the fans' points.
+  // Draws of the running tournaments for the bracket game, the fans' points, and «Вопрос дня»
+  // (settled by the fresh draws, asked once a day).
   if (await due(env, 'brackets', BRACKETS_EVERY_MS, force)) {
     await setState(env, 'brackets', 'run');
-    tasks.push(runJob(env, 'brackets', () => syncBrackets(env)));
+    tasks.push(runJob(env, 'brackets', async () => ({ ...(await syncBrackets(env)), question: await questionUpkeep(env) })));
   }
   // Match statistics of finished singles matches, and the players' 52-week summary with 0–10 scores.
   if (await due(env, 'match_stats', MATCH_STATS_EVERY_MS, force)) {
@@ -253,6 +256,13 @@ export default {
         }
         const view = await bracketView(env, bracketPath[1], user);
         return view ? json(view) : json({ ok: false, error: 'not found' }, 404);
+      }
+      if (path === '/api/question') {
+        const user = await authUser(env, request);
+        if (request.method !== 'POST') return json(await questionView(env, user));
+        if (!user) return json({ ok: false, error: 'open the app in Telegram' }, 401);
+        const result = await answerQuestion(env, user, await request.json().catch(() => ({})));
+        return json(result, result.ok ? 200 : result.status ?? 400);
       }
       if (['/api/me', '/api/votes', '/api/follows', '/api/prefs', '/api/events'].includes(path)) {
         const user = await authUser(env, request);
@@ -352,6 +362,7 @@ export default {
         const upcoming = upcomingByTournament([...all, ...ahead]);
         const { results: open } = await env.DB.prepare("SELECT bracket_key, name FROM brackets WHERE status = 'open'").all();
         const openBrackets = new Map(open.map((b) => [b.name, b.bracket_key]));
+        const question = await todayQuestion(env).catch(() => null);
         return json({
           date,
           tournaments: summarizeTournaments(all, broadcasts).map((t) => ({
@@ -359,6 +370,7 @@ export default {
           })),
           bolshe: all.filter((m) => m.bolshe),
           broadcasts,
+          question,
           // Players to suggest for «Мои игроки»: the best-ranked of today's main-tour singles.
           featured: [...new Map(main.filter((m) => m.tournament.level === 'tour').flatMap((m) => [m.p1, m.p2])
             .filter((p) => p.player_id && p.rank).sort((a, b) => a.rank - b.rank).map((p) => [p.player_id, p])).values()].slice(0, 6),

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 860" preserveAspectRatio="xMidYMid slice">
+  <!-- Page background of «Больше! Теннис»: purple and lime smoke along the edges, quiet in the middle. -->
+  <defs>
+    <filter id="purple" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.009 0.006" numOctaves="5" seed="11"/>
+      <feColorMatrix values="0 0 0 0 0.44  0 0 0 0 0.20  0 0 0 0 0.88  2.4 0 0 0 -0.95"/>
+    </filter>
+    <filter id="lime" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.012 0.008" numOctaves="4" seed="29"/>
+      <feColorMatrix values="0 0 0 0 0.84  0 0 0 0 0.95  0 0 0 0 0.23  3 0 0 0 -1.55"/>
+    </filter>
+    <radialGradient id="tr" cx="1" cy="0" r="0.8"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+    <radialGradient id="bl" cx="0" cy="0.78" r="0.7"><stop offset="0" stop-color="#fff" stop-opacity=".85"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+    <radialGradient id="lr" cx="1" cy="0.55" r="0.55"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+    <radialGradient id="lb" cx="0.15" cy="1" r="0.5"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+    <mask id="mp"><rect width="400" height="860" fill="url(#tr)"/><rect width="400" height="860" fill="url(#bl)"/></mask>
+    <mask id="ml"><rect width="400" height="860" fill="url(#lr)"/><rect width="400" height="860" fill="url(#lb)"/></mask>
+  </defs>
+  <g mask="url(#mp)"><rect width="400" height="860" filter="url(#purple)"/></g>
+  <g mask="url(#ml)" opacity=".55"><rect width="400" height="860" filter="url(#lime)"/></g>
+</svg>

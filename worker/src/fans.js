@@ -9,6 +9,7 @@
 import { fanAchievements } from '../../src/game/achievements.js';
 import { bracketStatus } from '../../src/game/bracket.js';
 import { LEVELS, XP_RULES, levelFor } from '../../src/game/levels.js';
+import { QUESTION_XP } from '../../src/game/question.js';
 import { mediaUrl } from '../../src/lib/media.js';
 import { verifyInitData } from '../../src/lib/telegram-auth.js';
 import { matchesOfPlayer } from './matches-sync.js';
@@ -125,6 +126,13 @@ async function xpTable(db) {
     const { results: brackets } = await db.prepare('SELECT user_id, SUM(points) AS p FROM bracket_entries GROUP BY user_id').all();
     for (const b of brackets) xp.set(Number(b.user_id), (xp.get(Number(b.user_id)) ?? 0) + (b.p ?? 0));
   } catch { /* no brackets table yet */ }
+  // «Вопрос дня»: «Да» or «Нет» gives XP, the right one more («Затрудняюсь» gives nothing).
+  try {
+    const { results: answers } = await db.prepare(`SELECT v.user_id, SUM(CASE WHEN v.pick < 2 THEN ?1 ELSE 0 END
+        + CASE WHEN q.answer IS NOT NULL AND q.answer = v.pick THEN ?2 ELSE 0 END) AS p
+      FROM question_votes v JOIN daily_questions q ON q.day = v.day GROUP BY v.user_id`).bind(QUESTION_XP.answer, QUESTION_XP.correct).all();
+    for (const a of answers) xp.set(Number(a.user_id), (xp.get(Number(a.user_id)) ?? 0) + (a.p ?? 0));
+  } catch { /* no questions table yet */ }
   return [...xp].map(([user_id, total]) => ({ user_id, xp: total }));
 }
 
@@ -202,7 +210,7 @@ export async function fanProfile(env, user, date) {
   const myPlayers = [];
   for (const p of followed) myPlayers.push(playerCard(p, p.fs_id ? await matchesOfPlayer(db, p.fs_id, 8) : [], now));
   return {
-    user: { id: user.id, first_name: user.first_name },
+    user: { id: user.id, first_name: user.first_name, username: user.username ?? null },
     xp,
     level: levelFor(xp),
     first_level: LEVELS[0].title,
@@ -211,6 +219,7 @@ export async function fanProfile(env, user, date) {
     guessed: settled.filter((r) => r.pick === r.winner).length,
     settled: settled.length,
     streak,
+    votes_total: voteRows.length,
     picks: Object.fromEntries(picks.map((r) => [r.match_id, r.pick])),
     follows: followed.map((p) => p.player_id),
     my_players: myPlayers,

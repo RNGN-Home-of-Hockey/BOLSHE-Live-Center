@@ -1,5 +1,6 @@
 // Copies Flashscore day feeds into D1 (tournaments, matches). Only changed matches are written.
 
+import { tournamentTier } from '../../src/insights/tournaments.js';
 import { mediaUrl } from '../../src/lib/media.js';
 import { fetchDay } from '../../src/sources/flashscore-matches.js';
 import { shapeOdds } from './odds-sync.js';
@@ -123,6 +124,7 @@ export function shapeMatch(row) {
     tournament: {
       key: row.tournament_key, name: row.tournament, full_name: row.tournament_name, tour: row.tour,
       level: row.level, discipline: row.discipline, surface: row.surface, country: row.tournament_country, logo: row.tournament_logo ?? null,
+      tier: tournamentTier({ tour: row.tour, level: row.level, tournament: row.tournament }),
     },
     p1: side(row, 'a', 1),
     p2: side(row, 'b', 2),

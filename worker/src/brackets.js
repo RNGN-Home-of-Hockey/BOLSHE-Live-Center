@@ -5,6 +5,7 @@
 //   POST /api/brackets/<key>        {picks} — send a bracket (once; locked until the tournament ends)
 
 import { isFinished, openSlots, scoreBracket, validatePicks } from '../../src/game/bracket.js';
+import { explainTournament } from '../../src/insights/tournaments.js';
 import { mediaUrl } from '../../src/lib/media.js';
 import { fetchDraw } from '../../src/sources/flashscore-draw.js';
 
@@ -86,8 +87,9 @@ const publicEntry = (e) => (e ? {
 
 export async function listBrackets(env, user) {
   const { results } = await env.DB.prepare(`SELECT b.bracket_key, b.name, b.tour, b.surface, b.status, b.starts_at, b.ends_at, b.draw_json,
+      t.tournament AS city, t.level, t.logo,
       (SELECT COUNT(*) FROM bracket_entries e WHERE e.bracket_key = b.bracket_key) AS fans
-    FROM brackets b WHERE b.status = 'open' OR b.updated_at > datetime('now', '-7 days')
+    FROM brackets b LEFT JOIN tournaments t ON t.tournament_key = b.tournament_key WHERE b.status = 'open' OR b.updated_at > datetime('now', '-7 days')
     ORDER BY b.status = 'open' DESC, b.ends_at DESC LIMIT 20`).all();
   const mine = new Map();
   if (user) {
@@ -101,6 +103,9 @@ export async function listBrackets(env, user) {
     const e = mine.get(b.bracket_key);
     return {
       bracket_key: b.bracket_key, name: b.name, tour: b.tour, surface: b.surface, status: b.status, fans: b.fans,
+      // For the big tournament card: "ATP 1000", the city, the dates of the main draw, the logo.
+      city: b.city ?? b.name.replace(/^(ATP|WTA)s+/, ''), tier: explainTournament({ tour: b.tour, level: b.level ?? 'tour', tournament: b.city ?? b.name }).tier,
+      logo: b.logo ?? null, starts_at: b.starts_at, ends_at: b.ends_at,
       round: round?.title ?? null, open_matches: openSlots(draw).length, champion: champion?.name_ru ?? null,
       mine: e ? { points: e.points, possible: e.possible, correct: e.correct, decided: e.decided } : null,
     };

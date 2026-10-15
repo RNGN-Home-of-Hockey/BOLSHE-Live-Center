@@ -4,7 +4,7 @@
 export const LEVELS = [
   { key: 'ballkid', title: 'Подающий мячи', subtitle: 'Только вышел на корт', from: 0 },
   { key: 'amateur', title: 'Любитель', subtitle: 'Играет по выходным', from: 100 },
-  { key: 'junior', title: 'Юниор', subtitle: 'Освоил основы', from: 300 },
+  { key: 'wildcard', title: 'Уайлд-кард', subtitle: 'Пустили в сетку по приглашению', from: 300 },
   { key: 'qualifier', title: 'Квалификант', subtitle: 'Пробился через квалификацию', from: 600 },
   { key: 'tour', title: 'Игрок тура', subtitle: 'Свой в основной сетке', from: 1000 },
   { key: 'seeded', title: 'Сеяный', subtitle: 'Его уже опасаются', from: 1600 },
