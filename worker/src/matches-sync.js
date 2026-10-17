@@ -88,7 +88,9 @@ export const MATCH_SELECT = `SELECT m.*, t.name AS tournament_name, t.tournament
        FROM broadcasts br
       WHERE br.date_msk = m.date_msk AND br.status != 'removed'
         AND ((br.player1_id = a.player_id AND br.player2_id = b.player_id) OR (br.player1_id = b.player_id AND br.player2_id = a.player_id))
-      LIMIT 1) AS bolshe
+      LIMIT 1) AS bolshe,
+    (SELECT json_object('key', h.match_key, 'cover', h.cover, 'done', h.done, 'files', json(h.files_json), 'summaries', json(h.summaries_json))
+       FROM highlights h WHERE h.match_id = m.match_id LIMIT 1) AS hl
   FROM matches m
   JOIN tournaments t ON t.tournament_key = m.tournament_key
   LEFT JOIN players a ON a.fs_id = m.p1_fs_id
@@ -131,6 +133,8 @@ export function shapeMatch(row) {
     bolshe: row.bolshe ? withCover(JSON.parse(row.bolshe)) : null,
     odds: row.odds ? shapeOdds(JSON.parse(row.odds), row.status) : null,
     votes: votesOf(row.votes),
+    // Our cut of the match (review, top, set clips) — files on the no-VPN door, /hl/<key>/<file>.
+    highlights: row.hl ? JSON.parse(row.hl) : null,
   };
 }
 

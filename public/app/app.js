@@ -407,6 +407,56 @@ function bindFanActions(root, rerender) {
   }));
 }
 
+// ---------- our highlights (cut on the Moscow server, light copies ~1.3 Mbit/s) ----------
+const HL_ORDER = (f) => (f.kind === 'review' ? 0 : f.kind.startsWith('top') ? 1 : 2 + Number(f.kind.slice(3)));
+const hlLabel = (f) => (f.kind === 'review' ? 'Обзор' : f.kind.startsWith('top') ? `Топ-${f.kind.slice(3)}` : `${f.kind.slice(3)}-й сет`);
+const mmss = (s) => `${Math.floor((s || 0) / 60)}:${String(Math.round(s || 0) % 60).padStart(2, '0')}`;
+const hlFiles = (h) => [...(h?.files ?? [])].sort((a, c) => HL_ORDER(a) - HL_ORDER(c));
+// The player: the video (the review first), chips to switch to the top and the sets, the set stories.
+function hlPlayer(h) {
+  const files = hlFiles(h);
+  if (!files.length) return '';
+  const sums = h.summaries ? Object.entries(h.summaries).sort(([a], [c]) => a - c) : [];
+  return `<div class="hl-box" data-hl-box>
+    <video class="hl-video" controls playsinline preload="metadata"${h.cover ? ` poster="${esc(h.cover)}"` : ''} src="${esc(files[0].url)}"></video>
+    <div class="chips hl-kinds">${files.map((f, i) => `<button class="chip${i ? '' : ' on'}" type="button" data-hl-src="${esc(f.url)}">${hlLabel(f)} · ${mmss(f.secs)}</button>`).join('')}</div>
+    ${sums.length ? `<div class="hl-sum">${sums.map(([k, v]) => `<div><b>${k}-й сет.</b> ${esc(v)}</div>`).join('')}</div>` : ''}
+    ${h.done ? '' : '<div class="muted small">Полный обзор появится после матча — пока нарезка готовых сетов.</div>'}</div>`;
+}
+document.addEventListener('click', (event) => {
+  const b = event.target.closest?.('[data-hl-src]');
+  if (!b) return;
+  const box = b.closest('[data-hl-box]');
+  const video = box?.querySelector('video');
+  if (!video) return;
+  video.src = b.dataset.hlSrc;
+  video.play().catch(() => {});
+  box.querySelectorAll('[data-hl-src]').forEach((x) => x.classList.toggle('on', x === b));
+});
+// «▶ Хайлайты» in lists: opens the match on its «Видео» tab.
+document.addEventListener('click', (event) => {
+  const el = event.target.closest?.('[data-hl-match]');
+  if (!el) return;
+  event.preventDefault();
+  event.stopPropagation();
+  matchPane[el.dataset.hlMatch] = 'video';
+  location.hash = `#/match/${encodeURIComponent(el.dataset.hlMatch)}`;
+}, true);
+// A highlights player in a sheet (the player page: matches without our match card).
+function openHighlights(h, title) {
+  document.querySelector('.sheet-back')?.remove();
+  const back = document.createElement('div');
+  back.className = 'sheet-back';
+  back.innerHTML = `<div class="sheet" role="dialog" aria-label="Хайлайты"><button class="icon-btn sheet-x" type="button" data-sheet-close aria-label="Закрыть">✕</button>
+    <h2>${esc(title)}</h2>${hlPlayer(h)}</div>`;
+  document.body.appendChild(back);
+  back.addEventListener('click', (e) => { if (e.target === back || e.target.closest('[data-sheet-close]')) back.remove(); });
+}
+const hlChip = (m) => {
+  const review = hlFiles(m.highlights).find((f) => f.kind === 'review') ?? hlFiles(m.highlights)[0];
+  return review ? `<span class="mc-hl" data-hl-match="${esc(m.match_id)}" role="link"><i>${ICON.play}</i>Хайлайты · ${mmss(review.secs)}</span>` : '';
+};
+
 // ---------- match cards (lists) ----------
 function setCells(m, side, curCls = 'cur') {
   const sets = m.sets ?? [];
@@ -436,7 +486,8 @@ function matchCard(m) {
   const hidden = noSpoilers && m.status !== 'scheduled' ? '<div class="hidden-score">Счёт скрыт</div>' : '';
   const watch = m.bolshe?.vk_url && m.status !== 'cancelled'
     ? `<span class="mc-watch" data-ext="${esc(m.bolshe.vk_url)}" role="link"><i>${ICON.play}</i>${m.status === 'live' ? 'Смотреть' : DONE.includes(m.status) ? 'Запись эфира' : 'Эфир «Больше»'}</span>` : '';
-  const foot = watch || m.odds ? `<div class="mc-foot">${watch}${oddsRow(m)}</div>` : '';
+  const hl = m.highlights && showScore(m) ? hlChip(m) : '';
+  const foot = watch || hl || m.odds ? `<div class="mc-foot">${hl}${watch}${oddsRow(m)}</div>` : '';
   return `<a class="mcard" href="#/match/${encodeURIComponent(m.match_id)}">
     <div class="mc-top">${top}<span class="t">${esc(label)}</span>${m.bolshe ? '<span class="badge">Больше</span>' : ''}</div>
     ${matchRow(m, 1)}${matchRow(m, 2)}${hidden}${foot}</a>`;
@@ -859,7 +910,9 @@ async function match(id, token) {
   const t = m.tournament;
   const pick = me?.picks?.[m.match_id] ?? null;
   const panes = [['score', 'Счёт'], ['stats', 'Статистика'], ['votes', 'Прогнозы'], ...(m.bolshe ? [['video', 'Видео']] : [])];
-  const pane = matchPane[id] ?? (DONE.includes(m.status) && pick && showScore(m) ? 'votes' : 'score');
+  // After the match: the fan who voted lands on the results, otherwise on our highlights if we cut it.
+  const pane = matchPane[id] ?? (DONE.includes(m.status) && pick && showScore(m) ? 'votes'
+    : m.highlights?.done && showScore(m) ? 'video' : 'score');
   const name = (p, right) => {
     const inner = `${esc(lastName(p))}${p.rank ? `<sup>№${p.rank}</sup>` : ''}`;
     const len = lastName(p).length;
@@ -886,7 +939,9 @@ async function match(id, token) {
     <div class="pane" data-p="stats"${pane === 'stats' ? '' : ' hidden'}>${stats || '<div class="empty">Статистики по этому матчу пока нет</div>'}</div>
     <div class="pane" data-p="votes"${pane === 'votes' ? '' : ' hidden'}>${resultsPane(m)}</div>
     ${m.bolshe ? `<div class="pane" data-p="video"${pane === 'video' ? '' : ' hidden'}>
-      ${m.bolshe.cover ? `<div class="cover"><img class="cover-img" src="${esc(m.bolshe.cover)}" alt="" loading="lazy" data-cover></div>` : ''}
+      ${m.highlights && showScore(m) ? `<div class="sec-title" style="margin-top:0"><span>Хайлайты «Больше»</span></div>${hlPlayer(m.highlights)}` : ''}
+      ${m.highlights && !showScore(m) ? '<div class="empty">Хайлайты скрыты — выключи «без спойлеров» вверху</div>' : ''}
+      ${m.bolshe.cover && !m.highlights ? `<div class="cover"><img class="cover-img" src="${esc(m.bolshe.cover)}" alt="" loading="lazy" data-cover></div>` : ''}
       <div class="score-card"><b>Трансляция «Больше»</b><div class="muted small" style="margin-top:4px">${esc([m.bolshe.title, m.bolshe.round].filter(Boolean).join(' · '))}${m.bolshe.commentator1 ? `<br>Комментирует ${esc([m.bolshe.commentator1, m.bolshe.commentator2].filter(Boolean).join(' и '))}` : ''}</div></div>
       ${vk ? watchCta(vk, DONE.includes(m.status) ? 'Смотреть запись на VK' : 'Смотреть на Больше!') : '<div class="empty">Ссылка на эфир появится ближе к началу</div>'}
     </div>` : ''}`;
@@ -1029,9 +1084,33 @@ const age = (birth) => {
   return a;
 };
 
+// The player's «Больше» broadcasts: cover, date, opponent, tournament; ▶ VK and our highlights when cut.
+let bcOpen = false;
+function playerMediaBlock(media) {
+  if (!media) return '';
+  const hl = noSpoilers ? [] : media.highlights.filter((h) => h.files.length);
+  const bcs = media.broadcasts;
+  const date = (d) => new Date(`${d}T12:00:00Z`).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }).replace('.', '');
+  const hlCards = hl.map((h, i) => {
+    const b = bcs.find((x) => x.highlights?.key === h.key);
+    const review = hlFiles(h).find((f) => f.kind === 'review') ?? hlFiles(h)[0];
+    return `<button class="hl-card" type="button" data-hl-open="${i}">${h.cover ? `<img src="${esc(h.cover)}" alt="" loading="lazy" data-cover>` : ''}
+      <span class="hl-play">${ICON.play}</span><span class="hl-cap"><b>${esc(b ? `с ${lastName({ name: b.opponent })}` : 'Хайлайты')}</b><small>${esc(date(h.date))} · ${hlLabel(review)} ${mmss(review.secs)}</small></span></button>`;
+  }).join('');
+  const row = (b, i) => `<div class="bc-row${i >= 6 && !bcOpen ? ' bc-more' : ''}">
+    ${b.cover ? `<img class="th" src="${esc(b.cover)}" alt="" loading="lazy" data-cover>` : '<span class="th nocov"></span>'}
+    <span class="who"><b>${b.opponent ? `с ${esc(lastName({ name: b.opponent }))}` : 'Эфир «Больше»'}</b><small>${esc([date(b.date), b.tournament, b.round].filter(Boolean).join(' · '))}</small></span>
+    <span class="bc-acts">${b.highlights && !noSpoilers ? `<button class="mc-hl" type="button" data-hl-open="${hl.findIndex((h) => h.key === b.highlights.key)}"><i>${ICON.play}</i>Хайлайты</button>` : ''}
+      ${b.vk_url ? `<span class="mc-watch" data-ext="${esc(b.vk_url)}" role="link"><i>${ICON.play}</i>ВК</span>` : ''}</span></div>`;
+  return `${hl.length ? `<div class="sec-title"><span>Хайлайты</span><span class="r">${hl.length}</span></div><div class="hl-strip">${hlCards}</div>` : ''}
+    ${bcs.length ? `<div class="sec-title"><span>Эфиры «Больше»</span><span class="r">${bcs.length}</span></div><div class="bc-list">${bcs.map(row).join('')}</div>
+      ${bcs.length > 6 && !bcOpen ? `<button class="more-btn" type="button" data-bc-more>Показать все эфиры (${bcs.length})</button>` : ''}` : ''}`;
+}
+
 async function player(id, token) {
-  const [{ player: p, insights }, { matches: list }] = await Promise.all([
-    api(`/api/players/${encodeURIComponent(id)}`), api(`/api/players/${encodeURIComponent(id)}/matches`), loadMe(mskDay(0)),
+  const [{ player: p, insights }, { matches: list }, media] = await Promise.all([
+    api(`/api/players/${encodeURIComponent(id)}`), api(`/api/players/${encodeURIComponent(id)}/matches`),
+    api(`/api/players/${encodeURIComponent(id)}/media`).catch(() => null), loadMe(mskDay(0)),
   ]);
   if (stale(token)) return;
   const a = age(p.birth_date);
@@ -1045,8 +1124,20 @@ async function player(id, token) {
       <div><b>${p.elo ? Math.round(p.elo) : '—'}</b><span>Эло</span></div>
       <div><b>${p.doubles_rank ?? '—'}</b><span>пары</span></div>
     </div>
+    ${playerMediaBlock(media)}
     ${insightsBlock(insights)}
     <h2>Матчи</h2>${list.length ? list.map(matchCard).join('') : '<div class="empty">Свежих матчей нет — история появится по мере игр</div>'}`;
+  const hlList = noSpoilers ? [] : (media?.highlights ?? []).filter((h) => h.files.length);
+  view.querySelectorAll('[data-hl-open]').forEach((b) => b.addEventListener('click', () => {
+    const h = hlList[Number(b.dataset.hlOpen)];
+    const bc = media.broadcasts.find((x) => x.highlights?.key === h?.key);
+    if (h) openHighlights(h, `${lastName({ name: p.name_ru })}${bc?.opponent ? ` — ${lastName({ name: bc.opponent })}` : ''}`);
+  }));
+  view.querySelector('[data-bc-more]')?.addEventListener('click', (e) => {
+    bcOpen = true;
+    view.querySelectorAll('.bc-more').forEach((r) => r.classList.remove('bc-more'));
+    e.currentTarget.remove();
+  });
   bindFanActions(view, () => player(id, token));
 }
 

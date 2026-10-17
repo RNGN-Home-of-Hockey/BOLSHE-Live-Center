@@ -1,0 +1,15 @@
+# Tells BOLSHE Live Center which tennis highlights are ready (ops/hl-push/bolshe_hl_push.py).
+[Unit]
+Description=BOLSHE Live Center: push ready tennis highlights to the app
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /opt/bolshe-hl/bolshe_hl_push.py
+Nice=10
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ReadWritePaths=/var/lib/bolshe-hl
+StateDirectory=bolshe-hl

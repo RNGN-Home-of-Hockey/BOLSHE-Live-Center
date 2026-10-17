@@ -9,6 +9,7 @@
 //   GET  /api/me?date=  POST /api/votes  POST /api/follows   fans (header X-Telegram-Init-Data)
 //   GET  /api/question  POST /api/question {pick}            «Вопрос дня» (answering needs the header)
 //   POST /api/web-login  GET /api/web-login?code=  POST /api/web-logout   website sign-in through the bot
+//   POST /api/highlights/push (x-push-token)  GET /api/players/<id>/media   highlights + «Больше» broadcasts of a player
 //   POST /telegram/webhook               Telegram updates (secret header required)
 // Cron (every 10 min): schedule sheet -> broadcasts; registers the bot webhook once the token exists.
 
@@ -26,6 +27,7 @@ import { getPlayer, searchPlayers } from './players.js';
 import { broadcastsForDate, syncSchedule } from './schedule-sync.js';
 import { answerQuestion, questionUpkeep, questionView, todayQuestion } from './question.js';
 import { endWebSession, pollWebLogin, startWebLogin } from './web-login.js';
+import { playerMedia, pushHighlights } from './highlights.js';
 import { playerInsights, refreshPlayerStats, statsList, syncMatchStats } from './stats.js';
 import { appUrl, ensureMenuButton, ensureWebhook, handleTelegramUpdate, webhookSecret } from './telegram.js';
 
@@ -259,6 +261,14 @@ export default {
         const view = await bracketView(env, bracketPath[1], user);
         return view ? json(view) : json({ ok: false, error: 'not found' }, 404);
       }
+      if (path === '/api/highlights/push' && request.method === 'POST') {
+        const result = await pushHighlights(env, request);
+        return json(result, result.ok ? 200 : result.status ?? 400);
+      }
+      // Highlight files live on the no-VPN door; a request that reached the Worker directly goes there.
+      if (path.startsWith('/hl/') && env.APP_URL) {
+        return new Response(null, { status: 302, headers: { location: `${env.APP_URL}${url.pathname}`, 'cache-control': 'no-store' } });
+      }
       if (path === '/api/web-login') {
         const result = request.method === 'POST' ? await startWebLogin(env) : await pollWebLogin(env, url.searchParams.get('code'));
         return json(result, result.ok ? 200 : result.status ?? 400);
@@ -313,6 +323,8 @@ export default {
         });
         return json({ players }, 200, 60);
       }
+      const mediaOf = path.match(/^\/api\/players\/([^/]+)\/media$/);
+      if (mediaOf) return json(await playerMedia(env, decodeURIComponent(mediaOf[1])), 200, 60);
       const playerMatches = path.match(/^\/api\/players\/([^/]+)\/matches$/);
       if (playerMatches) {
         const player = await env.DB.prepare('SELECT fs_id FROM players WHERE player_id = ?').bind(decodeURIComponent(playerMatches[1])).first();

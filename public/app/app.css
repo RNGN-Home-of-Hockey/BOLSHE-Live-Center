@@ -613,6 +613,40 @@ details.rules summary { color: var(--text); font-weight: 700; cursor: pointer; }
 .login-alt { text-align: center; font-size: 13px; color: var(--hint); }
 .login-state { text-align: center; font-size: 13px; color: var(--hint); display: flex; flex-direction: column; gap: 10px; }
 
+/* our highlights: the player, chips of review / top / sets, cards on the player page, «Больше» broadcasts */
+.hl-box { display: flex; flex-direction: column; gap: 10px; }
+.hl-video { width: 100%; aspect-ratio: 16 / 9; border-radius: 18px; background: #000; display: block; }
+.hl-kinds { flex-wrap: wrap; overflow: visible; }
+.hl-kinds .chip { padding: 7px 12px; font-size: 13px; }
+.hl-sum { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--hint); line-height: 1.45; }
+.hl-sum b { color: var(--text); }
+.mc-hl { display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 14px 0 6px; border-radius: 999px; border: 0; cursor: pointer;
+  background: var(--lime); color: var(--lime-ink); font-weight: 800; font-size: 13px; }
+.mc-hl i { width: 26px; height: 26px; border-radius: 50%; background: var(--lime-ink); color: var(--lime); display: grid; place-items: center; font-style: normal; }
+.mc-hl i svg { width: 12px; height: 12px; }
+.hl-strip { display: grid; grid-auto-flow: column; grid-auto-columns: 72%; gap: 10px; overflow-x: auto; scrollbar-width: none; padding-bottom: 4px; }
+.hl-strip::-webkit-scrollbar { display: none; }
+.hl-card { position: relative; aspect-ratio: 16 / 9; border-radius: 18px; overflow: hidden; border: 1px solid var(--line); padding: 0; cursor: pointer;
+  background: #140f1d url("img/paint.svg") center / cover; color: #fff; text-align: left; }
+.hl-card img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.hl-card::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0, 0, 0, 0) 45%, rgba(0, 0, 0, .78)); }
+.hl-play { position: absolute; z-index: 1; left: 12px; top: 12px; width: 36px; height: 36px; border-radius: 50%; background: var(--lime); color: var(--lime-ink); display: grid; place-items: center; }
+.hl-play svg { width: 16px; height: 16px; }
+.hl-cap { position: absolute; z-index: 1; left: 12px; right: 12px; bottom: 10px; display: flex; flex-direction: column; }
+.hl-cap b { font-size: 15px; font-weight: 800; }
+.hl-cap small { font-size: 12px; color: rgba(255, 255, 255, .8); }
+.bc-list { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 2px 14px; }
+.bc-row { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.bc-row:last-child { border-bottom: 0; }
+.bc-row.bc-more { display: none; }
+.bc-row .th { width: 72px; height: 40px; border-radius: 8px; object-fit: cover; background: var(--card2); display: block; }
+.bc-row .who { min-width: 0; }
+.bc-row .who b { display: block; font-size: 14px; font-weight: 800; }
+.bc-row .who small { display: block; font-size: 12px; color: var(--hint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bc-acts { grid-column: 2; display: flex; gap: 6px; flex-wrap: wrap; }
+.bc-acts .mc-hl, .bc-acts .mc-watch { height: 32px; font-size: 12px; }
+.bc-acts .mc-hl i, .bc-acts .mc-watch i { width: 22px; height: 22px; }
+
 /* covers (bracket/old places) */
 .cover { position: relative; aspect-ratio: 16 / 9; border-radius: 16px; overflow: hidden; background: #140f1d url("img/paint.svg") center / cover; }
 .cover .heads { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 6%; }
