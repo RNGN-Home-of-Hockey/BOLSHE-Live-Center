@@ -3,6 +3,7 @@
 
 import { getPlayer, nameStats, nextUnverified, searchPlayers, setPlayerName } from './players.js';
 import { answerLogin, loginForBot } from './web-login.js';
+import { hostsText, linkHost, unlinkHost } from './hosts.js';
 
 const SOURCE_LABEL = {
   override: 'ручная правка (файл)',
@@ -121,6 +122,7 @@ const ADMIN_COMMANDS = [
   { command: 'name', description: 'Исправить имя игрока' },
   { command: 'player', description: 'Найти игрока' },
   { command: 'stats', description: 'Статистика базы' },
+  { command: 'hosts', description: 'Ведущие и комментаторы' },
   { command: 'start', description: 'Помощь' },
 ];
 
@@ -131,6 +133,9 @@ const HELP_ADMIN = [
   '/name Швентек = Ига Свёнтек — исправить сразу',
   '/fix — проверять имена по одному, лучшие игроки первыми',
   '/stats — сколько имён откуда и сколько проверено',
+  '/hosts — ведущие и комментаторы «Больше»',
+  '/host_link Имя Фамилия = @ник — привязать ведущего к его Telegram (он должен один раз открыть бота)',
+  '/host_unlink Имя Фамилия — отвязать',
 ].join('\n');
 
 async function onMessage(env, msg) {
@@ -195,6 +200,18 @@ async function onMessage(env, msg) {
     const s = await nameStats(env.DB);
     const by = s.by_source.map((r) => `${SOURCE_LABEL[r.source] ?? r.source}: ${r.n}`).join('\n');
     return send(env, chatId, `<b>Игроков в базе:</b> ${s.total}\nРешений админов в боте: ${s.bot_decisions}\n\n<b>Откуда имена</b>\n${esc(by)}`);
+  }
+
+  if (cmd === 'hosts') return send(env, chatId, await hostsText(env.DB));
+  if (cmd === 'host_link') {
+    const [who, nick] = rest.split('=').map((x) => x.trim());
+    if (!who || !nick) return send(env, chatId, 'Напиши: /host_link Вадим Азаренко = @ник');
+    const r = await linkHost(env.DB, who, nick);
+    return send(env, chatId, r.ok ? `✅ ${esc(r.name)} привязан(а) к ${esc(r.who ?? nick)}. Его прогнозы теперь видны как прогнозы эксперта.` : esc(r.error));
+  }
+  if (cmd === 'host_unlink') {
+    const r = await unlinkHost(env.DB, rest);
+    return send(env, chatId, r.ok ? `Отвязал: ${esc(r.name)}` : esc(r.error));
   }
 
   if (cmd === 'fix') {

@@ -2,9 +2,9 @@
 // from Flashscore every 10 minutes, fans' brackets are scored after every refresh.
 //   GET  /api/brackets              running and recent brackets (+ the fan's points, if signed in)
 //   GET  /api/brackets/<key>        the draw with our names and photos, the fan's bracket, the table
-//   POST /api/brackets/<key>        {picks} — send a bracket (once; locked until the tournament ends)
+//   POST /api/brackets/<key>        {picks} — send a bracket; it can be changed until its first match starts
 
-import { isFinished, openSlots, scoreBracket, validatePicks } from '../../src/game/bracket.js';
+import { isFinished, lockTime, openSlots, scoreBracket, validatePicks } from '../../src/game/bracket.js';
 import { explainTournament } from '../../src/insights/tournaments.js';
 import { mediaUrl } from '../../src/lib/media.js';
 import { fetchDraw } from '../../src/sources/flashscore-draw.js';
@@ -83,6 +83,8 @@ export async function syncBrackets(env) {
 
 const publicEntry = (e) => (e ? {
   picks: JSON.parse(e.picks_json), submitted_at: e.submitted_at, points: e.points, correct: e.correct, decided: e.decided, possible: e.possible,
+  lock_at: e.lock_at ?? null, updated_at: e.updated_at ?? null,
+  editable: Boolean(e.lock_at && Date.parse(e.lock_at) > Date.now()),
 } : null);
 
 export async function listBrackets(env, user) {
@@ -153,15 +155,25 @@ export async function submitBracket(env, key, user, rawPicks) {
   const b = await env.DB.prepare('SELECT draw_json, status FROM brackets WHERE bracket_key = ?').bind(key).first();
   if (!b) return { ok: false, status: 404, error: 'Сетка не найдена' };
   if (b.status !== 'open') return { ok: false, status: 409, error: 'Турнир уже закончился' };
-  const existing = await env.DB.prepare('SELECT submitted_at FROM bracket_entries WHERE bracket_key = ? AND user_id = ?').bind(key, user.id).first();
-  if (existing) return { ok: false, status: 409, error: 'Сетка уже отправлена — менять её нельзя до конца турнира' };
+  const existing = await env.DB.prepare('SELECT submitted_at, lock_at FROM bracket_entries WHERE bracket_key = ? AND user_id = ?').bind(key, user.id).first();
+  if (existing && !(existing.lock_at && Date.parse(existing.lock_at) > Date.now())) {
+    return { ok: false, status: 409, error: 'Первый матч уже начался — сетку больше не поменять до конца турнира' };
+  }
   const draw = JSON.parse(b.draw_json);
   const check = validatePicks(draw, rawPicks);
   if (!check.ok) return { ok: false, status: 400, error: check.error };
-  const sentAt = new Date().toISOString();
+  const now = new Date().toISOString();
+  // A change keeps the first sending time: before the first match nothing has been scored yet anyway.
+  const sentAt = existing?.submitted_at ?? now;
   const s = scoreBracket(draw, check.picks, sentAt);
-  await env.DB.prepare(`INSERT INTO bracket_entries (bracket_key, user_id, picks_json, submitted_at, points, correct, decided, possible, scored_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-    .bind(key, user.id, JSON.stringify(check.picks), sentAt, s.points, s.correct, s.decided, s.possible, sentAt).run();
-  return { ok: true, submitted_at: sentAt, ...s };
+  if (existing) {
+    await env.DB.prepare(`UPDATE bracket_entries SET picks_json = ?, points = ?, correct = ?, decided = ?, possible = ?, scored_at = ?, updated_at = ?
+      WHERE bracket_key = ? AND user_id = ?`).bind(JSON.stringify(check.picks), s.points, s.correct, s.decided, s.possible, now, now, key, user.id).run();
+    return { ok: true, changed: true, submitted_at: sentAt, lock_at: existing.lock_at, ...s };
+  }
+  const lockAt = lockTime(draw) ?? new Date(Date.now() + 3600e3).toISOString();
+  await env.DB.prepare(`INSERT INTO bracket_entries (bracket_key, user_id, picks_json, submitted_at, points, correct, decided, possible, scored_at, lock_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+    .bind(key, user.id, JSON.stringify(check.picks), sentAt, s.points, s.correct, s.decided, s.possible, sentAt, lockAt).run();
+  return { ok: true, submitted_at: sentAt, lock_at: lockAt, ...s };
 }

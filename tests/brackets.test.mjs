@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { currentRound, isFinished, openSlots, participants, pointsFor, scoreBracket, validatePicks } from '../src/game/bracket.js';
+import { currentRound, isFinished, lockTime, openSlots, participants, pointsFor, scoreBracket, validatePicks } from '../src/game/bracket.js';
 import { parseDrawFeed } from '../src/sources/flashscore-draw.js';
 
 // Shape of the real Flashscore draw feed (dr_<tournament>_<stage>), cut to 8 positions:
@@ -60,4 +60,15 @@ test('bracket: only matches that began after sending count', () => {
   assert.deepEqual(scoreBracket(d, picks, '2026-10-15T18:00:00Z'), { points: 32, correct: 1, decided: 1, possible: 32 },
     'sent after the semi-final began: only the final counts');
   assert.equal(isFinished(d), true);
+});
+
+test('a sent bracket can be changed until the earliest open match starts; a live match locks at once', () => {
+  const draw = { rounds: [
+    { matches: [{ h: 0, a: 1, w: 0, start: '2026-10-18T08:00:00.000Z' }, { h: 2, a: 3, w: null, start: '2026-10-18T12:00:00.000Z' }] },
+    { matches: [{ h: null, a: null, w: null, start: '2026-10-18T10:00:00.000Z' }] },
+  ] };
+  assert.equal(lockTime(draw), '2026-10-18T10:00:00.000Z', 'the decided 08:00 match does not count');
+  draw.rounds[0].matches[1].status = 'live';
+  assert.equal(lockTime(draw, Date.parse('2026-10-18T11:00:00Z')), '2026-10-18T11:00:00.000Z');
+  assert.equal(lockTime({ rounds: [{ matches: [{ h: 0, a: 1, w: null, start: null }] }] }), null);
 });

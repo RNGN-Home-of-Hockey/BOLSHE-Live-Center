@@ -941,7 +941,7 @@ function resultsPane(m) {
 const matchPane = {}; // the tab picked on a match stays on refresh
 
 async function match(id, token) {
-  const [d] = await Promise.all([api(`/api/matches/${encodeURIComponent(id)}`), loadMe(mskDay(0))]);
+  const [d] = await Promise.all([api(`/api/matches/${encodeURIComponent(id)}`), loadMe(mskDay(0)), loadHosts()]);
   if (stale(token)) return;
   const m = d.match;
   const t = m.tournament;
@@ -972,14 +972,15 @@ async function match(id, token) {
       ${vk && m.status !== 'cancelled' ? watchCta(vk, DONE.includes(m.status) ? 'Запись эфира на VK' : 'Смотреть на Больше!', DONE.includes(m.status)) : ''}
       ${wlBar(m)}
       ${m.status === 'scheduled' ? `<div class="score-card">${voteBlock(m)}</div>` : ''}
+      ${expertsBlock(m, d.experts)}
     </div>
     <div class="pane" data-p="stats"${pane === 'stats' ? '' : ' hidden'}>${stats || '<div class="empty">Статистики по этому матчу пока нет</div>'}</div>
-    <div class="pane" data-p="votes"${pane === 'votes' ? '' : ' hidden'}>${resultsPane(m)}</div>
+    <div class="pane" data-p="votes"${pane === 'votes' ? '' : ' hidden'}>${resultsPane(m)}${expertsBlock(m, d.experts)}</div>
     ${m.bolshe ? `<div class="pane" data-p="video"${pane === 'video' ? '' : ' hidden'}>
       ${m.highlights && showScore(m) ? `<div class="sec-title" style="margin-top:0"><span>Хайлайты «Больше»</span></div>${hlPlayer(m.highlights)}` : ''}
       ${m.highlights && !showScore(m) ? '<div class="empty">Хайлайты скрыты — выключи «без спойлеров» вверху</div>' : ''}
       ${m.bolshe.cover && !m.highlights ? `<div class="cover"><img class="cover-img" src="${esc(m.bolshe.cover)}" alt="" loading="lazy" data-cover></div>` : ''}
-      <div class="score-card"><b>Трансляция «Больше»</b><div class="muted small" style="margin-top:4px">${esc([m.bolshe.title, m.bolshe.round].filter(Boolean).join(' · '))}${m.bolshe.commentator1 ? `<br>Комментирует ${esc([m.bolshe.commentator1, m.bolshe.commentator2].filter(Boolean).join(' и '))}` : ''}</div></div>
+      <div class="score-card"><b>Трансляция «Больше»</b><div class="muted small" style="margin-top:4px">${esc([m.bolshe.title, m.bolshe.round].filter(Boolean).join(' · '))}${m.bolshe.commentator1 ? `<br>Комментирует ${[m.bolshe.commentator1, m.bolshe.commentator2].filter(Boolean).map(hostLink).join(' и ')}` : ''}</div></div>
       ${vk ? watchCta(vk, DONE.includes(m.status) ? 'Смотреть запись на VK' : 'Смотреть на Больше!') : '<div class="empty">Ссылка на эфир появится ближе к началу</div>'}
     </div>` : ''}`;
   view.querySelectorAll('[data-pane]').forEach((b) => b.addEventListener('click', () => {
@@ -1178,6 +1179,79 @@ async function player(id, token) {
   bindFanActions(view, () => player(id, token));
 }
 
+// ---------- «Эксперты «Больше»»: hosts and commentators vote in the app themselves ----------
+let hostsCache = null;
+async function loadHosts() {
+  if (!hostsCache) hostsCache = await api('/api/hosts').catch(() => ({ hosts: [] }));
+  return hostsCache;
+}
+const normName = (s) => String(s ?? '').toLowerCase().replace(/ё/g, 'е').trim();
+const hostByName = (name) => (hostsCache?.hosts ?? []).find((h) => normName(h.name) === normName(name) || h.aliases.some((a) => normName(a) === normName(name)));
+const ROLE_LABEL = { host: 'Ведущий', ambassador: 'Амбассадор', commentator: 'Комментатор' };
+function hostAva(h, cls = 'h-ava') {
+  if (h.photo) return `<img class="${cls}" src="${esc(h.photo)}" alt="" loading="lazy" data-head>`;
+  const init = h.name.split(/\s+/).map((w) => w[0]).join('').slice(0, 2);
+  return `<span class="${cls} h-init">${esc(init)}</span>`;
+}
+// A commentator's name links to their page when we know them.
+const hostLink = (name) => {
+  const h = hostByName(name);
+  return h ? `<a href="#/host/${encodeURIComponent(h.id)}">${esc(name)}</a>` : esc(name);
+};
+// «Что говорят эксперты»: the hosts' picks for the match (✓ / ✗ once it is over).
+function expertsBlock(m, experts) {
+  if (!experts?.length) return '';
+  const done = DONE.includes(m.status) && m.winner && showScore(m);
+  return `<div class="sec-title" style="margin-top:4px"><span>Что говорят эксперты</span><a href="#/hosts">Все →</a></div>
+    <div class="ex-strip">${experts.map((e) => `<a class="ex-card" href="#/host/${encodeURIComponent(e.id)}">${hostAva(e)}<b>${esc(lastName({ name: e.name }))}</b>
+      <span class="ex-pick${done ? (m.winner === e.pick ? ' ok' : ' no') : ''}">${esc(lastName(e.pick === 1 ? m.p1 : m.p2))}${done ? (m.winner === e.pick ? ' ✓' : ' ✗') : ''}</span></a>`).join('')}</div>`;
+}
+
+async function hostsScreen(token) {
+  const d = await loadHosts();
+  if (stale(token)) return;
+  const group = (role, title) => {
+    const list = d.hosts.filter((h) => h.role === role);
+    return list.length ? `<h2>${title}</h2><div class="host-grid">${list.map((h) => `<a class="host-card" href="#/host/${encodeURIComponent(h.id)}">${hostAva(h)}
+      <b>${esc(h.name)}</b><small>${h.linked ? (h.decided ? `точность ${h.accuracy}% · ${h.decided} ${plural(h.decided, 'прогноз', 'прогноза', 'прогнозов')}` : 'прогнозов пока нет') : 'скоро в приложении'}</small></a>`).join('')}</div>` : '';
+  };
+  view.innerHTML = `<div class="page-head"><h1>Эксперты «Больше»</h1></div>
+    <div class="vs-box"><div><small>Ведущие</small><b>${d.hosts_accuracy != null ? `${d.hosts_accuracy}%` : '—'}</b></div><span>против</span><div><small>Болельщики</small><b>${d.fans_accuracy != null ? `${d.fans_accuracy}%` : '—'}</b></div></div>
+    <div class="note" style="margin-top:8px">Точность прогнозов «Кто выиграет?»: ведущие и комментаторы голосуют в приложении сами, как все.</div>
+    ${group('host', 'Ведущие')}${group('ambassador', 'Амбассадоры')}${group('commentator', 'Комментаторы')}`;
+}
+
+async function hostScreen(id, token) {
+  const [d] = await Promise.all([api(`/api/hosts/${encodeURIComponent(id)}`), loadMe(mskDay(0)), loadHosts()]);
+  if (stale(token)) return;
+  const h = d.host;
+  const c = d.compare;
+  const pick = (i) => {
+    const m = i.match;
+    const picked = i.pick === 1 ? m.p1 : m.p2;
+    return `<a class="pred" href="#/match/${encodeURIComponent(m.match_id)}"><div class="pred-top"><span>${esc(tourTitle(m.tournament))}</span><span>${esc(`${cap(dayWord(m.start_at))}, ${localTime(m.start_at)}`)}</span></div>
+      <div class="pred-body"><div class="pred-players"><div>${avatar(m.p1.photo)}<span class="${showScore(m) && m.winner === 1 ? 'w' : ''}">${esc(m.p1.name)}</span></div>
+        <div>${avatar(m.p2.photo)}<span class="${showScore(m) && m.winner === 2 ? 'w' : ''}">${esc(m.p2.name)}</span></div></div>
+        <div class="pred-pick ${i.right == null || !showScore(m) ? '' : i.right ? 'ok' : 'no'}"><small>Прогноз</small>${avatar(picked.photo, 'head')}<b>${esc(lastName(picked))}</b>
+          ${i.right == null || !showScore(m) ? '' : `<span class="pred-xp">${i.right ? '✓ угадал' : '✗'}</span>`}</div></div></a>`;
+  };
+  const bc = d.broadcasts;
+  const since = bc?.first ? new Date(`${bc.first}T12:00:00Z`).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }).replace(' г.', '') : '';
+  const date = (x) => new Date(`${x}T12:00:00Z`).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }).replace('.', '');
+  const castRow = (b) => `<div class="bc-row">${b.cover ? `<img class="th" src="${esc(b.cover)}" alt="" loading="lazy" data-cover>` : '<span class="th nocov"></span>'}
+    <span class="who"><b>${esc(b.players.map((n) => lastName({ name: n })).join(' — ') || 'Эфир «Больше»')}</b><small>${esc([date(b.date), b.tournament, b.round].filter(Boolean).join(' · '))}</small></span>
+    <span class="bc-acts">${b.vk_url ? `<span class="mc-watch" data-ext="${esc(b.vk_url)}" role="link"><i>${ICON.play}</i>ВК</span>` : ''}</span></div>`;
+  view.innerHTML = `<div class="host-head">${hostAva(h, 'h-ava big')}<div><small>${esc(ROLE_LABEL[h.role] ?? '')} «Больше»</small><h1>${esc(h.name)}</h1>
+      ${h.bio ? `<p>${esc(h.bio)}</p>` : bc?.count ? `<p>Комментирует теннис на «Больше»${since ? ` с ${esc(since)}` : ''}.</p>` : ''}
+      ${h.photo_credit ? `<p class="h-credit">${esc(h.photo_credit)}</p>` : ''}</div></div>
+    ${h.linked ? `<div class="stats4" style="grid-template-columns:repeat(3,minmax(0,1fr))"><div><small>Точность</small><b>${h.accuracy != null ? `${h.accuracy}%` : '—'}</b></div>
+      <div><small>Прогнозов</small><b>${h.votes}</b></div><div><small>Очки</small><b>${h.points}</b></div></div>` : '<div class="empty" style="margin-top:12px">Скоро здесь будут прогнозы — эксперт ещё не подключился к приложению</div>'}
+    ${c ? `<div class="sec-title"><span>Сравнить со мной</span></div><div class="vs-box"><div><small>${esc(lastName({ name: h.name }))}</small><b>${c.host_right} из ${c.common}</b></div><span>общих матчей: ${c.common}</span><div><small>Ты</small><b>${c.me_right} из ${c.common}</b></div></div>
+      ${c.common ? `<div class="note" style="margin-top:8px">${c.me_right > c.host_right ? 'Ты угадываешь лучше эксперта 🔥' : c.me_right === c.host_right ? 'Пока вровень — посмотрим, кто кого' : 'Эксперт пока впереди — догоняй'}</div>` : '<div class="note" style="margin-top:8px">Проголосуй в тех же матчах, что и эксперт, — здесь появится счёт.</div>'}` : ''}
+    ${d.picks.length ? `<div class="sec-title"><span>Последние прогнозы</span></div>${d.picks.map(pick).join('')}` : ''}
+    ${bc?.count ? `<div class="sec-title"><span>Эфиры «Больше»</span><span class="r">${bc.count}</span></div><div class="bc-list">${bc.last.map(castRow).join('')}</div>` : ''}`;
+}
+
 // ---------- profile: Профиль / Мои прогнозы / Мои игроки / Статистика; Достижения, Уровни, Рейтинг ----------
 const PROFILE_TABS = [['', 'Профиль'], ['predictions', 'Мои прогнозы'], ['players', 'Мои игроки'], ['stats', 'Статистика']];
 const ACH_CATS = [['all', 'Все'], ['predictions', 'Прогнозы'], ['tournaments', 'Турниры'], ['players', 'Игроки'], ['activity', 'Активность'], ['community', 'Сообщество']];
@@ -1264,7 +1338,8 @@ async function profile(token, sub = '') {
     <div class="sec-title"><span>Мои игроки</span><a href="#/profile/players">Все игроки →</a></div>
     ${players.length ? `<div class="mp-grid">${players.map(plCard).join('')}</div>` : `<div class="empty">Отметь игроков звёздочкой — здесь будут их ближайшие матчи. <a href="#/players?all=1">Найти игроков</a></div>`}
     <div class="pf-links"><a href="#/achievements"><span>🏅</span><b>Достижения</b><small>${achs.filter((a) => a.level).length} из ${achs.length} открыто</small></a>
-      <a href="#/rating"><span>📊</span><b>Рейтинг</b><small>${me?.rating?.place ? `ты №${nf(me.rating.place)} из ${nf(me.rating.of)}` : 'общий · неделя · турнир'}</small></a></div>`;
+      <a href="#/rating"><span>📊</span><b>Рейтинг</b><small>${me?.rating?.place ? `ты №${nf(me.rating.place)} из ${nf(me.rating.of)}` : 'общий · неделя · турнир'}</small></a>
+      <a href="#/hosts"><span>🎙</span><b>Эксперты «Больше»</b><small>прогнозы ведущих и сравнение с тобой</small></a></div>`;
 }
 
 // «Мои прогнозы» (Активные / Завершённые) and «Статистика».
@@ -1384,7 +1459,7 @@ async function ratingScreen(token, params) {
   if (stale(token)) return;
   const row = (r) => `<div class="bk-row${r.me ? ' me' : ''}"><span>${r.place}</span><span>${esc(r.name)}${r.me ? ' (ты)' : ''}<small class="muted"> · верных ${r.right}</small></span><b>${nf(r.points)}</b></div>`;
   view.innerHTML = `<div class="page-head"><h1>Рейтинг</h1></div>
-    <div class="tabs-line">${[['all', 'Общий'], ['week', 'Неделя'], ['tournament', 'Турнир']].map(([k, label]) => `<a class="${k === period ? 'on' : ''}" href="#/rating?period=${k}">${label}</a>`).join('')}</div>
+    <div class="tabs-line">${[['all', 'Общий'], ['week', 'Неделя'], ['tournament', 'Турнир']].map(([k, label]) => `<a class="${k === period ? 'on' : ''}" href="#/rating?period=${k}">${label}</a>`).join('')}<a href="#/hosts">Ведущие</a></div>
     ${period === 'tournament' ? `<div class="chips" style="margin-top:10px">${tours.map((t) => `<a class="chip${t.key === key ? ' on' : ''}" href="#/rating?period=tournament&t=${encodeURIComponent(t.key)}">${esc(t.tour)} ${esc(t.name)}</a>`).join('')}</div>` : ''}
     ${d.me ? `<div class="rt-me"><span>Ты</span><b>№${nf(d.me.place)}</b><small>из ${nf(d.fans)} · ${nf(d.me.points)} очков</small></div>` : signedIn() ? '<div class="note" style="margin-top:12px">Тебя пока нет в таблице — очки дают верные прогнозы.</div>' : `<div style="margin-top:12px">${loginButton()}</div>`}
     <div class="bk-table" style="margin-top:12px">${(d.top ?? []).map(row).join('') || '<div class="empty">Пока никого — стань первым</div>'}</div>
@@ -1421,7 +1496,7 @@ function cleanPicks(draw, picks) {
 }
 const openKeys = (draw) => draw.rounds.flatMap((round, r) => round.matches.map((m, k) => (m.w == null ? slotKey(r, k) : null))).filter(Boolean);
 
-const RULES = 'Выбери победителя каждого оставшегося матча — до финала. Отправить сетку можно один раз: потом до конца турнира её не поменять. Очки дают матчи, которые начались после отправки: финал — 32, полуфинал — 16, четвертьфинал — 8, 1/8 — 4, 1/16 — 2, ранние круги — 1. Очки сеток идут и в опыт.';
+const RULES = 'Выбери победителя каждого оставшегося матча — до финала. Отправленную сетку можно менять до начала первого матча, потом — до конца турнира уже нет. Очки дают матчи, которые начались после отправки: финал — 32, полуфинал — 16, четвертьфинал — 8, 1/8 — 4, 1/16 — 2, ранние круги — 1. Очки сеток идут и в опыт.';
 
 let tourFilter = 'all';
 let tourStatus = 'now';
@@ -1559,6 +1634,7 @@ function saveDraft(key, picks) {
   try { localStorage.setItem(`bolshe-bracket-${key}`, JSON.stringify(picks)); } catch { /* ignore */ }
 }
 const bracketRound = {};
+const bracketEditing = {};
 
 // Players of a draw by ranking: still in, or out in which round.
 function drawPlayers(d) {
@@ -1599,8 +1675,12 @@ async function bracketScreen(key, token, params = new URLSearchParams()) {
     return;
   }
   const sent = d.entry;
-  const editable = !sent && d.status === 'open' && signedIn();
-  const picks = sent ? sent.picks : cleanPicks(draw, loadDraft(key));
+  // A sent bracket can be changed until its first match starts («Изменить»).
+  const editing = Boolean(sent?.editable && bracketEditing[key]);
+  const editable = (editing || !sent) && d.status === 'open' && signedIn();
+  if (editing && !bracketDrafts[`${key}:edit`]) bracketDrafts[`${key}:edit`] = { ...sent.picks };
+  const draftKey = editing ? `${key}:edit` : key;
+  const picks = editing ? cleanPicks(draw, bracketDrafts[draftKey]) : sent ? sent.picks : cleanPicks(draw, loadDraft(key));
   const sides = drawSides(draw, picks);
   const open = openKeys(draw);
   const filled = open.filter((k) => picks[k] != null).length;
@@ -1636,8 +1716,10 @@ async function bracketScreen(key, token, params = new URLSearchParams()) {
   const status = !signedIn() && !sent
     ? needLogin('Войди через Telegram, чтобы заполнить сетку и попасть в таблицу.')
     : sent
-      ? `<div class="bk-note"><b>Твоя сетка отправлена</b> ${esc(new Date(sent.submitted_at).toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }))}.
-        Очки: <b>${sent.points}</b> · угадано ${sent.correct} из ${sent.decided}${d.status === 'open' ? ` · ещё можно набрать до ${sent.possible}` : ''}${d.place ? ` · место ${d.place} из ${d.table.length}` : ''}</div>`
+      ? `<div class="bk-note"><b>${sent.updated_at ? 'Сетка сохранена' : 'Твоя сетка отправлена'}</b> ${esc(new Date(sent.updated_at ?? sent.submitted_at).toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }))}.
+        Очки: <b>${sent.points}</b> · угадано ${sent.correct} из ${sent.decided}${d.status === 'open' ? ` · ещё можно набрать до ${sent.possible}` : ''}${d.place ? ` · место ${d.place} из ${d.table.length}` : ''}
+        ${sent.editable ? `<div class="bk-edit">${editing ? 'Меняешь сетку — сохрани до начала первого матча' : `Можно изменить до ${esc(`${dayWord(sent.lock_at)} ${localTime(sent.lock_at)}`)}`}
+          <button type="button" class="chip${editing ? '' : ' on'}" data-edit>${editing ? 'Отменить' : 'Изменить'}</button></div>` : ''}</div>`
       : d.status === 'open' ? `<div class="bk-note">${esc(RULES)}</div>` : '<div class="bk-note">Турнир завершён.</div>';
   view.innerHTML = `${head}
     ${status}
@@ -1648,23 +1730,30 @@ async function bracketScreen(key, token, params = new URLSearchParams()) {
       return `<div class="bk-match"><div class="bk-meta"><span>${esc(round.title)} · матч ${k + 1}</span><span>${when}</span></div>${sideRow(h, m, k, a)}${sideRow(a, m, k, h)}</div>`;
     }).join('')}</div>`}
     ${communityBlock(d)}
-    ${editable ? `<div class="bk-send"><button type="button" data-send${filled < open.length ? ' disabled' : ''}>${filled < open.length ? `Заполнено ${filled} из ${open.length}` : 'Отправить сетку'}</button></div>` : ''}
+    ${editable ? `<div class="bk-send"><button type="button" data-send${filled < open.length ? ' disabled' : ''}>${filled < open.length ? `Заполнено ${filled} из ${open.length}` : editing ? 'Сохранить изменения' : 'Отправить сетку'}</button></div>` : ''}
     ${d.table.length ? `<h2>Таблица</h2><div class="bk-table">${d.table.slice(0, 20).map((t) => `<div class="bk-row${t.me ? ' me' : ''}"><span>${t.place}</span><span>${esc(t.name)}${t.me ? ' (ты)' : ''}</span><b>${t.points}</b></div>`).join('')}</div>` : ''}`;
   view.querySelectorAll('[data-round]').forEach((b) => b.addEventListener('click', () => {
     bracketRound[key] = Number(b.dataset.round);
     bracketScreen(key, token, params).catch(() => {});
   }));
+  view.querySelector('[data-edit]')?.addEventListener('click', () => {
+    bracketEditing[key] = !editing;
+    delete bracketDrafts[`${key}:edit`];
+    bracketScreen(key, token, params).catch(() => {});
+  });
   view.querySelectorAll('[data-pick]').forEach((b) => b.addEventListener('click', () => {
-    saveDraft(key, cleanPicks(draw, { ...picks, [b.dataset.pick]: Number(b.dataset.pos) }));
+    const next = cleanPicks(draw, { ...picks, [b.dataset.pick]: Number(b.dataset.pos) });
+    if (editing) bracketDrafts[draftKey] = next;
+    else saveDraft(key, next);
     tg?.HapticFeedback?.selectionChanged?.();
     bracketScreen(key, token, params).catch(() => {});
   }));
   view.querySelector('[data-send]')?.addEventListener('click', async (e) => {
-    const go = () => post(`/api/brackets/${encodeURIComponent(key)}`, { picks: cleanPicks(draw, loadDraft(key)) })
-      .then(() => { toast('Сетка отправлена'); return bracketScreen(key, token, params); })
+    const go = () => post(`/api/brackets/${encodeURIComponent(key)}`, { picks: cleanPicks(draw, editing ? bracketDrafts[draftKey] : loadDraft(key)) })
+      .then(() => { toast(editing ? 'Сетка изменена' : 'Сетка отправлена'); bracketEditing[key] = false; delete bracketDrafts[`${key}:edit`]; return bracketScreen(key, token, params); })
       .catch((error) => toast(error.message));
     e.currentTarget.disabled = true;
-    const text = 'Отправить сетку? После отправки её нельзя будет поменять до конца турнира.';
+    const text = editing ? 'Сохранить новую сетку?' : 'Отправить сетку? Поменять её можно будет до начала первого матча.';
     if (tg?.showConfirm) tg.showConfirm(text, (yes) => (yes ? go() : bracketScreen(key, token, params)));
     else if (window.confirm(text)) go();
     else e.currentTarget.disabled = false;
@@ -1774,10 +1863,10 @@ async function route() {
   const parts = path.split('/').filter(Boolean);
   const tab = {
     '': 'home', question: 'home', matches: 'matches', match: 'matches', tournaments: 'tournaments', tournament: 'tournaments', bracket: 'tournaments',
-    players: 'players', player: 'players', profile: 'profile', settings: 'profile', achievements: 'profile', levels: 'profile', rating: 'profile',
+    players: 'players', player: 'players', profile: 'profile', settings: 'profile', achievements: 'profile', levels: 'profile', rating: 'profile', hosts: 'profile', host: 'profile',
   }[parts[0] ?? ''] ?? 'home';
   document.querySelectorAll('.tabs a').forEach((a) => a.classList.toggle('on', a.dataset.tab === tab));
-  const detail = ['match', 'player', 'settings', 'bracket', 'question', 'tournament', 'achievements', 'levels', 'rating'].includes(parts[0]);
+  const detail = ['match', 'player', 'settings', 'bracket', 'question', 'tournament', 'achievements', 'levels', 'rating', 'hosts', 'host'].includes(parts[0]);
   if (tg?.BackButton) { if (detail) tg.BackButton.show(); else tg.BackButton.hide(); }
   if (!view.innerHTML) view.innerHTML = '<div class="loading">Загружаем…</div>';
   try {
@@ -1789,6 +1878,8 @@ async function route() {
     else if (parts[0] === 'achievements') await achievementsScreen(token, params);
     else if (parts[0] === 'levels') await levelsScreen(token);
     else if (parts[0] === 'rating') await ratingScreen(token, params);
+    else if (parts[0] === 'hosts') await hostsScreen(token);
+    else if (parts[0] === 'host' && parts[1]) await hostScreen(decodeURIComponent(parts[1]), token);
     else if (parts[0] === 'settings') await settings(token);
     else if (parts[0] === 'welcome') await welcome(token);
     else if (parts[0] === 'question') await questionScreen(token);

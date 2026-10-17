@@ -771,6 +771,33 @@ a.lv-card { color: #fff; }
 .rt-me small { color: var(--hint); }
 @media (max-width: 360px) { .stats4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
+/* experts «Больше»: avatars, the strip on a match, the list, a host's page; bracket edit line */
+.h-ava { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; flex: none; background: var(--card2); }
+.h-init { display: inline-grid; place-items: center; background: linear-gradient(135deg, var(--purple), var(--purple-2)); color: #fff; font-weight: 800; font-size: 15px; }
+.h-ava.big { width: 88px; height: 88px; font-size: 28px; box-shadow: 0 0 0 3px var(--lime); }
+.ex-strip { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding-bottom: 4px; }
+.ex-strip::-webkit-scrollbar { display: none; }
+.ex-card { flex: none; width: 104px; display: flex; flex-direction: column; align-items: center; gap: 5px; text-align: center; background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 12px 6px; color: var(--text); }
+.ex-card b { font-size: 13px; }
+.ex-pick { font-size: 12px; font-weight: 800; padding: 3px 8px; border-radius: 999px; background: var(--chip); color: var(--hl); }
+.ex-pick.ok { background: color-mix(in srgb, var(--win) 18%, transparent); color: var(--win); }
+.ex-pick.no { color: var(--hint); }
+.host-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.host-card { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 14px 8px; color: var(--text); }
+.host-card .h-ava { width: 60px; height: 60px; font-size: 20px; }
+.host-card b { font-size: 14px; font-weight: 800; }
+.host-card small { font-size: 11.5px; color: var(--hint); }
+.vs-box { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; text-align: center; background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 14px; }
+.vs-box small { display: block; font-size: 11px; font-weight: 800; color: var(--hint); text-transform: uppercase; letter-spacing: .05em; }
+.vs-box b { font-size: 24px; font-weight: 800; color: var(--hl); }
+.vs-box > span { font-size: 12px; color: var(--hint); }
+.host-head { display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: 16px; align-items: center; margin-top: 6px; }
+.host-head small { color: var(--hint); font-weight: 700; text-transform: uppercase; letter-spacing: .05em; font-size: 11px; }
+.host-head h1 { margin: 2px 0 4px; }
+.host-head p { margin: 0; color: var(--hint); font-size: 13px; line-height: 1.4; }
+.h-credit { font-size: 10.5px !important; opacity: .7; margin-top: 6px !important; }
+.bk-edit { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); font-weight: 600; }
+
 /* covers (bracket/old places) */
 .cover { position: relative; aspect-ratio: 16 / 9; border-radius: 16px; overflow: hidden; background: #140f1d url("img/paint.svg") center / cover; }
 .cover .heads { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 6%; }

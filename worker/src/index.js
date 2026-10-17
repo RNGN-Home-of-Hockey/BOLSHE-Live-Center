@@ -11,6 +11,7 @@
 //   POST /api/web-login  GET /api/web-login?code=  POST /api/web-logout   website sign-in through the bot
 //   POST /api/highlights/push (x-push-token)  GET /api/players/<id>/media   highlights + «Больше» broadcasts of a player
 //   GET  /api/tournaments  GET /api/tournaments/<key>                       «Турниры»: now / soon / done and the tournament page
+//   GET  /api/hosts  GET /api/hosts/<id>                                    «Эксперты «Больше»» (hosts vote in the app themselves)
 //   POST /telegram/webhook               Telegram updates (secret header required)
 // Cron (every 10 min): schedule sheet -> broadcasts; registers the bot webhook once the token exists.
 
@@ -20,6 +21,7 @@ import { explainTournament } from '../../src/insights/tournaments.js';
 import { bracketView, listBrackets, submitBracket, syncBrackets } from './brackets.js';
 import { authUser, castVote, fanProfile, myPredictions, setFollow, setPrefs, trackEvent } from './fans.js';
 import { ratingView } from './rating.js';
+import { hostView, listHosts, matchExperts } from './hosts.js';
 import { matchCard } from './match-details.js';
 import { mediaCounts, serveMedia, syncMedia } from './media.js';
 import { matchesForDate, matchesOfPlayer, syncMatchDays } from './matches-sync.js';
@@ -253,6 +255,12 @@ export default {
       // sending needs the signed Telegram data.
       if (path === '/api/brackets') return json({ brackets: await listBrackets(env, await authUser(env, request)) });
       if (path === '/api/tournaments') return json({ tournaments: await listTournaments(env, await authUser(env, request)) });
+      if (path === '/api/hosts') return json(await listHosts(env), 200, 60);
+      const hostPath = path.match(/^\/api\/hosts\/([a-z0-9-]+)$/);
+      if (hostPath) {
+        const hv = await hostView(env, hostPath[1], await authUser(env, request));
+        return hv ? json(hv) : json({ ok: false, error: 'not found' }, 404);
+      }
       if (path === '/api/rating') {
         const result = await ratingView(env, await authUser(env, request), { period: url.searchParams.get('period') ?? 'all', tournament: url.searchParams.get('t') });
         return json(result, result.ok ? 200 : result.status ?? 400);
@@ -380,7 +388,9 @@ export default {
         return json({ date, matches }, 200, 20);
       }
       if (path.startsWith('/api/matches/')) {
-        const card = await matchCard(env, decodeURIComponent(path.slice('/api/matches/'.length)));
+        const matchId = decodeURIComponent(path.slice('/api/matches/'.length));
+        const card = await matchCard(env, matchId);
+        if (card) card.experts = await matchExperts(env.DB, matchId);
         return card ? json(card, 200, 30) : json({ ok: false, error: 'not found' }, 404);
       }
       if (path === '/api/home') {

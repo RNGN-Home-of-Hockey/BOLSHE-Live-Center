@@ -114,4 +114,18 @@ export function currentRound(draw) {
   return i < 0 ? draw.rounds.length - 1 : i;
 }
 
+// Until when a sent bracket can be changed (owner 2026-10-18: "до начала первого матча"): the earliest start
+// among the matches still open now; a match already on court locks at once. null = no start time known.
+export function lockTime(draw, now = Date.now()) {
+  let first = null;
+  for (const round of draw.rounds) {
+    for (const m of round.matches) {
+      if (m.w != null) continue;
+      if (m.status === 'live') return new Date(now).toISOString();
+      if (m.start && (!first || m.start < first)) first = m.start;
+    }
+  }
+  return first;
+}
+
 export const isFinished = (draw) => draw.rounds.length > 0 && draw.rounds.at(-1).matches.every((m) => m.w != null);
