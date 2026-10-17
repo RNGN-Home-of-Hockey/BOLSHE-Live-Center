@@ -647,6 +647,77 @@ details.rules summary { color: var(--text); font-weight: 700; cursor: pointer; }
 .bc-acts .mc-hl, .bc-acts .mc-watch { height: 32px; font-size: 12px; }
 .bc-acts .mc-hl i, .bc-acts .mc-watch i { width: 22px; height: 22px; }
 
+/* matches: tournament chips, status tabs; ★ favourite tournaments */
+.filter-cap { font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--hint); margin: 14px 2px 8px; }
+.tabs-line { display: flex; gap: 18px; margin: 14px 0 4px; border-bottom: 1px solid var(--line); overflow-x: auto; scrollbar-width: none; }
+.tabs-line::-webkit-scrollbar { display: none; }
+.tabs-line a { padding: 10px 2px 9px; color: var(--hint); font-weight: 700; font-size: 14px; white-space: nowrap; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.tabs-line a.on { color: var(--hl); border-bottom-color: var(--hl); }
+.tabs-line small { font-size: 11px; opacity: .75; }
+.fav { border: 0; background: rgba(0, 0, 0, .35); color: #fff; width: 34px; height: 34px; border-radius: 10px; font-size: 18px; line-height: 1; cursor: pointer; }
+.fav.on { background: var(--lime); color: var(--lime-ink); }
+
+/* «Турниры»: list cards and the tournament page */
+.tl-card { position: relative; overflow: hidden; border-radius: 24px; color: #fff; isolation: isolate; display: flex; flex-direction: column;
+  background: linear-gradient(160deg, rgba(20, 15, 29, .2), rgba(20, 15, 29, .86) 70%), #241445 url("img/paint.svg") center / cover; border: 1px solid rgba(255, 255, 255, .08); }
+.tl-card.wta { background: linear-gradient(160deg, rgba(60, 20, 90, .25), rgba(30, 12, 50, .88) 70%), #3b1666 url("img/paint.svg") 30% center / cover; }
+.tl-card a { color: inherit; }
+.tl-main { display: flex; flex-direction: column; gap: 4px; padding: 16px 16px 10px; }
+.tl-card .tc-logo { right: 14px; top: 14px; width: 50px; height: 50px; padding: 3px; }
+.tl-card .tc-city { font-size: 38px; padding-right: 110px; }
+.tl-fav { position: absolute; right: 70px; top: 22px; z-index: 2; }
+.tl-bk { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; gap: 10px; align-items: center; margin: 0 12px; padding: 10px 12px; border-radius: 16px;
+  background: rgba(0, 0, 0, .32); border: 1px solid rgba(255, 255, 255, .1); }
+.tl-bk .ic { font-size: 20px; }
+.tl-bk b { display: block; font-size: 14px; }
+.tl-bk small { display: block; font-size: 12px; color: rgba(255, 255, 255, .7); }
+.tl-bk .go { font-size: 22px; color: rgba(255, 255, 255, .6); }
+.tl-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 14px 14px; font-size: 13px; }
+.tl-live { display: inline-flex; align-items: center; gap: 7px; font-weight: 700; }
+.tl-live i { width: 8px; height: 8px; border-radius: 50%; background: var(--live); animation: blink 1.4s ease-in-out infinite; }
+.tl-soon, .tl-hl { color: rgba(255, 255, 255, .78); font-weight: 600; }
+.tl-go { padding: 8px 12px; border-radius: 999px; background: rgba(255, 255, 255, .1); border: 1px solid rgba(255, 255, 255, .18); font-weight: 700; white-space: nowrap; }
+.tp-head { position: relative; overflow: hidden; border-radius: 26px; padding: 18px; color: #fff; min-height: 170px; display: flex; flex-direction: column; justify-content: flex-end; gap: 4px;
+  background: linear-gradient(180deg, rgba(20, 15, 29, .1), rgba(20, 15, 29, .88)), #241445 url("img/paint.svg") center / cover; border: 1px solid rgba(255, 255, 255, .08); }
+.tp-head.wta { background: linear-gradient(180deg, rgba(60, 20, 90, .1), rgba(30, 12, 50, .9)), #3b1666 url("img/paint.svg") 30% center / cover; }
+.tp-head .tc-city { font-size: 44px; }
+.tp-head .tl-fav { right: 76px; top: 18px; }
+.tp-tabs { margin: 12px 0 4px; }
+.tp-body { margin-top: 8px; }
+.tp-game { display: flex; flex-direction: column; gap: 12px; background: var(--card); border: 1px solid var(--line); border-radius: 22px; padding: 14px; }
+.tp-game-top { display: flex; gap: 12px; align-items: center; }
+.tp-game-top .ic { font-size: 30px; }
+.tp-game-top b { display: block; font-size: 17px; font-weight: 800; }
+.tp-game-top small { color: var(--hint); }
+.tp-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); text-align: center; }
+.tp-stats div + div { border-left: 1px solid var(--line); }
+.tp-stats b { display: block; font-size: 22px; font-weight: 800; }
+.tp-stats small { font-size: 11px; color: var(--hint); }
+.tl-hl-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+.h1-link { color: inherit; }
+/* bracket as a tree: columns of rounds, the champion at the end */
+.tree { display: flex; gap: 16px; overflow-x: auto; padding: 4px 2px 12px; scrollbar-width: none; margin-bottom: 12px; }
+.tree::-webkit-scrollbar { display: none; }
+.tr-col { display: flex; flex-direction: column; width: 158px; flex: none; }
+.tr-cap { font-size: 11px; font-weight: 800; color: var(--hint); text-transform: uppercase; letter-spacing: .06em; text-align: center; margin-bottom: 6px; }
+.tr-cap small { opacity: .7; }
+.tr-cell { flex: 1; display: flex; align-items: center; padding: 4px 0; }
+.tr-match { position: relative; width: 100%; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 3px; }
+.tr-col:not(.tr-champ) .tr-match::after { content: ""; position: absolute; right: -17px; top: 50%; width: 16px; border-top: 1.5px solid var(--line); }
+.tr-side { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; gap: 6px; align-items: center; width: 100%; border: 1.5px solid transparent; background: none;
+  color: var(--text); padding: 5px 6px; border-radius: 10px; font-size: 13px; font-weight: 600; text-align: left; cursor: pointer; }
+.tr-side .ava, .tr-side .ph { width: 22px; height: 22px; }
+.tr-side .bk-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tr-side.picked { border-color: var(--hl); background: color-mix(in srgb, var(--hl) 12%, transparent); }
+.tr-side.won .bk-name { font-weight: 800; }
+.tr-side.lost { opacity: .45; }
+.tr-side:disabled { cursor: default; }
+.tr-champ { width: 130px; }
+.tr-win { width: 100%; min-height: 110px; border: 1.5px dashed var(--line); border-radius: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 6px; text-align: center; font-weight: 800; padding: 10px; }
+.tr-win .head, .tr-win .ph { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 2px var(--lime); }
+.tr-win small { font-size: 11px; color: var(--hint); font-weight: 600; }
+
 /* covers (bracket/old places) */
 .cover { position: relative; aspect-ratio: 16 / 9; border-radius: 16px; overflow: hidden; background: #140f1d url("img/paint.svg") center / cover; }
 .cover .heads { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 6%; }

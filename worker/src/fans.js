@@ -3,7 +3,7 @@
 //   GET  /api/me?date=YYYY-MM-DD   header X-Telegram-Init-Data
 //   POST /api/votes   {match_id, pick: 1|2}
 //   POST /api/follows {player_id | player_ids: [...], on: true|false}
-//   POST /api/prefs   {public, surface, tours, since, onboarded}   (onboarding and settings)
+//   POST /api/prefs   {public, surface, tours, since, onboarded, fav_tournaments}   (onboarding, settings, ★ tournaments)
 //   POST /api/events  {kind: 'vk', ref}                            (a «Больше» broadcast opened from the app)
 
 import { fanAchievements } from '../../src/game/achievements.js';
@@ -70,12 +70,16 @@ export async function setPrefs(env, user, body) {
     public: typeof body?.public === 'boolean' ? (body.public ? 1 : 0) : old?.public ?? 1,
     surface: pick('surface'), tours: pick('tours'), since: pick('since'),
     onboarded_at: body?.onboarded ? old?.onboarded_at ?? now : old?.onboarded_at ?? null,
+    // ★ tournaments: up to 20 names like «Шанхай».
+    fav_tournaments: Array.isArray(body?.fav_tournaments)
+      ? JSON.stringify([...new Set(body.fav_tournaments.map((x) => String(x).trim().slice(0, 40)).filter(Boolean))].slice(0, 20))
+      : old?.fav_tournaments ?? null,
   };
-  await env.DB.prepare(`INSERT INTO fan_prefs (user_id, public, surface, tours, since, onboarded_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)
+  await env.DB.prepare(`INSERT INTO fan_prefs (user_id, public, surface, tours, since, onboarded_at, fav_tournaments, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(user_id) DO UPDATE SET public = excluded.public, surface = excluded.surface, tours = excluded.tours,
-      since = excluded.since, onboarded_at = excluded.onboarded_at, updated_at = excluded.updated_at`)
-    .bind(user.id, row.public, row.surface, row.tours, row.since, row.onboarded_at, now).run();
-  return { ok: true, prefs: { ...row, public: Boolean(row.public) } };
+      since = excluded.since, onboarded_at = excluded.onboarded_at, fav_tournaments = excluded.fav_tournaments, updated_at = excluded.updated_at`)
+    .bind(user.id, row.public, row.surface, row.tours, row.since, row.onboarded_at, row.fav_tournaments, now).run();
+  return { ok: true, prefs: { ...row, public: Boolean(row.public), fav_tournaments: JSON.parse(row.fav_tournaments ?? '[]') } };
 }
 
 export async function trackEvent(env, user, body) {
@@ -229,7 +233,10 @@ export async function fanProfile(env, user, date) {
     achievements: fanAchievements(voteRows.map((r) => ({ ...r, mine: mySet.has(r.p1_player) || mySet.has(r.p2_player), bolshe: Boolean(r.bolshe) })), {
       follows: followed.length, bracketPoints: await bracketPointsOf(db, user.id), appDays: days.map((d) => d.day), streams: streams?.n ?? 0,
     }),
-    prefs: prefs ? { public: Boolean(prefs.public), surface: prefs.surface, tours: prefs.tours, since: prefs.since, onboarded_at: prefs.onboarded_at } : null,
+    prefs: prefs ? {
+      public: Boolean(prefs.public), surface: prefs.surface, tours: prefs.tours, since: prefs.since, onboarded_at: prefs.onboarded_at,
+      fav_tournaments: JSON.parse(prefs.fav_tournaments ?? '[]'),
+    } : null,
     brackets: await myBrackets(db, user.id),
   };
 }

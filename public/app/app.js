@@ -242,12 +242,33 @@ async function loadMe(date) {
   if (!signedIn()) { me = null; return null; }
   try {
     me = await api(`/api/me?date=${date}`);
+    if (Array.isArray(me?.prefs?.fav_tournaments) && me.prefs.fav_tournaments.length) favTours = me.prefs.fav_tournaments;
   } catch (error) {
     me = null;
     if (session && /HTTP 401/.test(error.message)) saveSession(null); // the website session has ended
   }
   return me;
 }
+
+// ---------- ★ favourite tournaments: in the fan's settings when signed in, on this device otherwise ----------
+let favTours = [];
+try { favTours = JSON.parse(localStorage.getItem('bolshe-fav-tours') || '[]'); } catch { favTours = []; }
+const isFav = (name) => favTours.includes(name);
+function toggleFav(name) {
+  favTours = isFav(name) ? favTours.filter((x) => x !== name) : [...favTours, name];
+  try { localStorage.setItem('bolshe-fav-tours', JSON.stringify(favTours)); } catch { /* ignore */ }
+  if (signedIn()) post('/api/prefs', { fav_tournaments: favTours }).catch(() => {});
+  toast(isFav(name) ? `«${name}» в избранном — будет первым` : `«${name}» убран из избранного`);
+}
+const favButton = (name) => `<button class="fav${isFav(name) ? ' on' : ''}" type="button" data-fav="${esc(name)}" aria-label="Избранный турнир">${isFav(name) ? '★' : '☆'}</button>`;
+document.addEventListener('click', (event) => {
+  const b = event.target.closest?.('[data-fav]');
+  if (!b) return;
+  event.preventDefault();
+  event.stopPropagation();
+  toggleFav(b.dataset.fav);
+  route();
+}, true);
 
 // ---------- «Войти через Telegram» on the website ----------
 const TG_ICON = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.4 4.2 2.9 11.3c-1.3.5-1.2 1.2-.2 1.5l4.7 1.5 1.8 5.6c.2.6.4.8.9.8.4 0 .6-.2.9-.5l2.3-2.2 4.7 3.5c.9.5 1.5.2 1.7-.8l3.1-14.6c.3-1.3-.5-1.9-1.4-1.5zM9.4 14l8.6-5.4c.4-.3.8-.1.5.2l-7.1 6.4-.3 3.2z"/></svg>';
@@ -670,10 +691,11 @@ function datesLabel(fromIso, toIso) {
 
 // A big tournament poster: "ATP 1000", the city in capitals, dates · surface, the logo,
 // buttons Сетка / Матчи / Игроки.
-function tourPoster({ tour, tier, city, info, logo, inner = '', key = null }) {
+function tourPoster({ tour, tier, city, info, logo, inner = '', key = null, tkey = null }) {
   const q = encodeURIComponent(city);
+  const cityHtml = tkey ? `<a href="#/tournament/${encodeURIComponent(tkey)}">${esc(city)}</a>` : esc(city);
   return `<div class="tcard${tour === 'WTA' ? ' wta' : ''}">${logo ? `<img class="tc-logo" src="${esc(logo)}" alt="" loading="lazy" data-cover>` : ''}
-    <div class="tc-tier">${esc(tierLabel({ tier, tour }))}</div><div class="tc-city">${esc(city)}</div>${info ? `<div class="tc-dates">${esc(info)}</div>` : ''}
+    <div class="tc-tier">${esc(tierLabel({ tier, tour }))}</div><div class="tc-city">${cityHtml}</div>${info ? `<div class="tc-dates">${esc(info)}</div>` : ''}
     ${inner}
     <div class="tc-btns">${key ? `<a class="main" href="#/bracket/${encodeURIComponent(key)}">Сетка</a>` : ''}<a href="#/matches?f=${esc(tour ?? 'all')}&t=${q}">Матчи</a>${key ? `<a href="#/bracket/${encodeURIComponent(key)}?view=players">Игроки</a>` : ''}</div>
   </div>`;
@@ -684,7 +706,7 @@ function tournamentsBlock(d) {
   const challengers = d.tournaments.filter((t) => t.level === 'challenger').length;
   if (!tour.length && !challengers) return '';
   const card = (t) => tourPoster({
-    tour: t.tour, tier: t.tier, city: t.name, logo: t.logo, key: t.bracket_key,
+    tour: t.tour, tier: t.tier, city: t.name, logo: t.logo, key: t.bracket_key, tkey: t.key,
     info: [SURFACE[t.surface], t.round, t.live ? `идёт ${t.live} ${plural(t.live, 'матч', 'матча', 'матчей')}` : null].filter(Boolean).join(' · '),
     inner: `${t.bracket_key ? bracketLine(t.bracket_key) : ''}
       ${t.upcoming?.length ? `<div class="ahead">Главные матчи впереди</div>
@@ -794,14 +816,18 @@ async function questionScreen(token) {
 }
 
 // ---------- matches ----------
-const MATCH_FILTERS = [['all', 'Все'], ['live', 'В эфире'], ['ATP', 'ATP'], ['WTA', 'WTA'], ['challenger', 'Челленджеры'], ['itf', 'ITF']];
+const MATCH_FILTERS = [['all', 'Все'], ['ATP', 'ATP'], ['WTA', 'WTA'], ['challenger', 'Челленджеры'], ['itf', 'ITF']];
+const STATUS_TABS = [['all', 'Все'], ['live', 'Live'], ['upcoming', 'Предстоящие'], ['done', 'Завершённые']];
+const statusOf = (m) => (m.status === 'live' ? 'live' : m.status === 'scheduled' ? 'upcoming' : 'done');
 
 async function matches(params, token) {
   const date = params.get('date') ?? mskDay(0);
-  const f = params.get('f') ?? ({ challenger: 'challenger', itf: 'itf' }[params.get('level')] ?? 'all');
+  let f = params.get('f') ?? ({ challenger: 'challenger', itf: 'itf' }[params.get('level')] ?? 'all');
+  let s = params.get('s') ?? 'all';
+  if (f === 'live') { f = 'all'; s = 'live'; } // old links «В эфире»
   const only = params.get('t') ?? '';
   let list;
-  if (f === 'live') {
+  if (s === 'live' && f === 'all') {
     const [a, c] = await Promise.all([api(`/api/matches?date=${date}&level=tour`), api(`/api/matches?date=${date}&level=challenger`)]);
     list = [...a.matches, ...c.matches].filter((m) => m.status === 'live');
   } else {
@@ -809,26 +835,37 @@ async function matches(params, token) {
     list = (await api(`/api/matches?date=${date}&level=${level}${f === 'ATP' || f === 'WTA' ? `&tour=${f}` : ''}`)).matches;
   }
   if (stale(token)) return;
+  // Tournaments of the day for the chips: ★ favourites first, then the busiest.
+  const tourCount = new Map();
+  for (const m of list) tourCount.set(m.tournament.name, (tourCount.get(m.tournament.name) ?? 0) + 1);
+  const tourNames = [...tourCount.keys()].filter(Boolean).sort((a, c) => isFav(c) - isFav(a) || tourCount.get(c) - tourCount.get(a));
   if (only) list = list.filter((m) => m.tournament.name === only);
+  const byStatus = { all: list.length, live: 0, upcoming: 0, done: 0 };
+  for (const m of list) byStatus[statusOf(m)] += 1;
+  if (s !== 'all') list = list.filter((m) => statusOf(m) === s);
   // Live first, then what is still to come by the clock, then the finished ones (latest first);
   // singles before doubles.
   const group = (m) => (m.status === 'live' ? 0 : m.status === 'scheduled' ? 1 : 2);
   list.sort((a, c) => group(a) - group(c) || (a.is_doubles - c.is_doubles)
     || (group(a) === 2 ? Date.parse(c.start_at) - Date.parse(a.start_at) : Date.parse(a.start_at) - Date.parse(c.start_at)));
   const link = (over) => {
-    const p = new URLSearchParams({ date, f, ...(only ? { t: only } : {}), ...over });
+    const p = new URLSearchParams({ date, f, s, ...(only ? { t: only } : {}), ...over });
     for (const [k, v] of [...p]) if (!v) p.delete(k);
     return `#/matches?${p}`;
   };
   const shift = (n) => new Date(Date.parse(`${date}T12:00:00Z`) + n * 86400e3).toISOString().slice(0, 10);
   view.innerHTML = `<div class="page-head"><h1>Матчи</h1>
       <label class="icon-btn cal" title="Выбрать день">${ICON.cal}<input type="date" data-pick min="${mskDay(-7)}" max="${mskDay(7)}" value="${esc(date)}" aria-label="Выбрать день"></label></div>
-    <div class="chips">${MATCH_FILTERS.map(([k, label]) => `<a class="chip${k === f ? ' on' : ''}" href="${link({ f: k })}">${label}</a>`).join('')}</div>
-    ${only ? `<div class="chips" style="margin-top:8px"><a class="chip on" href="${link({ t: '' })}">${esc(only)} ✕</a></div>` : ''}
+    <div class="chips">${MATCH_FILTERS.map(([k, label]) => `<a class="chip${k === f ? ' on' : ''}" href="${link({ f: k, t: '' })}">${label}</a>`).join('')}</div>
+    ${tourNames.length > 1 || only ? `<div class="filter-cap">Турнир</div>
+      <div class="chips"><a class="chip${only ? '' : ' on'}" href="${link({ t: '' })}">Все турниры</a>${(only && !tourNames.includes(only) ? [only, ...tourNames] : tourNames)
+        .map((n) => `<a class="chip${n === only ? ' on' : ''}" href="${link({ t: n })}">${isFav(n) ? '★ ' : ''}${esc(n)}</a>`).join('')}</div>` : ''}
+    <div class="tabs-line">${STATUS_TABS.map(([k, label]) => `<a class="${k === s ? 'on' : ''}" href="${link({ s: k })}">${label}${k !== 'all' && byStatus[k] ? ` <small>${byStatus[k]}</small>` : ''}</a>`).join('')}</div>
     <div class="date-row">${date > mskDay(-7) ? `<a class="icon-btn" href="${link({ date: shift(-1) })}" aria-label="День назад">${ICON.prev}</a>` : '<span></span>'}
       <b>${esc(dateTitle(date))}</b>${date < mskDay(7) ? `<a class="icon-btn" href="${link({ date: shift(1) })}" aria-label="День вперёд">${ICON.next}</a>` : '<span></span>'}</div>
     ${list.map(matchCard).join('')
-      || `<div class="empty">${f === 'live' ? 'Сейчас в эфире ничего нет' : date > mskDay(1) ? 'Расписание на этот день ещё не опубликовано — обычно оно появляется накануне' : 'В этот день матчей нет'}</div>`}`;
+      || `<div class="empty">${s === 'live' ? 'Сейчас в эфире ничего нет' : s === 'upcoming' ? 'Больше матчей в этот день не будет' : s === 'done' ? 'Завершённых матчей пока нет'
+        : date > mskDay(1) ? 'Расписание на этот день ещё не опубликовано — обычно оно появляется накануне' : 'В этот день матчей нет'}</div>`}`;
   const pick = view.querySelector('[data-pick]');
   pick?.addEventListener('change', () => { if (pick.value) location.hash = link({ date: pick.value }); });
   if (date === mskDay(0)) refreshEvery(30000, () => matches(params, token));
@@ -1230,29 +1267,128 @@ const openKeys = (draw) => draw.rounds.flatMap((round, r) => round.matches.map((
 const RULES = 'Выбери победителя каждого оставшегося матча — до финала. Отправить сетку можно один раз: потом до конца турнира её не поменять. Очки дают матчи, которые начались после отправки: финал — 32, полуфинал — 16, четвертьфинал — 8, 1/8 — 4, 1/16 — 2, ранние круги — 1. Очки сеток идут и в опыт.';
 
 let tourFilter = 'all';
-function bracketPoster(b) {
-  const info = [datesLabel(b.starts_at, b.ends_at), SURFACE[b.surface], b.status === 'open' ? (b.round ? `идёт ${b.round.toLowerCase()}` : null) : 'завершён'].filter(Boolean).join(' · ');
-  const mine = b.mine
-    ? `${bracketLine(b.bracket_key)}<div class="bk-mine"><b>${b.mine.points}</b> ${plural(b.mine.points, 'очко', 'очка', 'очков')}${b.status === 'open' ? ` · можно набрать до ${b.mine.possible}` : ''}</div>`
-    : b.status === 'open' ? `<div class="bk-cta">🏆 Заполни сетку — осталось ${b.open_matches} ${plural(b.open_matches, 'матч', 'матча', 'матчей')}</div>` : '';
-  return tourPoster({
-    tour: b.tour, tier: b.tier, city: b.city ?? b.name, logo: b.logo, key: b.bracket_key, info,
-    inner: `${mine}${b.champion ? `<div class="tc-dates">🏆 Чемпион: ${esc(b.champion)}</div>` : ''}<div class="tc-dates">${b.fans} ${plural(b.fans, 'участник', 'участника', 'участников')} в игре</div>`,
-  });
+let tourStatus = 'now';
+const TOUR_TABS = [['now', 'Идут сейчас'], ['soon', 'Скоро'], ['done', 'Завершены']];
+const dayIso = (d) => (d ? `${d}T12:00:00Z` : null);
+// One tournament in the list: logo, ★, «ATP 1000», the city, dates · surface, the game bracket line, live now.
+function tourCard(t) {
+  const dates = datesLabel(t.starts_at ?? dayIso(t.first_day), t.ends_at ?? dayIso(t.last_day));
+  const info = [dates, SURFACE[t.surface]].filter(Boolean).join(' · ');
+  const b = t.bracket;
+  const mine = b ? me?.brackets?.find((x) => x.bracket_key === b.key) : null;
+  const bk = !b ? '' : `<a class="tl-bk" href="#/bracket/${encodeURIComponent(b.key)}"><span class="ic">🏆</span><span><b>Игровая сетка</b><small>${mine
+    ? esc(`очков ${b.mine?.points ?? mine.points}${mine.better_than != null ? ` · лучше, чем у ${mine.better_than}% участников` : ''}`)
+    : b.status === 'open' ? `Осталось ${b.open_matches} ${plural(b.open_matches, 'матч', 'матча', 'матчей')} для прогноза` : b.champion ? `Чемпион: ${esc(b.champion)}` : 'Турнир завершён'}</small></span><span class="go">›</span></a>`;
+  const foot = t.status === 'soon'
+    ? `<span class="tl-soon">🕑 Скоро начнётся${t.next_start ? ` · первый матч ${esc(dayWord(t.next_start))} в ${esc(localTime(t.next_start))}` : ''}</span>`
+    : t.live ? `<span class="tl-live"><i></i>${t.live} ${plural(t.live, 'матч', 'матча', 'матчей')} сейчас</span>` : t.highlights ? `<span class="tl-hl">▶ хайлайтов: ${t.highlights}</span>` : '<span></span>';
+  return `<div class="tl-card${t.tour === 'WTA' ? ' wta' : ''}"><a class="tl-main" href="#/tournament/${encodeURIComponent(t.key)}">
+      ${t.logo ? `<img class="tc-logo" src="${esc(t.logo)}" alt="" loading="lazy" data-cover>` : ''}
+      <div class="tc-tier">${esc(tierLabel(t))}</div><div class="tc-city">${esc(t.name)}</div>
+      <div class="tc-dates">${esc(info)}${b?.round && t.status === 'now' ? ` · ${esc(b.round.toLowerCase())}` : ''}</div></a>
+    <span class="tl-fav">${favButton(t.name)}</span>
+    ${bk}
+    <div class="tl-foot">${foot}<a class="tl-go" href="#/tournament/${encodeURIComponent(t.key)}?tab=matches">Матчи турнира →</a></div></div>`;
 }
 
 async function tournamentsTab(token) {
-  const [d] = await Promise.all([api('/api/brackets'), loadMe(mskDay(0))]);
+  const [d] = await Promise.all([api('/api/tournaments'), loadMe(mskDay(0))]);
   if (stale(token)) return;
-  const list = d.brackets.filter((b) => tourFilter === 'all' || b.tour === tourFilter);
-  const open = list.filter((b) => b.status === 'open');
-  const done = list.filter((b) => b.status !== 'open');
+  const byTour = d.tournaments.filter((t) => tourFilter === 'all' || (tourFilter === 'challenger' ? t.level === 'challenger' : t.level === 'tour' && t.tour === tourFilter));
+  const counts = Object.fromEntries(TOUR_TABS.map(([k]) => [k, byTour.filter((t) => t.status === k).length]));
+  const order = (a, c) => isFav(c.name) - isFav(a.name) || (a.level === 'tour' ? 0 : 1) - (c.level === 'tour' ? 0 : 1)
+    || ['slam', 'finals', '1000', '500', '250', 'tour', 'challenger'].indexOf(a.tier) - ['slam', 'finals', '1000', '500', '250', 'tour', 'challenger'].indexOf(c.tier)
+    || (tourStatus === 'done' ? c.last_day.localeCompare(a.last_day) : a.first_day.localeCompare(c.first_day));
+  const list = byTour.filter((t) => t.status === tourStatus).sort(order);
   view.innerHTML = `<div class="page-head"><h1>Турниры</h1></div>
-    <div class="chips">${[['all', 'Все'], ['ATP', 'ATP'], ['WTA', 'WTA']].map(([k, label]) => `<button class="chip${k === tourFilter ? ' on' : ''}" type="button" data-tf="${k}">${label}</button>`).join('')}<a class="chip" href="#/matches?f=challenger">Челленджеры</a></div>
-    <div class="tours" style="margin-top:12px">${open.length ? open.map(bracketPoster).join('') : '<div class="empty">Сейчас сеток нет — они появятся с началом основной сетки турнира</div>'}</div>
-    ${done.length ? `<h2>Завершённые</h2><div class="tours">${done.map(bracketPoster).join('')}</div>` : ''}
+    <div class="chips">${[['all', 'Все'], ['ATP', 'ATP'], ['WTA', 'WTA'], ['challenger', 'Челленджеры']].map(([k, label]) => `<button class="chip${k === tourFilter ? ' on' : ''}" type="button" data-tf="${k}">${label}</button>`).join('')}</div>
+    <div class="tabs-line">${TOUR_TABS.map(([k, label]) => `<a href="#/tournaments" class="${k === tourStatus ? 'on' : ''}" data-ts="${k}">${label}${counts[k] ? ` <small>${counts[k]}</small>` : ''}</a>`).join('')}</div>
+    <div class="tours" style="margin-top:12px">${list.map(tourCard).join('') || `<div class="empty">${tourStatus === 'soon' ? 'Новые турниры появятся, когда опубликуют их расписание' : tourStatus === 'done' ? 'Завершённых турниров за последние дни нет' : 'Сейчас турниров нет'}</div>`}</div>
     <details class="rules"><summary>Как играть в сетку</summary>${esc(RULES)}</details>`;
   view.querySelectorAll('[data-tf]').forEach((b) => b.addEventListener('click', () => { tourFilter = b.dataset.tf; tournamentsTab(token).catch(() => {}); }));
+  view.querySelectorAll('[data-ts]').forEach((b) => b.addEventListener('click', (e) => { e.preventDefault(); tourStatus = b.dataset.ts; tournamentsTab(token).catch(() => {}); }));
+}
+
+// ---------- the tournament page: Обзор / Матчи / Сетка / Игроки / Хайлайты ----------
+const TOUR_PAGE_TABS = [['overview', 'Обзор'], ['matches', 'Матчи'], ['bracket', 'Сетка'], ['players', 'Игроки'], ['highlights', 'Хайлайты']];
+
+function communityBlock(d) {
+  if (!d?.community?.length) return '';
+  const top = d.community.slice(0, 4);
+  const rest = 100 - top.reduce((a, c) => a + c.pct, 0);
+  const bar = (label, pct, cls = '') => `<div class="res-bar ${cls}"><div class="lbl"><span>${esc(label)}</span><b>${pct}%</b></div><div class="track"><i style="width:${pct}%"></i></div></div>`;
+  return `<div class="score-card"><div class="res-title">Прогнозы сообщества — кто выиграет турнир</div>
+    <div class="res-bars">${top.map((c, i) => bar(lastName({ name: c.name }), c.pct, i ? '' : 'picked')).join('')}${rest > 0 && d.community.length > 4 ? bar('Другие', rest) : ''}</div></div>`;
+}
+
+async function tournamentScreen(key, token, params) {
+  const tab = params.get('tab') ?? 'overview';
+  const [d] = await Promise.all([api(`/api/tournaments/${encodeURIComponent(key)}`), loadMe(mskDay(0))]);
+  if (stale(token)) return;
+  const t = d.tournament;
+  const ms = d.matches.filter((m) => !m.is_doubles);
+  const b = t.bracket;
+  const needDraw = b && (tab === 'bracket' || tab === 'players');
+  const bv = needDraw ? await api(`/api/brackets/${encodeURIComponent(b.key)}`).catch(() => null) : null;
+  if (stale(token)) return;
+  const tabs = TOUR_PAGE_TABS.filter(([k]) => k !== 'bracket' || b);
+  const hl = ms.filter((m) => m.highlights && showScore(m));
+  const link = (k) => `#/tournament/${encodeURIComponent(key)}?tab=${k}`;
+  const dates = datesLabel(t.starts_at ?? dayIso(t.first_day), t.ends_at ?? dayIso(t.last_day));
+  const live = ms.filter((m) => m.status === 'live');
+  const next = ms.filter((m) => m.status === 'scheduled').slice(0, 4);
+  const onBolshe = ms.filter((m) => m.bolshe && (m.status === 'live' || m.status === 'scheduled')).slice(0, 4);
+  let body = '';
+  if (tab === 'overview') {
+    const mine = b ? me?.brackets?.find((x) => x.bracket_key === b.key) : null;
+    body = `${b ? `<div class="tp-game"><div class="tp-game-top"><span class="ic">🏆</span><div><b>Игровая сетка</b><small>Выбери победителей и получай очки</small></div></div>
+        <div class="tp-stats"><div><b>${b.fans}</b><small>${plural(b.fans, 'участник', 'участника', 'участников')}</small></div>
+          <div><b>${b.mine ? b.mine.points : '—'}</b><small>твои очки</small></div><div><b>${b.mine ? b.mine.possible : b.open_matches}</b><small>${b.mine ? 'можно набрать' : 'матчей впереди'}</small></div></div>
+        ${mine ? bracketLine(b.key) : ''}<a class="cta" href="#/bracket/${encodeURIComponent(b.key)}"><span class="ic">${ICON.play}</span>${b.mine ? 'Моя сетка' : b.status === 'open' ? 'Заполнить сетку' : 'Сетка турнира'}<span class="go">${ICON.arrow}</span></a></div>` : ''}
+      ${live.length ? `<div class="sec-title"><span>Сейчас идут</span><span class="r">${live.length}</span></div>${live.map(matchCard).join('')}` : ''}
+      ${next.length ? `<div class="sec-title"><span>Ближайшие матчи</span><a href="${link('matches')}">Все →</a></div>${next.map(matchCard).join('')}` : ''}
+      ${onBolshe.length ? `<div class="sec-title"><span>Где смотреть</span></div><div class="blist">${onBolshe.map((m) => `<div class="brow">${broadcastRow({ m })}</div>`).join('')}</div>` : ''}
+      ${hl.length ? `<div class="sec-title"><span>Хайлайты турнира</span><a href="${link('highlights')}">Все →</a></div>` : ''}
+      ${t.about ? `<div class="note" style="margin-top:16px">${esc(t.about)}</div>` : ''}`;
+  } else if (tab === 'matches') {
+    const s = params.get('s') ?? 'all';
+    const byS = { all: ms.length, live: 0, upcoming: 0, done: 0 };
+    for (const m of ms) byS[statusOf(m)] += 1;
+    const list = ms.filter((m) => s === 'all' || statusOf(m) === s);
+    const days = [...new Set(list.map((m) => m.date_msk))].sort((a, c) => (s === 'done' ? c.localeCompare(a) : a.localeCompare(c)));
+    body = `<div class="tabs-line">${STATUS_TABS.map(([k, label]) => `<a class="${k === s ? 'on' : ''}" href="${link('matches')}&s=${k}">${label}${k !== 'all' && byS[k] ? ` <small>${byS[k]}</small>` : ''}</a>`).join('')}</div>
+      ${days.map((day) => `<div class="date-row"><b>${esc(dateTitle(day))}</b></div>${list.filter((m) => m.date_msk === day).map(matchCard).join('')}`).join('') || '<div class="empty" style="margin-top:12px">Матчей нет</div>'}`;
+  } else if (tab === 'bracket') {
+    body = `${b && me ? bracketLine(b.key) : ''}<a class="cta" style="margin-top:12px" href="#/bracket/${encodeURIComponent(b.key)}"><span class="ic">🏆</span>${b.mine ? 'Открыть мою сетку' : b.status === 'open' ? 'Заполнить сетку' : 'Сетка турнира'}<span class="go">${ICON.arrow}</span></a>
+      <div style="margin-top:12px">${communityBlock(bv)}</div>
+      ${bv?.table?.length ? `<h2>Таблица участников</h2><div class="bk-table">${bv.table.slice(0, 10).map((r) => `<div class="bk-row${r.me ? ' me' : ''}"><span>${r.place}</span><span>${esc(r.name)}${r.me ? ' (ты)' : ''}</span><b>${r.points}</b></div>`).join('')}</div>` : ''}`;
+  } else if (tab === 'players') {
+    if (bv) body = drawPlayers(bv);
+    else {
+      const seen = new Map();
+      for (const m of ms) for (const p of [m.p1, m.p2]) if (p.player_id && !seen.has(p.player_id)) seen.set(p.player_id, p);
+      const list = [...seen.values()].sort((a, c) => (a.rank ?? 9999) - (c.rank ?? 9999));
+      body = list.length ? `<div class="stat-list">${list.map((p) => `<a class="dr-row" href="#/player/${encodeURIComponent(p.player_id)}">${avatar(p.photo, 'ava')}<span><b>${esc(p.name)}</b></span><small>${p.rank ? `№${p.rank}` : ''}</small></a>`).join('')}</div>` : '<div class="empty">Игроков пока нет</div>';
+    }
+  } else if (tab === 'highlights') {
+    body = hl.length ? `<div class="tl-hl-grid">${hl.map((m, i) => {
+      const review = hlFiles(m.highlights).find((f) => f.kind === 'review') ?? hlFiles(m.highlights)[0];
+      return `<button class="hl-card" type="button" data-thl="${i}">${m.highlights.cover ? `<img src="${esc(m.highlights.cover)}" alt="" loading="lazy" data-cover>` : ''}<span class="hl-play">${ICON.play}</span>
+        <span class="hl-cap"><b>${esc(lastName(m.p1))} — ${esc(lastName(m.p2))}</b><small>${esc(shortDate(m.date_msk))} · ${hlLabel(review)} ${mmss(review.secs)}</small></span></button>`;
+    }).join('')}</div>` : `<div class="empty">${noSpoilers ? 'Хайлайты скрыты — выключи «без спойлеров» вверху' : 'Хайлайтов этого турнира пока нет — они появляются после матчей, которые показывал «Больше»'}</div>`;
+  }
+  view.innerHTML = `<div class="tp-head${t.tour === 'WTA' ? ' wta' : ''}">${t.logo ? `<img class="tc-logo" src="${esc(t.logo)}" alt="" loading="lazy" data-cover>` : ''}
+      <span class="tl-fav">${favButton(t.name)}</span>
+      <div class="tc-tier">${esc(tierLabel(t))}</div><div class="tc-city">${esc(t.name)}</div>
+      <div class="tc-dates">${esc([dates, SURFACE[t.surface], b?.round && t.status === 'now' ? b.round.toLowerCase() : t.status === 'done' ? 'завершён' : null].filter(Boolean).join(' · '))}</div></div>
+    <div class="chips tp-tabs">${tabs.map(([k, label]) => `<a class="chip${k === tab ? ' on' : ''}" href="${link(k)}">${label}${k === 'highlights' && hl.length ? ` ${hl.length}` : ''}</a>`).join('')}</div>
+    <div class="tp-body">${body}</div>`;
+  view.querySelectorAll('[data-thl]').forEach((el) => el.addEventListener('click', () => {
+    const m = hl[Number(el.dataset.thl)];
+    if (m) openHighlights(m.highlights, `${lastName(m.p1)} — ${lastName(m.p2)}`);
+  }));
+  bindFanActions(view, () => tournamentScreen(key, token, params));
+  if (t.status === 'now' && (tab === 'overview' || tab === 'matches')) refreshEvery(45000, () => tournamentScreen(key, token, params));
 }
 
 const bracketDrafts = {};
@@ -1298,7 +1434,7 @@ async function bracketScreen(key, token, params = new URLSearchParams()) {
   const draw = d.draw;
   const showPlayers = params.get('view') === 'players';
   const current = Math.max(0, draw.rounds.findIndex((round) => round.matches.some((m) => m.w == null)));
-  const head = `<h1>${esc(d.name)}</h1>
+  const head = `<h1>${d.tournament_key ? `<a class="h1-link" href="#/tournament/${encodeURIComponent(d.tournament_key)}">${esc(d.name)}</a>` : esc(d.name)}</h1>
     <div class="muted small" style="margin:-6px 2px 12px">${esc(SURFACE[d.surface] ?? '')}${d.status === 'open' ? ` · идёт ${esc(draw.rounds[current].title.toLowerCase())}` : ' · турнир завершён'}</div>
     <div class="seg2"><a class="${showPlayers ? '' : 'on'}" href="#/bracket/${encodeURIComponent(key)}">Сетка</a><a class="${showPlayers ? 'on' : ''}" href="#/bracket/${encodeURIComponent(key)}?view=players">Игроки</a></div>`;
   if (showPlayers) {
@@ -1313,17 +1449,31 @@ async function bracketScreen(key, token, params = new URLSearchParams()) {
   const filled = open.filter((k) => picks[k] != null).length;
   const r = bracketRound[key] ?? current;
   const player = (pos) => draw.players.find((p) => p.pos === pos);
-  const sideRow = (pos, m, k, other) => {
+  const sideRow = (pos, m, k, other, rr = r, compact = false) => {
     const p = pos == null ? null : player(pos);
-    const myPick = picks[slotKey(r, k)];
+    const myPick = picks[slotKey(rr, k)];
     const won = m.w != null && m.w === pos;
     const lost = m.w != null && pos != null && m.w !== pos;
     const picked = myPick != null && myPick === pos;
     const mark = picked && m.w != null ? (won ? '<span class="bk-ok">✓</span>' : '<span class="bk-no">✗</span>') : '';
-    const name = p ? `${esc(lastName({ name: p.name_ru }))}${p.seed ? ` <small>(${esc(p.seed)})</small>` : p.tag ? ` <small>(${esc(p.tag)})</small>` : ''}` : `<span class="muted">${r > 0 ? 'победитель прошлого круга' : '—'}</span>`;
+    const name = p ? `${esc(lastName({ name: p.name_ru }))}${p.seed ? ` <small>(${esc(p.seed)})</small>` : p.tag ? ` <small>(${esc(p.tag)})</small>` : ''}` : `<span class="muted">${compact ? '—' : rr > 0 ? 'победитель прошлого круга' : '—'}</span>`;
     const canPick = editable && m.w == null && pos != null && other !== undefined;
-    return `<button class="bk-side${won ? ' won' : ''}${lost ? ' lost' : ''}${picked ? ' picked' : ''}" type="button"${canPick ? ` data-pick="${slotKey(r, k)}" data-pos="${pos}"` : ' disabled'}>
-      ${p ? avatar(p.photo, 'ava') : '<span class="ava ph"></span>'}<span class="bk-name">${name}</span>${p?.rank ? `<small class="muted">№${p.rank}</small>` : ''}${mark}</button>`;
+    return `<button class="${compact ? 'tr-side' : 'bk-side'}${won ? ' won' : ''}${lost ? ' lost' : ''}${picked ? ' picked' : ''}" type="button"${canPick ? ` data-pick="${slotKey(rr, k)}" data-pos="${pos}"` : ' disabled'}>
+      ${p ? avatar(p.photo, 'ava') : '<span class="ava ph"></span>'}<span class="bk-name">${name}</span>${!compact && p?.rank ? `<small class="muted">№${p.rank}</small>` : ''}${mark}</button>`;
+  };
+  // The visual bracket from round `from` to the final, and the champion (real or picked).
+  const tree = (from) => {
+    const last = draw.rounds.length - 1;
+    const champPos = draw.rounds[last].matches[0]?.w ?? picks[slotKey(last, 0)] ?? null;
+    const champ = champPos != null ? player(champPos) : null;
+    return `<div class="tree">${draw.rounds.slice(from).map((round, i) => {
+      const rr = from + i;
+      return `<div class="tr-col"><div class="tr-cap">${esc(round.short)} <small>+${roundPoints(draw, rr)}</small></div>${round.matches.map((m, k) => {
+        const [h, a] = sides[rr][k];
+        return `<div class="tr-cell"><div class="tr-match">${sideRow(h, m, k, a, rr, true)}${sideRow(a, m, k, h, rr, true)}</div></div>`;
+      }).join('')}</div>`;
+    }).join('')}<div class="tr-col tr-champ"><div class="tr-cap">🏆</div><div class="tr-cell"><div class="tr-win">${champ
+      ? `${avatar(champ.photo, 'head')}<span>${esc(lastName({ name: champ.name_ru }))}</span><small>${draw.rounds[last].matches[0]?.w != null ? 'чемпион' : 'твой выбор'}</small>` : '<span class="muted">Победитель</span>'}</div></div></div></div>`;
   };
   const round = draw.rounds[r];
   const status = !signedIn() && !sent
@@ -1335,11 +1485,12 @@ async function bracketScreen(key, token, params = new URLSearchParams()) {
   view.innerHTML = `${head}
     ${status}
     <div class="chips bk-rounds">${draw.rounds.map((x, i) => `<button class="chip${i === r ? ' on' : ''}" type="button" data-round="${i}">${esc(x.short)} <small>+${roundPoints(draw, i)}</small></button>`).join('')}</div>
-    <div class="bk-list">${round.matches.map((m, k) => {
+    ${round.matches.length <= 8 ? tree(r) : `<div class="bk-list">${round.matches.map((m, k) => {
       const [h, a] = sides[r][k];
       const when = m.w != null ? '' : m.status === 'live' ? '<span class="pill-live">LIVE</span>' : m.start ? esc(`${dayWord(m.start)} ${localTime(m.start)}`) : '';
       return `<div class="bk-match"><div class="bk-meta"><span>${esc(round.title)} · матч ${k + 1}</span><span>${when}</span></div>${sideRow(h, m, k, a)}${sideRow(a, m, k, h)}</div>`;
-    }).join('')}</div>
+    }).join('')}</div>`}
+    ${communityBlock(d)}
     ${editable ? `<div class="bk-send"><button type="button" data-send${filled < open.length ? ' disabled' : ''}>${filled < open.length ? `Заполнено ${filled} из ${open.length}` : 'Отправить сетку'}</button></div>` : ''}
     ${d.table.length ? `<h2>Таблица</h2><div class="bk-table">${d.table.slice(0, 20).map((t) => `<div class="bk-row${t.me ? ' me' : ''}"><span>${t.place}</span><span>${esc(t.name)}${t.me ? ' (ты)' : ''}</span><b>${t.points}</b></div>`).join('')}</div>` : ''}`;
   view.querySelectorAll('[data-round]').forEach((b) => b.addEventListener('click', () => {
@@ -1465,11 +1616,11 @@ async function route() {
   const params = new URLSearchParams(query);
   const parts = path.split('/').filter(Boolean);
   const tab = {
-    '': 'home', question: 'home', matches: 'matches', match: 'matches', tournaments: 'tournaments', bracket: 'tournaments',
+    '': 'home', question: 'home', matches: 'matches', match: 'matches', tournaments: 'tournaments', tournament: 'tournaments', bracket: 'tournaments',
     players: 'players', player: 'players', profile: 'profile', settings: 'profile',
   }[parts[0] ?? ''] ?? 'home';
   document.querySelectorAll('.tabs a').forEach((a) => a.classList.toggle('on', a.dataset.tab === tab));
-  const detail = ['match', 'player', 'settings', 'bracket', 'question'].includes(parts[0]);
+  const detail = ['match', 'player', 'settings', 'bracket', 'question', 'tournament'].includes(parts[0]);
   if (tg?.BackButton) { if (detail) tg.BackButton.show(); else tg.BackButton.hide(); }
   if (!view.innerHTML) view.innerHTML = '<div class="loading">Загружаем…</div>';
   try {
@@ -1482,6 +1633,7 @@ async function route() {
     else if (parts[0] === 'welcome') await welcome(token);
     else if (parts[0] === 'question') await questionScreen(token);
     else if (parts[0] === 'tournaments') await tournamentsTab(token);
+    else if (parts[0] === 'tournament' && parts[1]) await tournamentScreen(decodeURIComponent(parts[1]), token, params);
     else if (parts[0] === 'bracket' && parts[1]) await bracketScreen(decodeURIComponent(parts[1]), token, params);
     else await home(params, token);
   } catch (error) {

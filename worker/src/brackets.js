@@ -86,7 +86,7 @@ const publicEntry = (e) => (e ? {
 } : null);
 
 export async function listBrackets(env, user) {
-  const { results } = await env.DB.prepare(`SELECT b.bracket_key, b.name, b.tour, b.surface, b.status, b.starts_at, b.ends_at, b.draw_json,
+  const { results } = await env.DB.prepare(`SELECT b.bracket_key, b.tournament_key, b.name, b.tour, b.surface, b.status, b.starts_at, b.ends_at, b.draw_json,
       t.tournament AS city, t.level, t.logo,
       (SELECT COUNT(*) FROM bracket_entries e WHERE e.bracket_key = b.bracket_key) AS fans
     FROM brackets b LEFT JOIN tournaments t ON t.tournament_key = b.tournament_key WHERE b.status = 'open' OR b.updated_at > datetime('now', '-7 days')
@@ -102,7 +102,7 @@ export async function listBrackets(env, user) {
     const champion = isFinished(draw) ? draw.players.find((p) => p.pos === draw.rounds.at(-1).matches[0].w) : null;
     const e = mine.get(b.bracket_key);
     return {
-      bracket_key: b.bracket_key, name: b.name, tour: b.tour, surface: b.surface, status: b.status, fans: b.fans,
+      bracket_key: b.bracket_key, tournament_key: b.tournament_key, name: b.name, tour: b.tour, surface: b.surface, status: b.status, fans: b.fans,
       // For the big tournament card: "ATP 1000", the city, the dates of the main draw, the logo.
       city: b.city ?? b.name.replace(/^(ATP|WTA)s+/, ''), tier: explainTournament({ tour: b.tour, level: b.level ?? 'tour', tournament: b.city ?? b.name }).tier,
       logo: b.logo ?? null, starts_at: b.starts_at, ends_at: b.ends_at,
@@ -124,12 +124,24 @@ export async function bracketView(env, key, user) {
   // A fan who hid their results (Настройки) is shown without a name.
   const label = (r) => (!r.public ? `Болельщик ${String(r.user_id).slice(-4)}`
     : r.first_name ? r.first_name : r.username ? `@${r.username}` : `Болельщик ${String(r.user_id).slice(-4)}`);
+  // «Прогнозы сообщества»: whom the fans' brackets make the champion.
+  const { results: all } = await env.DB.prepare('SELECT picks_json FROM bracket_entries WHERE bracket_key = ?').bind(key).all();
+  const finalKey = `${draw.rounds.length - 1}:0`;
+  const champs = new Map();
+  for (const e of all) {
+    const pos = JSON.parse(e.picks_json)[finalKey];
+    if (pos != null) champs.set(Number(pos), (champs.get(Number(pos)) ?? 0) + 1);
+  }
+  const picked = [...champs.values()].reduce((a, c) => a + c, 0);
+  const community = [...champs].sort((a, c) => c[1] - a[1])
+    .map(([pos, n]) => ({ pos, name: draw.players.find((p) => p.pos === pos)?.name_ru ?? null, pct: Math.round((100 * n) / picked) }));
   const myPlace = entry
     ? 1 + ((await env.DB.prepare(`SELECT COUNT(*) AS n FROM bracket_entries WHERE bracket_key = ? AND (points > ? OR (points = ? AND correct > ?))`)
       .bind(key, entry.points, entry.points, entry.correct).first())?.n ?? 0)
     : null;
   return {
-    bracket_key: key, name: b.name, tour: b.tour, surface: b.surface, status: b.status, updated_at: b.updated_at,
+    bracket_key: key, tournament_key: b.tournament_key, name: b.name, tour: b.tour, surface: b.surface, status: b.status, updated_at: b.updated_at,
+    community,
     draw,
     entry: publicEntry(entry),
     place: myPlace,

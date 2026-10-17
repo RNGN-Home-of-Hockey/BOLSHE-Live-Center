@@ -10,6 +10,7 @@
 //   GET  /api/question  POST /api/question {pick}            «Вопрос дня» (answering needs the header)
 //   POST /api/web-login  GET /api/web-login?code=  POST /api/web-logout   website sign-in through the bot
 //   POST /api/highlights/push (x-push-token)  GET /api/players/<id>/media   highlights + «Больше» broadcasts of a player
+//   GET  /api/tournaments  GET /api/tournaments/<key>                       «Турниры»: now / soon / done and the tournament page
 //   POST /telegram/webhook               Telegram updates (secret header required)
 // Cron (every 10 min): schedule sheet -> broadcasts; registers the bot webhook once the token exists.
 
@@ -28,6 +29,7 @@ import { broadcastsForDate, syncSchedule } from './schedule-sync.js';
 import { answerQuestion, questionUpkeep, questionView, todayQuestion } from './question.js';
 import { endWebSession, pollWebLogin, startWebLogin } from './web-login.js';
 import { playerMedia, pushHighlights } from './highlights.js';
+import { listTournaments, tournamentView } from './tournaments.js';
 import { playerInsights, refreshPlayerStats, statsList, syncMatchStats } from './stats.js';
 import { appUrl, ensureMenuButton, ensureWebhook, handleTelegramUpdate, webhookSecret } from './telegram.js';
 
@@ -49,7 +51,7 @@ function summarizeTournaments(matches, broadcasts) {
     const t = m.tournament;
     if (m.is_doubles || !['tour', 'challenger'].includes(t.level)) continue;
     const key = `${t.tour}|${t.name}`;
-    const entry = byKey.get(key) ?? { tour: t.tour, name: t.name, level: t.level, surface: t.surface, country: t.country, logo: t.logo ?? null, matches: 0, live: 0, bolshe: 0, russians: 0 };
+    const entry = byKey.get(key) ?? { key: t.key, tour: t.tour, name: t.name, level: t.level, surface: t.surface, country: t.country, logo: t.logo ?? null, matches: 0, live: 0, bolshe: 0, russians: 0 };
     entry.matches += 1;
     if (m.status === 'live') entry.live += 1;
     if (m.bolshe) entry.bolshe += 1;
@@ -249,6 +251,12 @@ export default {
       // Bracket game: reading is open to all (a signed-in fan also gets their own bracket),
       // sending needs the signed Telegram data.
       if (path === '/api/brackets') return json({ brackets: await listBrackets(env, await authUser(env, request)) });
+      if (path === '/api/tournaments') return json({ tournaments: await listTournaments(env, await authUser(env, request)) });
+      const tournamentPath = path.match(/^\/api\/tournaments\/([A-Za-z0-9_-]+)$/);
+      if (tournamentPath) {
+        const tv = await tournamentView(env, tournamentPath[1], await authUser(env, request));
+        return tv ? json(tv) : json({ ok: false, error: 'not found' }, 404);
+      }
       const bracketPath = path.match(/^\/api\/brackets\/([A-Za-z0-9]+_[A-Za-z0-9]+)$/);
       if (bracketPath) {
         const user = await authUser(env, request);
