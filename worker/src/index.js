@@ -18,7 +18,8 @@ import { ACHIEVEMENTS, achievementLevel } from '../../src/game/achievements.js';
 import { LEGEND_STEP, LEVELS, XP_RULES, levelFor } from '../../src/game/levels.js';
 import { explainTournament } from '../../src/insights/tournaments.js';
 import { bracketView, listBrackets, submitBracket, syncBrackets } from './brackets.js';
-import { authUser, castVote, fanProfile, setFollow, setPrefs, trackEvent } from './fans.js';
+import { authUser, castVote, fanProfile, myPredictions, setFollow, setPrefs, trackEvent } from './fans.js';
+import { ratingView } from './rating.js';
 import { matchCard } from './match-details.js';
 import { mediaCounts, serveMedia, syncMedia } from './media.js';
 import { matchesForDate, matchesOfPlayer, syncMatchDays } from './matches-sync.js';
@@ -252,6 +253,10 @@ export default {
       // sending needs the signed Telegram data.
       if (path === '/api/brackets') return json({ brackets: await listBrackets(env, await authUser(env, request)) });
       if (path === '/api/tournaments') return json({ tournaments: await listTournaments(env, await authUser(env, request)) });
+      if (path === '/api/rating') {
+        const result = await ratingView(env, await authUser(env, request), { period: url.searchParams.get('period') ?? 'all', tournament: url.searchParams.get('t') });
+        return json(result, result.ok ? 200 : result.status ?? 400);
+      }
       const tournamentPath = path.match(/^\/api\/tournaments\/([A-Za-z0-9_-]+)$/);
       if (tournamentPath) {
         const tv = await tournamentView(env, tournamentPath[1], await authUser(env, request));
@@ -289,9 +294,10 @@ export default {
         const result = await answerQuestion(env, user, await request.json().catch(() => ({})));
         return json(result, result.ok ? 200 : result.status ?? 400);
       }
-      if (['/api/me', '/api/votes', '/api/follows', '/api/prefs', '/api/events'].includes(path)) {
+      if (['/api/me', '/api/me/predictions', '/api/votes', '/api/follows', '/api/prefs', '/api/events'].includes(path)) {
         const user = await authUser(env, request);
         if (!user) return json({ ok: false, error: 'Войди через Telegram' }, 401);
+        if (path === '/api/me/predictions') return json(await myPredictions(env, user));
         if (path === '/api/me') {
           const date = url.searchParams.get('date') ?? todayMsk();
           if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return json({ ok: false, error: 'date must be YYYY-MM-DD' }, 400);

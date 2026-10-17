@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { ACHIEVEMENTS, achievementLevel, fanAchievements, fanMetrics } from '../src/game/achievements.js';
+import { ACHIEVEMENTS, LEVEL_XP, achievementLevel, achievementsXp, fanAchievements, fanMetrics } from '../src/game/achievements.js';
 
 const vote = (i, over = {}) => ({
   pick: 1, winner: 1, start_at: new Date(Date.UTC(2026, 9, 1 + i, 10)).toISOString(), voted_at: null,
@@ -45,6 +45,16 @@ test('metrics: best streak, upsets, minority wins, surfaces, our players, days i
   assert.equal(m.follows, 4);
   assert.equal(m.app_days, 3, 'three days in a row, then a gap');
   assert.equal(m.streams, 6);
+});
+
+test('achievement XP: each reached level adds its reward; the next reward is shown', () => {
+  const streak = ACHIEVEMENTS.find((a) => a.key === 'streak');
+  const two = achievementLevel(streak, 12);
+  assert.equal(two.level, 2);
+  assert.equal(two.earned_xp, LEVEL_XP[0] + LEVEL_XP[1]);
+  assert.equal(two.reward, LEVEL_XP[2]);
+  assert.equal(two.cat, 'predictions');
+  assert.equal(achievementsXp([two, achievementLevel(streak, 0)]), 150);
 });
 
 test('every achievement is reported, unopened ones at level 0', () => {

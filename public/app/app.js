@@ -1178,15 +1178,29 @@ async function player(id, token) {
   bindFanActions(view, () => player(id, token));
 }
 
-// ---------- profile ----------
-// One achievement: icon, five levels (stars), a bar to the next level; a tap opens the details.
+// ---------- profile: Профиль / Мои прогнозы / Мои игроки / Статистика; Достижения, Уровни, Рейтинг ----------
+const PROFILE_TABS = [['', 'Профиль'], ['predictions', 'Мои прогнозы'], ['players', 'Мои игроки'], ['stats', 'Статистика']];
+const ACH_CATS = [['all', 'Все'], ['predictions', 'Прогнозы'], ['tournaments', 'Турниры'], ['players', 'Игроки'], ['activity', 'Активность'], ['community', 'Сообщество']];
+const nf = (n) => Number(n ?? 0).toLocaleString('ru-RU');
+const delta = (n, unit = '') => (n ? `<i class="dl ${n > 0 ? 'up' : 'down'}">${n > 0 ? '↑' : '↓'} ${Math.abs(n)}${unit}</i>` : '');
+
+// One achievement: icon, title, the condition, five stars, the bar, and the XP for the next level.
 function achievementCard(a) {
   const stars = Array.from({ length: a.max_level }, (_, i) => `<i class="${i < a.level ? 'on' : ''}">★</i>`).join('');
-  const goal = a.next ? `${a.value.toLocaleString('ru-RU')} из ${a.next.toLocaleString('ru-RU')} ${a.unit}` : `Высший уровень · ${a.value.toLocaleString('ru-RU')} ${a.unit}`;
-  return `<button type="button" class="ach${a.level ? '' : ' locked'}" data-ach>
+  const goal = a.next ? `${nf(a.value)} из ${nf(a.next)} ${a.unit}` : `Высший уровень · ${nf(a.value)} ${a.unit}`;
+  return `<button type="button" class="ach${a.level ? ' earned' : ' locked'}" data-ach>
     <span class="ach-ic">${a.icon}</span><b>${esc(a.title)}</b><span class="ach-stars">${stars}</span>
     <span class="ach-bar"><i style="width:${Math.round(a.progress * 100)}%"></i></span><small>${esc(goal)}</small>
-    <small class="more">${esc(a.about)}${a.next ? ` До ${a.level + 1}-го уровня ещё ${a.to_next.toLocaleString('ru-RU')}.` : ''}</small></button>`;
+    ${a.next ? `<small class="ach-xp">+${nf(a.reward)} XP</small>` : ''}
+    <small class="more">${esc(a.about)}${a.next ? ` До ${a.level + 1}-го уровня ещё ${nf(a.to_next)}.` : ''}</small></button>`;
+}
+// The achievement closest to its next level — «Ближайшая цель».
+const nearest = (achs) => [...achs].filter((a) => a.next).sort((a, c) => c.progress - a.progress || a.to_next - c.to_next);
+function goalCard(a) {
+  return `<a class="goal" href="#/achievements"><span class="ach-ic">${a.icon}</span><span class="goal-body"><b>${esc(a.title)}</b>
+    <small>${esc(a.about)}</small><span class="ach-bar"><i style="width:${Math.round(a.progress * 100)}%"></i></span>
+    <small>${nf(a.value)} из ${nf(a.next)} — ещё ${nf(a.to_next)}, и ${a.level ? `${a.level + 1}-й уровень` : 'достижение открыто'}</small></span>
+    <span class="goal-xp">+${nf(a.reward)} XP</span></a>`;
 }
 
 // Same rules as src/game/levels.js, fed by /api/levels so both stay in sync.
@@ -1201,37 +1215,180 @@ function levelFor(levels, step, xp) {
   return { title: lv.title, subtitle: `Титулов Большого шлема: ${slams}`, next_title: `Легенда · ${slams + 1}-й шлем`, to_next: nextAt - xp, progress: (xp - (nextAt - step)) / step };
 }
 
-// Profile: the fan, the level card, accuracy · predictions · streak, achievements, the ladder.
-async function profile(token) {
-  const [d] = await Promise.all([api('/api/levels?xp=0'), loadMe(mskDay(0))]);
-  if (stale(token)) return;
+function profileHead(sub) {
   const u = tg?.initDataUnsafe?.user ?? session?.user;
   const name = me?.user?.first_name || u?.first_name || 'Болельщик';
   const username = me?.user?.username || u?.username;
+  return `<div class="page-head"><h1>Профиль</h1><a class="icon-btn" href="#/settings" aria-label="Настройки" title="Настройки">${ICON.gear}</a></div>
+    <div class="me-card">${meAvatar()}<div><b>${esc(name)}</b><span>${username ? `@${esc(username)}` : signedIn() ? 'болельщик «Больше»' : 'Войди, чтобы копить опыт и видеть свои очки'}</span></div>
+      ${signedIn() ? '<a class="me-edit" href="#/welcome">Редактировать</a>' : ''}</div>
+    ${signedIn() ? '' : `<div style="margin-top:12px">${loginButton()}</div>`}
+    <div class="tabs-line">${PROFILE_TABS.map(([k, label]) => `<a class="${k === sub ? 'on' : ''}" href="#/profile${k ? `/${k}` : ''}">${label}</a>`).join('')}</div>`;
+}
+
+async function profile(token, sub = '') {
+  if (sub === 'predictions' || sub === 'stats') return predictionsScreen(token, sub);
+  const [d] = await Promise.all([api('/api/levels?xp=0'), loadMe(mskDay(0))]);
+  if (stale(token)) return;
+  if (sub === 'players') {
+    view.innerHTML = `${profileHead(sub)}<div style="margin-top:14px">${me ? minePlayersBody() : '<div class="empty">Войди, чтобы отмечать игроков</div>'}</div>`;
+    return;
+  }
   const xp = me?.xp ?? 0;
   const lv = me?.level ?? levelFor(d.levels, d.legend_step, xp);
-  const target = xp + (lv.to_next ?? 0);
-  const accuracy = me?.settled ? Math.round((100 * me.guessed) / me.settled) : null;
-  const achs = [...(me?.achievements ?? d.achievements ?? [])].sort((a, c) => c.level - a.level || c.progress - a.progress);
-  const cur = d.levels.reduce((k, l, i) => (xp >= l.from ? i : k), 0);
-  view.innerHTML = `
-    <div class="page-head"><h1>Профиль</h1><a class="icon-btn" href="#/settings" aria-label="Настройки" title="Настройки">${ICON.gear}</a></div>
-    <div class="me-card">${meAvatar()}<div><b>${esc(name)}</b><span>${username ? `@${esc(username)}` : signedIn() ? 'болельщик «Больше»' : 'Войди, чтобы копить опыт и видеть свои очки'}</span></div></div>
-    ${signedIn() ? '' : `<div style="margin-top:12px">${loginButton()}</div>`}
-    <div class="lv-card">${BALL}<div class="cap">Твой уровень</div><div class="title">${esc(lv.title)}</div>
+  const accuracy = me?.week?.accuracy_now ?? (me?.settled ? Math.round((100 * me.guessed) / me.settled) : null);
+  const accDelta = me?.week?.accuracy_before != null && accuracy != null ? accuracy - me.week.accuracy_before : 0;
+  const placeDelta = me?.rating?.place && me?.rating?.place_week_ago ? me.rating.place_week_ago - me.rating.place : 0;
+  const achs = me?.achievements ?? d.achievements ?? [];
+  const goal = nearest(achs)[0];
+  const players = (me?.my_players ?? []).slice(0, 3);
+  const plCard = (p) => {
+    const g = p.live ?? p.next;
+    return `<a class="mp-card" href="#/player/${encodeURIComponent(p.player_id)}">${avatar(p.photo, 'head')}<b>${esc(p.name)}</b>
+      ${p.live ? `<span class="pill-live">LIVE</span><small>${showScore({ status: 'live' }) ? `${esc(p.live.score)} · ` : ''}vs ${esc(lastName({ name: p.live.opponent }))}</small>`
+        : g ? `<small>${esc(cap(dayWord(g.start_at)))}, ${esc(localTime(g.start_at))}<br>vs ${esc(lastName({ name: g.opponent }))}</small>` : '<small>матчей нет</small>'}</a>`;
+  };
+  view.innerHTML = `${profileHead('')}
+    <a class="lv-card" href="#/levels">${BALL}<div class="cap">Твой уровень</div><div class="title">${esc(lv.title)}</div>
       <div class="prog"><i style="width:${Math.round((lv.progress ?? 0) * 100)}%"></i></div>
-      <div class="xp">${xp.toLocaleString('ru-RU')} / ${target.toLocaleString('ru-RU')} XP</div>
-      <div class="sub">${esc(lv.subtitle)}${lv.next_title ? ` · дальше «${esc(lv.next_title)}»` : ''}</div>
-      <button class="go" type="button" data-levels aria-label="Все уровни">${ICON.arrow}</button></div>
-    <div class="stats3"><div><small>Точность</small><b>${accuracy != null ? `${accuracy}%` : '—'}</b></div><div><small>Прогнозов</small><b>${me?.votes_total ?? 0}</b></div><div><small>В серии</small><b>${me?.streak ?? 0}</b></div></div>
-    ${me?.place ? `<div class="place-line">Место в общей таблице: №${me.place} из ${me.fans}</div>` : ''}
-    <h2>Достижения</h2>
-    <div class="achs">${achs.map(achievementCard).join('')}</div>
-    <div class="note" style="margin-top:10px">У каждого достижения пять уровней. Опыт: +10 XP за прогноз, +20 за верный (вдвое — если угадал вопреки большинству); «Вопрос дня» и очки сеток турниров — тоже в опыт.</div>
-    <h2 id="levels">Уровни</h2>
-    <div class="ladder">${d.levels.map((l, i) => `<div class="${xp >= l.from ? 'on' : ''}${i === cur ? ' cur' : ''}"><b>${esc(l.title)}</b><small>${esc(l.subtitle)}</small><span>${l.from.toLocaleString('ru-RU')} XP</span></div>`).join('')}</div>`;
-  view.querySelector('[data-levels]').addEventListener('click', () => view.querySelector('#levels').scrollIntoView({ behavior: 'smooth' }));
+      <div class="xp">${nf(xp)} / ${nf(xp + (lv.to_next ?? 0))} XP</div>
+      <div class="sub">${lv.next_title ? `Ещё ${nf(lv.to_next)} XP — и ты «${esc(lv.next_title)}»` : esc(lv.subtitle)}</div>
+      <span class="go">${ICON.arrow}</span></a>
+    <div class="stats4">
+      <div><small>Точность</small><b>${accuracy != null ? `${accuracy}%` : '—'}</b>${delta(accDelta, '%')}</div>
+      <div><small>Прогнозов</small><b>${nf(me?.votes_total)}</b>${me?.week?.votes ? `<i class="dl up">↑ ${me.week.votes}</i>` : ''}</div>
+      <div><small>В серии</small><b>${nf(me?.streak)}</b><i class="dl">верных</i></div>
+      <a href="#/rating"><small>Рейтинг</small><b>${me?.rating?.place ? `#${nf(me.rating.place)}` : '—'}</b>${delta(placeDelta)}</a>
+    </div>
+    ${goal ? `<div class="sec-title"><span>Ближайшая цель</span><a href="#/achievements">Все достижения →</a></div>${goalCard(goal)}` : ''}
+    <div class="sec-title"><span>Мои игроки</span><a href="#/profile/players">Все игроки →</a></div>
+    ${players.length ? `<div class="mp-grid">${players.map(plCard).join('')}</div>` : `<div class="empty">Отметь игроков звёздочкой — здесь будут их ближайшие матчи. <a href="#/players?all=1">Найти игроков</a></div>`}
+    <div class="pf-links"><a href="#/achievements"><span>🏅</span><b>Достижения</b><small>${achs.filter((a) => a.level).length} из ${achs.length} открыто</small></a>
+      <a href="#/rating"><span>📊</span><b>Рейтинг</b><small>${me?.rating?.place ? `ты №${nf(me.rating.place)} из ${nf(me.rating.of)}` : 'общий · неделя · турнир'}</small></a></div>`;
+}
+
+// «Мои прогнозы» (Активные / Завершённые) and «Статистика».
+let predTab = 'active';
+let predTour = '';
+let predRes = 'all';
+async function predictionsScreen(token, sub) {
+  const [d] = await Promise.all([signedIn() ? api('/api/me/predictions') : Promise.resolve({ items: [] }), loadMe(mskDay(0))]);
+  if (stale(token)) return;
+  const items = d.items ?? [];
+  const done = items.filter((i) => i.right != null);
+  const active = items.filter((i) => i.right == null && i.match.status !== 'cancelled' && !DONE.includes(i.match.status));
+  const tName = (i) => i.match.tournament.name;
+  let body = '';
+  if (!signedIn()) body = needLogin('Войди через Telegram — здесь будут все твои прогнозы.');
+  else if (sub === 'stats') {
+    const right = done.filter((i) => i.right).length;
+    let run = 0;
+    let best = 0;
+    for (const i of [...done].sort((a, c) => Date.parse(a.match.start_at) - Date.parse(c.match.start_at))) { run = i.right ? run + 1 : 0; best = Math.max(best, run); }
+    const group = (key) => {
+      const m = new Map();
+      for (const i of done) { const k = key(i); const r = m.get(k) ?? { n: 0, ok: 0 }; r.n += 1; r.ok += i.right ? 1 : 0; m.set(k, r); }
+      return [...m].sort((a, c) => c[1].n - a[1].n);
+    };
+    const table = (rows, labelOf) => `<div class="stat-all">${rows.map(([k, r]) => `<div class="sa-row"><span>${esc(labelOf(k))}</span><b>${r.ok} из ${r.n}</b>
+      <i class="sa-bar"><i style="width:${Math.round((100 * r.ok) / r.n)}%"></i></i></div>`).join('')}</div>`;
+    body = done.length ? `<div class="stats4">
+        <div><small>Точность</small><b>${Math.round((100 * right) / done.length)}%</b></div><div><small>Верных</small><b>${right}</b></div>
+        <div><small>Неверных</small><b>${done.length - right}</b></div><div><small>Лучшая серия</small><b>${best}</b></div></div>
+      <h2>По турнирам</h2>${table(group(tName), (k) => k)}
+      <h2>По покрытиям</h2>${table(group((i) => i.match.tournament.surface ?? 'other'), (k) => cap(SURFACE[k] ?? 'другое'))}
+      <div class="note" style="margin-top:12px">Ждут результата: ${active.length}. Опыт за прогнозы: ${nf(items.reduce((a, c) => a + (c.right == null ? 10 : c.xp), 0))} XP.</div>`
+      : '<div class="empty">Статистика появится после первых завершённых прогнозов</div>';
+  } else {
+    const tours = [...new Set(done.map(tName))];
+    let list = predTab === 'active' ? active : done;
+    if (predTab === 'done') {
+      if (predTour) list = list.filter((i) => tName(i) === predTour);
+      if (predRes !== 'all') list = list.filter((i) => (predRes === 'ok' ? i.right : !i.right));
+    }
+    const card = (i) => {
+      const m = i.match;
+      const picked = i.pick === 1 ? m.p1 : m.p2;
+      const when = `${cap(dayWord(m.start_at))}, ${localTime(m.start_at)}`;
+      const score = i.right != null && showScore(m) ? ` · Счёт ${m.sets_p1 ?? 0}:${m.sets_p2 ?? 0}` : '';
+      return `<a class="pred" href="#/match/${encodeURIComponent(m.match_id)}" data-pred="${esc(m.match_id)}">
+        <div class="pred-top"><span>${esc(tourTitle(m.tournament))}</span><span>${esc(when)}${esc(score)}</span></div>
+        <div class="pred-body"><div class="pred-players"><div>${avatar(m.p1.photo)}<span class="${showScore(m) && m.winner === 1 ? 'w' : ''}">${esc(m.p1.name)}</span></div>
+          <div>${avatar(m.p2.photo)}<span class="${showScore(m) && m.winner === 2 ? 'w' : ''}">${esc(m.p2.name)}</span></div></div>
+          <div class="pred-pick ${i.right == null ? '' : i.right ? 'ok' : 'no'}"><small>Твой прогноз</small>${avatar(picked.photo, 'head')}<b>${esc(lastName(picked))}</b>
+            ${i.right == null ? '' : `<span class="pred-xp">${i.right ? `✓ +${i.xp} XP` : '✗ +10 XP'}</span>`}</div></div></a>`;
+    };
+    body = `<div class="seg2 pred-tabs"><button type="button" data-pt="active" class="${predTab === 'active' ? 'on' : ''}">Активные ${active.length || ''}</button><button type="button" data-pt="done" class="${predTab === 'done' ? 'on' : ''}">Завершённые ${done.length || ''}</button></div>
+      ${predTab === 'done' && done.length ? `<div class="chips"><button class="chip${predRes === 'all' ? ' on' : ''}" data-pr="all">Все</button><button class="chip${predRes === 'ok' ? ' on' : ''}" data-pr="ok">Верные</button><button class="chip${predRes === 'no' ? ' on' : ''}" data-pr="no">Неверные</button></div>
+        ${tours.length > 1 ? `<div class="chips" style="margin-top:8px"><button class="chip${predTour ? '' : ' on'}" data-ptour="">Все турниры</button>${tours.map((t) => `<button class="chip${t === predTour ? ' on' : ''}" data-ptour="${esc(t)}">${esc(t)}</button>`).join('')}</div>` : ''}` : ''}
+      <div style="margin-top:12px">${list.map(card).join('') || `<div class="empty">${predTab === 'active' ? 'Активных прогнозов нет — проголосуй «Кто выиграет?» в любом будущем матче' : 'Пока нет завершённых прогнозов'}</div>`}</div>`;
+  }
+  view.innerHTML = `${profileHead(sub === 'stats' ? 'stats' : 'predictions')}<div style="margin-top:14px">${body}</div>`;
+  const rerender = () => predictionsScreen(token, sub).catch(() => {});
+  view.querySelectorAll('[data-pt]').forEach((b) => b.addEventListener('click', () => { predTab = b.dataset.pt; rerender(); }));
+  view.querySelectorAll('[data-pr]').forEach((b) => b.addEventListener('click', () => { predRes = b.dataset.pr; rerender(); }));
+  view.querySelectorAll('[data-ptour]').forEach((b) => b.addEventListener('click', () => { predTour = b.dataset.ptour; rerender(); }));
+  view.querySelectorAll('[data-pred]').forEach((a) => a.addEventListener('click', () => { matchPane[a.dataset.pred] = 'votes'; }));
+}
+
+// «Достижения»: Ближайшие / Все (by category) / Мои награды.
+async function achievementsScreen(token, params) {
+  const tab = params.get('tab') ?? 'near';
+  const catSel = params.get('cat') ?? 'all';
+  const [d] = await Promise.all([api('/api/levels?xp=0'), loadMe(mskDay(0))]);
+  if (stale(token)) return;
+  const achs = me?.achievements ?? d.achievements ?? [];
+  const link = (over) => `#/achievements?${new URLSearchParams({ tab, cat: catSel, ...over })}`;
+  let body = '';
+  if (tab === 'near') {
+    const near = nearest(achs).slice(0, 3);
+    body = near.length ? near.map(goalCard).join('') : '<div class="empty">Все достижения на высшем уровне — легенда!</div>';
+  } else if (tab === 'all') {
+    const list = achs.filter((a) => catSel === 'all' || a.cat === catSel).sort((a, c) => c.level - a.level || c.progress - a.progress);
+    body = `<div class="chips">${ACH_CATS.map(([k, label]) => `<a class="chip${k === catSel ? ' on' : ''}" href="${link({ cat: k })}">${label}</a>`).join('')}</div>
+      <div class="achs" style="margin-top:12px">${list.map(achievementCard).join('')}</div>`;
+  } else {
+    const mine = achs.filter((a) => a.level).sort((a, c) => c.earned_xp - a.earned_xp);
+    body = mine.length ? `<div class="note">Получено опыта за достижения: <b>${nf(mine.reduce((a, c) => a + c.earned_xp, 0))} XP</b></div><div class="achs">${mine.map(achievementCard).join('')}</div>`
+      : '<div class="empty">Наград пока нет — первая ближе, чем кажется: загляни в «Ближайшие»</div>';
+  }
+  view.innerHTML = `<div class="page-head"><h1>Достижения</h1></div>
+    <div class="ach-banner">🏆 Собирай достижения, получай опыт за каждый уровень и поднимайся выше</div>
+    <div class="tabs-line">${[['near', 'Ближайшие'], ['all', 'Все достижения'], ['mine', 'Мои награды']].map(([k, label]) => `<a class="${k === tab ? 'on' : ''}" href="${link({ tab: k })}">${label}</a>`).join('')}</div>
+    <div style="margin-top:12px">${body}</div>
+    <div class="note" style="margin-top:12px">За уровни достижений — +50, +100, +200, +300 и +500 XP. У каждого достижения пять уровней.</div>`;
   view.querySelectorAll('[data-ach]').forEach((b) => b.addEventListener('click', () => b.classList.toggle('open')));
+}
+
+// «Уровни»: the ladder and how XP grows.
+async function levelsScreen(token) {
+  const [d] = await Promise.all([api('/api/levels?xp=0'), loadMe(mskDay(0))]);
+  if (stale(token)) return;
+  const xp = me?.xp ?? 0;
+  const cur = d.levels.reduce((k, l, i) => (xp >= l.from ? i : k), 0);
+  view.innerHTML = `<div class="page-head"><h1>Уровни</h1></div>
+    <div class="ladder">${d.levels.map((l, i) => `<div class="${xp >= l.from ? 'on' : ''}${i === cur ? ' cur' : ''}"><b>${esc(l.title)}</b><small>${esc(l.subtitle)}</small><span>${nf(l.from)} XP</span></div>`).join('')}</div>
+    <h2>Как растёт опыт</h2>
+    <div class="note">+10 XP за прогноз, +20 за верный (вдвое — если угадал вопреки большинству). «Вопрос дня»: +10 за ответ, +20 за верный. Очки сеток турниров и уровни достижений — тоже в опыт.
+      После «Легенды» каждые ${nf(d.legend_step)} XP — ещё один «титул Большого шлема».</div>
+    ${me ? `<div class="note">Сейчас у тебя ${nf(xp)} XP: прогнозы и сетки — ${nf(me.xp_predictions)}, достижения — ${nf(me.xp_achievements)}.</div>` : ''}`;
+}
+
+// «Рейтинг»: points for right predictions (not XP) — overall, the week, one tournament.
+async function ratingScreen(token, params) {
+  const period = params.get('period') ?? 'all';
+  const tKey = params.get('t') ?? '';
+  const tours = period === 'tournament' ? (await api('/api/tournaments').catch(() => ({ tournaments: [] }))).tournaments.filter((t) => t.level === 'tour' && t.status !== 'soon') : [];
+  const key = period === 'tournament' ? (tKey || tours[0]?.key || '') : '';
+  const [d] = await Promise.all([key || period !== 'tournament' ? api(`/api/rating?period=${period}${key ? `&t=${encodeURIComponent(key)}` : ''}`) : Promise.resolve({ top: [], fans: 0 }), loadMe(mskDay(0))]);
+  if (stale(token)) return;
+  const row = (r) => `<div class="bk-row${r.me ? ' me' : ''}"><span>${r.place}</span><span>${esc(r.name)}${r.me ? ' (ты)' : ''}<small class="muted"> · верных ${r.right}</small></span><b>${nf(r.points)}</b></div>`;
+  view.innerHTML = `<div class="page-head"><h1>Рейтинг</h1></div>
+    <div class="tabs-line">${[['all', 'Общий'], ['week', 'Неделя'], ['tournament', 'Турнир']].map(([k, label]) => `<a class="${k === period ? 'on' : ''}" href="#/rating?period=${k}">${label}</a>`).join('')}</div>
+    ${period === 'tournament' ? `<div class="chips" style="margin-top:10px">${tours.map((t) => `<a class="chip${t.key === key ? ' on' : ''}" href="#/rating?period=tournament&t=${encodeURIComponent(t.key)}">${esc(t.tour)} ${esc(t.name)}</a>`).join('')}</div>` : ''}
+    ${d.me ? `<div class="rt-me"><span>Ты</span><b>№${nf(d.me.place)}</b><small>из ${nf(d.fans)} · ${nf(d.me.points)} очков</small></div>` : signedIn() ? '<div class="note" style="margin-top:12px">Тебя пока нет в таблице — очки дают верные прогнозы.</div>' : `<div style="margin-top:12px">${loginButton()}</div>`}
+    <div class="bk-table" style="margin-top:12px">${(d.top ?? []).map(row).join('') || '<div class="empty">Пока никого — стань первым</div>'}</div>
+    <div class="note" style="margin-top:12px">Очки рейтинга — только за верные прогнозы: победитель матча +10 (+20, если так думали меньше 35% болельщиков), «Вопрос дня» +10, очки сеток турниров. Опыт за активность и достижения в рейтинг не идёт — новичок может догнать любого. Ведущие «Больше» появятся здесь со своими профилями.</div>`;
 }
 
 // ---------- tournaments: the bracket game ----------
@@ -1617,10 +1774,10 @@ async function route() {
   const parts = path.split('/').filter(Boolean);
   const tab = {
     '': 'home', question: 'home', matches: 'matches', match: 'matches', tournaments: 'tournaments', tournament: 'tournaments', bracket: 'tournaments',
-    players: 'players', player: 'players', profile: 'profile', settings: 'profile',
+    players: 'players', player: 'players', profile: 'profile', settings: 'profile', achievements: 'profile', levels: 'profile', rating: 'profile',
   }[parts[0] ?? ''] ?? 'home';
   document.querySelectorAll('.tabs a').forEach((a) => a.classList.toggle('on', a.dataset.tab === tab));
-  const detail = ['match', 'player', 'settings', 'bracket', 'question', 'tournament'].includes(parts[0]);
+  const detail = ['match', 'player', 'settings', 'bracket', 'question', 'tournament', 'achievements', 'levels', 'rating'].includes(parts[0]);
   if (tg?.BackButton) { if (detail) tg.BackButton.show(); else tg.BackButton.hide(); }
   if (!view.innerHTML) view.innerHTML = '<div class="loading">Загружаем…</div>';
   try {
@@ -1628,7 +1785,10 @@ async function route() {
     else if (parts[0] === 'player' && parts[1]) await player(decodeURIComponent(parts[1]), token);
     else if (parts[0] === 'matches') await matches(params, token);
     else if (parts[0] === 'players') await players(params, token);
-    else if (parts[0] === 'profile') await profile(token);
+    else if (parts[0] === 'profile') await profile(token, parts[1] ?? '');
+    else if (parts[0] === 'achievements') await achievementsScreen(token, params);
+    else if (parts[0] === 'levels') await levelsScreen(token);
+    else if (parts[0] === 'rating') await ratingScreen(token, params);
     else if (parts[0] === 'settings') await settings(token);
     else if (parts[0] === 'welcome') await welcome(token);
     else if (parts[0] === 'question') await questionScreen(token);

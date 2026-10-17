@@ -37,6 +37,16 @@ export const ACHIEVEMENTS = [
     about: 'Очки за угаданные матчи в сетках турниров' },
 ];
 
+// Categories of the «Достижения» section, and the XP a fan gets for reaching each level (1…5).
+export const ACH_CATEGORIES = {
+  streak: 'predictions', correct: 'predictions', upsets: 'predictions', contrarian: 'predictions', votes: 'predictions',
+  bracket: 'tournaments', clay: 'tournaments', hard: 'tournaments', grass: 'tournaments',
+  loyal: 'players', follows: 'players',
+  days: 'activity', app_days: 'activity', streams: 'activity',
+  bolshe: 'community',
+};
+export const LEVEL_XP = [50, 100, 200, 300, 500];
+
 const UPSET_ODDS = 2.5;
 const MINORITY_SHARE = 0.35;
 const MINORITY_VOTERS = 10;
@@ -90,12 +100,17 @@ export function achievementLevel(def, value) {
   const next = def.levels[level] ?? null;
   const from = level ? def.levels[level - 1] : 0;
   return {
-    key: def.key, icon: def.icon, title: def.title, about: def.about, unit: def.unit,
+    key: def.key, icon: def.icon, title: def.title, about: def.about, unit: def.unit, cat: ACH_CATEGORIES[def.key] ?? 'activity',
     value, level, max_level: def.levels.length, next,
+    reward: LEVEL_XP[level] ?? 0, // XP for the next level
+    earned_xp: LEVEL_XP.slice(0, level).reduce((a, c) => a + c, 0),
     progress: next ? Math.min(1, (value - from) / (next - from)) : 1,
     to_next: next ? next - value : 0,
   };
 }
+
+// XP from achievements: every reached level adds LEVEL_XP of that level.
+export const achievementsXp = (list) => list.reduce((a, c) => a + (c.earned_xp ?? 0), 0);
 
 export function fanAchievements(rows, extra = {}) {
   const metrics = fanMetrics(rows, extra);

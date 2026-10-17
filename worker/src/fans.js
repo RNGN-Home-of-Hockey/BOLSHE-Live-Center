@@ -6,14 +6,15 @@
 //   POST /api/prefs   {public, surface, tours, since, onboarded, fav_tournaments}   (onboarding, settings, ★ tournaments)
 //   POST /api/events  {kind: 'vk', ref}                            (a «Больше» broadcast opened from the app)
 
-import { fanAchievements } from '../../src/game/achievements.js';
+import { achievementsXp, fanAchievements } from '../../src/game/achievements.js';
 import { bracketStatus } from '../../src/game/bracket.js';
 import { LEVELS, XP_RULES, levelFor } from '../../src/game/levels.js';
 import { QUESTION_XP } from '../../src/game/question.js';
 import { mediaUrl } from '../../src/lib/media.js';
 import { verifyInitData } from '../../src/lib/telegram-auth.js';
 import { webSessionUser } from './web-login.js';
-import { matchesOfPlayer } from './matches-sync.js';
+import { MATCH_SELECT, matchesOfPlayer, shapeMatch } from './matches-sync.js';
+import { ratingPlace } from './rating.js';
 
 // Inside Telegram: the signed initData. On the website: the session of «Войти через Telegram».
 export async function authUser(env, request) {
@@ -90,6 +91,32 @@ export async function trackEvent(env, user, body) {
 }
 
 const mskDay = (ms) => new Date(ms + 3 * 3600e3).toISOString().slice(0, 10);
+
+// «Мои прогнозы»: every vote of the fan with its match (players, tournament, score, result) and the XP it gave.
+export async function myPredictions(env, user) {
+  const db = env.DB;
+  const { results: votes } = await db.prepare('SELECT match_id, pick, created_at FROM votes WHERE user_id = ? ORDER BY created_at DESC LIMIT 400')
+    .bind(user.id).all();
+  const matches = new Map();
+  for (let i = 0; i < votes.length; i += 80) {
+    const ids = votes.slice(i, i + 80).map((v) => v.match_id);
+    const { results } = await db.prepare(`${MATCH_SELECT} WHERE m.match_id IN (${ids.map(() => '?').join(',')})`).bind(...ids).all();
+    for (const r of results) matches.set(r.match_id, shapeMatch(r));
+  }
+  return {
+    items: votes.filter((v) => matches.has(v.match_id)).map((v) => {
+      const m = matches.get(v.match_id);
+      const share = m.votes.total ? (v.pick === 1 ? m.votes.p1 : m.votes.p2) / m.votes.total : 1;
+      const right = m.winner ? m.winner === v.pick : null;
+      const minority = right && m.votes.total >= 10 && share < XP_RULES.against_majority_share;
+      return {
+        match: m, pick: v.pick, voted_at: v.created_at, right,
+        xp: XP_RULES.prediction_made + (right ? XP_RULES.winner_correct * (minority ? XP_RULES.against_majority_multiplier : 1) : 0),
+        share: Math.round(share * 100),
+      };
+    }),
+  };
+}
 
 // The fan's brackets of running tournaments: picks still alive, guessed, and how the bracket
 // compares with the others ("лучше, чем у 60% участников").
@@ -178,7 +205,7 @@ export async function fanProfile(env, user, date) {
   const table = await xpTable(db);
   const meRow = table.find((r) => Number(r.user_id) === user.id);
   const xp = meRow?.xp ?? 0;
-  const { results: settled } = await db.prepare(`SELECT v.pick, m.winner FROM votes v JOIN matches m ON m.match_id = v.match_id
+  const { results: settled } = await db.prepare(`SELECT v.pick, m.winner, m.start_at FROM votes v JOIN matches m ON m.match_id = v.match_id
     WHERE v.user_id = ? AND m.winner IS NOT NULL ORDER BY m.start_at DESC`).bind(user.id).all();
   let streak = 0;
   while (streak < settled.length && settled[streak].pick === settled[streak].winner) streak += 1;
@@ -214,15 +241,33 @@ export async function fanProfile(env, user, date) {
     db.prepare('SELECT * FROM fan_prefs WHERE user_id = ?').bind(user.id).first(),
   ]);
   const now = Date.now();
+  // The week in numbers: predictions made, accuracy now vs a week ago.
+  const weekAgo = new Date(now - 7 * 86400e3).toISOString();
+  const before = settled.filter((r) => r.start_at < weekAgo);
+  const accuracy = (list) => (list.length ? Math.round((100 * list.filter((r) => r.pick === r.winner).length) / list.length) : null);
+  const achievements = fanAchievements(voteRows.map((r) => ({ ...r, mine: mySet.has(r.p1_player) || mySet.has(r.p2_player), bolshe: Boolean(r.bolshe) })), {
+    follows: followed.length, bracketPoints: await bracketPointsOf(db, user.id), appDays: days.map((d) => d.day), streams: streams?.n ?? 0,
+  });
+  const totalXp = xp + achievementsXp(achievements);
+  const rating = await ratingPlace(db, user.id);
   const myPlayers = [];
   for (const p of followed) myPlayers.push(playerCard(p, p.fs_id ? await matchesOfPlayer(db, p.fs_id, 8) : [], now));
   return {
     user: { id: user.id, first_name: user.first_name, username: user.username ?? null },
-    xp,
-    level: levelFor(xp),
+    xp: totalXp,
+    xp_predictions: xp,
+    xp_achievements: totalXp - xp,
+    level: levelFor(totalXp),
     first_level: LEVELS[0].title,
-    place: meRow ? 1 + table.filter((r) => r.xp > xp).length : null,
-    fans: table.length,
+    // The place is the rating of right predictions (rating.js), not XP.
+    place: rating.place,
+    fans: rating.of,
+    rating,
+    week: {
+      votes: voteRows.filter((r) => r.voted_at && r.voted_at >= weekAgo).length,
+      accuracy_now: accuracy(settled),
+      accuracy_before: accuracy(before),
+    },
     guessed: settled.filter((r) => r.pick === r.winner).length,
     settled: settled.length,
     streak,
@@ -230,9 +275,7 @@ export async function fanProfile(env, user, date) {
     picks: Object.fromEntries(picks.map((r) => [r.match_id, r.pick])),
     follows: followed.map((p) => p.player_id),
     my_players: myPlayers,
-    achievements: fanAchievements(voteRows.map((r) => ({ ...r, mine: mySet.has(r.p1_player) || mySet.has(r.p2_player), bolshe: Boolean(r.bolshe) })), {
-      follows: followed.length, bracketPoints: await bracketPointsOf(db, user.id), appDays: days.map((d) => d.day), streams: streams?.n ?? 0,
-    }),
+    achievements,
     prefs: prefs ? {
       public: Boolean(prefs.public), surface: prefs.surface, tours: prefs.tours, since: prefs.since, onboarded_at: prefs.onboarded_at,
       fav_tournaments: JSON.parse(prefs.fav_tournaments ?? '[]'),

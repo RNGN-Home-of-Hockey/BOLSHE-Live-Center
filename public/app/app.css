@@ -718,6 +718,59 @@ details.rules summary { color: var(--text); font-weight: 700; cursor: pointer; }
 .tr-win .head, .tr-win .ph { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 2px var(--lime); }
 .tr-win small { font-size: 11px; color: var(--hint); font-weight: 600; }
 
+/* profile v2: edit, 4 stats with the week's change, the nearest goal, my players, links; predictions; achievements; rating */
+.me-card { position: relative; }
+.me-edit { margin-left: auto; padding: 8px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--chip); color: var(--text); font-size: 13px; font-weight: 700; }
+a.lv-card { color: #fff; }
+.lv-card span.go { position: absolute; right: 16px; bottom: 16px; width: 44px; height: 44px; border-radius: 50%; background: #a57bff; color: #15111c; display: grid; place-items: center; }
+.stats4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
+.stats4 > div, .stats4 > a { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 10px 6px; text-align: center; color: var(--text); display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.stats4 small { font-size: 9.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--hint); }
+.stats4 b { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.dl { font-style: normal; font-size: 11px; font-weight: 700; color: var(--hint); }
+.dl.up { color: var(--win); }
+.dl.down { color: var(--bad); }
+.goal { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 12px; align-items: center; background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 14px; color: var(--text); margin-bottom: 10px; }
+.goal .ach-ic { font-size: 30px; }
+.goal-body { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.goal-body b { font-size: 15px; font-weight: 800; }
+.goal-body small { font-size: 12px; color: var(--hint); }
+.goal-xp { font-weight: 800; color: var(--hl); font-size: 14px; white-space: nowrap; }
+.mp-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.mp-card { display: flex; flex-direction: column; align-items: center; gap: 5px; text-align: center; background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 12px 6px; color: var(--text); min-width: 0; }
+.mp-card .head { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; background-color: var(--card2); }
+.mp-card b { font-size: 12.5px; line-height: 1.2; }
+.mp-card small { font-size: 11px; color: var(--hint); line-height: 1.3; }
+.pf-links { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 16px; }
+.pf-links a { display: flex; flex-direction: column; gap: 2px; background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 12px 14px; color: var(--text); }
+.pf-links span { font-size: 22px; }
+.pf-links b { font-size: 15px; font-weight: 800; }
+.pf-links small { font-size: 12px; color: var(--hint); }
+.pred-tabs { margin-bottom: 10px; }
+.pred { display: block; background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 12px 14px; margin-bottom: 10px; color: var(--text); }
+.pred-top { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--hint); margin-bottom: 8px; }
+.pred-body { display: grid; grid-template-columns: minmax(0, 1fr) 104px; gap: 10px; align-items: center; }
+.pred-players { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.pred-players div { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; min-width: 0; }
+.pred-players span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pred-players .w { font-weight: 800; color: var(--text); }
+.pred-pick { display: flex; flex-direction: column; align-items: center; gap: 3px; border: 1px solid var(--line); border-radius: 14px; padding: 8px 4px; text-align: center; }
+.pred-pick small { font-size: 10px; color: var(--hint); }
+.pred-pick .head { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; background-color: var(--card2); }
+.pred-pick b { font-size: 12px; }
+.pred-pick.ok { border-color: var(--win); }
+.pred-pick.no { opacity: .75; }
+.pred-xp { font-size: 11px; font-weight: 800; color: var(--win); }
+.pred-pick.no .pred-xp { color: var(--hint); }
+.ach.earned { border-color: color-mix(in srgb, var(--hl) 45%, var(--line)); }
+.ach-xp { color: var(--hl) !important; font-weight: 800; }
+.ach-banner { background: linear-gradient(110deg, var(--purple-2), var(--purple)); color: #fff; border-radius: 18px; padding: 14px; font-weight: 700; font-size: 14px; }
+.rt-me { display: flex; align-items: baseline; gap: 10px; margin-top: 12px; background: var(--card); border: 1px solid var(--hl); border-radius: 18px; padding: 12px 16px; }
+.rt-me span { color: var(--hint); font-weight: 700; }
+.rt-me b { font-size: 24px; font-weight: 800; color: var(--hl); }
+.rt-me small { color: var(--hint); }
+@media (max-width: 360px) { .stats4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
 /* covers (bracket/old places) */
 .cover { position: relative; aspect-ratio: 16 / 9; border-radius: 16px; overflow: hidden; background: #140f1d url("img/paint.svg") center / cover; }
 .cover .heads { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 6%; }
