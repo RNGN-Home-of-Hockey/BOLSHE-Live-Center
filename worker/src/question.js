@@ -1,9 +1,11 @@
 // «Вопрос дня» on the Worker: one question per Moscow day made from the running draws
 // (src/game/question.js) and settled after every draws refresh.
-//   GET  /api/question   today's question with the poll (+ the fan's answer) and the last ones
-//   POST /api/question   {pick: 0|1|2} — today's question only, while the answer is unknown
+//   GET  /api/question   today's question with the poll (+ the fan's answer, the hosts' answers once
+//                        the fan has answered) and the last ones
+//   POST /api/question   {pick: 0|1} — today's question only, until the player's next match starts
 
-import { QUESTION_OPTIONS, pickQuestion, questionAnswer } from '../../src/game/question.js';
+import { QUESTION_OPTIONS, QUESTION_XP, pickQuestion, questionAnswer, questionClosesAt } from '../../src/game/question.js';
+import { mediaUrl } from '../../src/lib/media.js';
 
 const mskDay = (ms = Date.now()) => new Date(ms + 3 * 3600e3).toISOString().slice(0, 10);
 const daysBefore = (day, n) => new Date(Date.parse(`${day}T12:00:00Z`) - n * 86400e3).toISOString().slice(0, 10);
@@ -13,7 +15,13 @@ export async function ensureQuestion(env, day = mskDay()) {
   if (await db.prepare('SELECT 1 AS x FROM daily_questions WHERE day = ?').bind(day).first()) return null;
   const { results } = await db.prepare("SELECT bracket_key, name, tour, draw_json FROM brackets WHERE status = 'open'").all();
   const { results: recent } = await db.prepare('SELECT player_fs_id FROM daily_questions WHERE day >= ?').bind(daysBefore(day, 5)).all();
-  const q = pickQuestion(results.map((b) => ({ ...b, draw: JSON.parse(b.draw_json) })), { day, recent });
+  // Players on court in the next 10 hours go last: their vote would close too early.
+  const now = Date.now();
+  const { results: playing } = await db.prepare(`SELECT p1_fs_id AS a, p2_fs_id AS b FROM matches
+    WHERE is_doubles = 0 AND status IN ('scheduled', 'live') AND start_at BETWEEN ? AND ?`)
+    .bind(new Date(now - 12 * 3600e3).toISOString(), new Date(now + 10 * 3600e3).toISOString()).all();
+  const soon = new Set(playing.flatMap((m) => [m.a, m.b]).filter(Boolean));
+  const q = pickQuestion(results.map((b) => ({ ...b, draw: JSON.parse(b.draw_json) })), { day, recent, soon });
   if (!q) return null;
   await db.prepare(`INSERT OR IGNORE INTO daily_questions (day, goal, question, bracket_key, tournament, player_fs_id, player_id, player_name, player_rank, photo, created_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
@@ -42,11 +50,37 @@ export async function questionUpkeep(env) {
   return { settled, created: created?.question ?? null };
 }
 
+// The player's first singles match after the question was asked: the vote closes when it starts.
+async function nextMatchStart(db, q) {
+  if (!q.player_fs_id) return null;
+  const r = await db.prepare(`SELECT MIN(start_at) AS s FROM matches WHERE (p1_fs_id = ?1 OR p2_fs_id = ?1) AND is_doubles = 0
+    AND start_at >= ?2 AND status NOT IN ('cancelled', 'postponed')`).bind(q.player_fs_id, q.created_at ?? `${q.day}T00:00:00Z`).first();
+  return r?.s ?? null;
+}
+
+async function closesAt(db, q) {
+  return questionClosesAt(q.day, await nextMatchStart(db, q));
+}
+
+// The hosts' answers («Эксперты «Больше»» vote like any fan).
+async function hostAnswers(db, day) {
+  try {
+    const { results } = await db.prepare(`SELECT h.host_id, h.name, h.role, h.photo_url, v.pick FROM question_votes v
+      JOIN hosts h ON h.telegram_user_id = v.user_id WHERE v.day = ? AND v.pick < 2 AND h.active = 1 ORDER BY h.sort`).bind(day).all();
+    return results.map((r) => ({ id: r.host_id, name: r.name, role: r.role, photo: r.photo_url ? (mediaUrl(r.photo_url) ?? r.photo_url) : null, pick: r.pick }));
+  } catch {
+    return []; // no hosts table yet
+  }
+}
+
 async function shape(db, q, user, today) {
   const { results } = await db.prepare('SELECT pick, COUNT(*) AS n FROM question_votes WHERE day = ? GROUP BY pick').bind(q.day).all();
-  const counts = [0, 0, 0];
-  for (const r of results) if (counts[r.pick] != null) counts[r.pick] = r.n;
+  const counts = QUESTION_OPTIONS.map(() => 0);
+  for (const r of results) if (counts[r.pick] != null) counts[r.pick] = r.n; // old «Затрудняюсь» votes are left out
   const mine = user ? await db.prepare('SELECT pick FROM question_votes WHERE day = ? AND user_id = ?').bind(q.day, user.id).first() : null;
+  const pick = mine?.pick != null && mine.pick < QUESTION_OPTIONS.length ? mine.pick : null;
+  const closes = q.day === today ? await closesAt(db, q) : null;
+  const open = q.answer == null && q.day === today && Date.now() < Date.parse(closes);
   return {
     day: q.day,
     question: q.question,
@@ -54,12 +88,16 @@ async function shape(db, q, user, today) {
     tournament: q.tournament,
     bracket_key: q.bracket_key,
     options: QUESTION_OPTIONS,
+    xp: QUESTION_XP,
     player: { id: q.player_id, name: q.player_name, rank: q.player_rank, photo: q.photo },
     counts,
-    total: counts[0] + counts[1] + counts[2],
-    pick: mine?.pick ?? null,
+    total: counts.reduce((a, n) => a + n, 0),
+    pick,
     answer: q.answer ?? null,
-    open: q.answer == null && q.day === today,
+    open,
+    closes_at: closes,
+    // Shown once the fan has answered (or the vote is over), not to sway the answer.
+    hosts: q.day === today && (pick != null || !open) ? await hostAnswers(db, q.day) : null,
   };
 }
 
@@ -83,11 +121,12 @@ export async function questionView(env, user) {
 
 export async function answerQuestion(env, user, body) {
   const pick = Number(body?.pick);
-  if (![0, 1, 2].includes(pick)) return { ok: false, status: 400, error: 'pick must be 0, 1 or 2' };
+  if (![0, 1].includes(pick)) return { ok: false, status: 400, error: 'pick must be 0 or 1' };
   const today = mskDay();
-  const q = await env.DB.prepare('SELECT answer FROM daily_questions WHERE day = ?').bind(today).first();
+  const q = await env.DB.prepare('SELECT * FROM daily_questions WHERE day = ?').bind(today).first();
   if (!q) return { ok: false, status: 404, error: 'Сегодня вопроса нет' };
   if (q.answer != null) return { ok: false, status: 409, error: 'Ответ уже известен — голосование закрыто' };
+  if (Date.now() >= Date.parse(await closesAt(env.DB, q))) return { ok: false, status: 409, error: 'Голосование закрыто — матч уже начался' };
   const now = new Date().toISOString();
   await env.DB.prepare(`INSERT INTO question_votes (day, user_id, pick, created_at, updated_at) VALUES (?, ?, ?, ?, ?)
     ON CONFLICT(day, user_id) DO UPDATE SET pick = excluded.pick, updated_at = excluded.updated_at`)

@@ -4,6 +4,7 @@
 import { getPlayer, nameStats, nextUnverified, searchPlayers, setPlayerName } from './players.js';
 import { answerLogin, loginForBot } from './web-login.js';
 import { hostsText, linkHost, unlinkHost } from './hosts.js';
+import { findMatchesByName, mainMatchNow, setMainMatch, setStudio, studioState } from './home.js';
 
 const SOURCE_LABEL = {
   override: 'ручная правка (файл)',
@@ -38,7 +39,7 @@ function adminIds(env) {
   return new Set(String(env.ADMIN_IDS ?? '').split(/[\s,;]+/).filter(Boolean).map(Number));
 }
 
-const isAdmin = (env, userId) => adminIds(env).has(Number(userId));
+export const isAdmin = (env, userId) => adminIds(env).has(Number(userId));
 
 function send(env, chatId, text, extra = {}) {
   return tg(env, 'sendMessage', { chat_id: chatId, text, parse_mode: 'HTML', disable_web_page_preview: true, ...extra });
@@ -123,6 +124,8 @@ const ADMIN_COMMANDS = [
   { command: 'player', description: 'Найти игрока' },
   { command: 'stats', description: 'Статистика базы' },
   { command: 'hosts', description: 'Ведущие и комментаторы' },
+  { command: 'main', description: 'Главный матч дня на главной' },
+  { command: 'live', description: 'Баннер «Больше! Лайв»' },
   { command: 'start', description: 'Помощь' },
 ];
 
@@ -136,7 +139,61 @@ const HELP_ADMIN = [
   '/hosts — ведущие и комментаторы «Больше»',
   '/host_link Имя Фамилия = @ник — привязать ведущего к его Telegram (он должен один раз открыть бота)',
   '/host_unlink Имя Фамилия — отвязать',
+  '/main — какой матч сейчас главный на главной; /main Картал — сделать главным матч игрока; /main авто — выбирать самим',
+  '/live — баннер «Больше! Лайв» (пн 19:00); /live ссылка | тема — ссылка и тема ближайшего эфира; /live время 20:00; /live выкл; /live вкл',
 ].join('\n');
+
+const mskTime = (iso) => new Date(Date.parse(iso) + 3 * 3600e3).toISOString().slice(11, 16);
+const mskDate = (iso) => new Date(Date.parse(iso) + 3 * 3600e3).toISOString().slice(0, 10).split('-').reverse().slice(0, 2).join('.');
+const matchLine = (m) => `${esc(m.p1.name)} — ${esc(m.p2.name)} · ${esc(m.tournament.name)} · ${mskDate(m.start_at)} ${mskTime(m.start_at)}${m.status === 'live' ? ' · LIVE' : ''}`;
+
+async function mainCommand(env, chatId, rest, by) {
+  if (!rest) {
+    const m = await mainMatchNow(env);
+    return send(env, chatId, m
+      ? `Главный матч сейчас (${m.manual ? 'выбран вручную' : 'выбран автоматически'}):\n${matchLine(m)}\n\n/main Фамилия — выбрать другой, /main авто — выбирать самим.`
+      : 'Главного матча сейчас нет — нет подходящих матчей сегодня и завтра.');
+  }
+  if (/^(авто|auto|сброс)$/i.test(rest)) {
+    await setMainMatch(env, null);
+    return send(env, chatId, 'Готово: главный матч снова выбирается сам — эфир «Больше», крупный турнир, поздний круг, топ-игроки.');
+  }
+  const found = await findMatchesByName(env, rest);
+  if (!found.length) return send(env, chatId, 'Не нашёл одиночных матчей с таким игроком сегодня и завтра.');
+  if (found.length === 1) {
+    await setMainMatch(env, found[0].match_id, by);
+    return send(env, chatId, `✅ Главный матч дня:\n${matchLine(found[0])}`);
+  }
+  return send(env, chatId, 'Какой матч сделать главным?', {
+    reply_markup: { inline_keyboard: found.map((m) => [{ text: `${m.p1.short} — ${m.p2.short} · ${mskTime(m.start_at)}`.slice(0, 60), callback_data: `main:${m.match_id}`.slice(0, 64) }]) },
+  });
+}
+
+async function liveCommand(env, chatId, rest) {
+  let note = null;
+  if (/^(выкл|нет|off)$/i.test(rest)) await setStudio(env, { off: true });
+  else if (/^(вкл|on)$/i.test(rest)) await setStudio(env, { off: false });
+  else if (/^время\s+\d{1,2}:\d{2}$/i.test(rest)) await setStudio(env, { time: rest.match(/\d{1,2}:\d{2}/)[0].padStart(5, '0') });
+  else if (rest) {
+    const [link, ...topic] = rest.split('|').map((x) => x.trim());
+    const patch = {};
+    if (link) {
+      if (!/^https:\/\/\S+$/.test(link)) return send(env, chatId, 'Ссылка должна начинаться с https:// — например /live https://vkvideo.ru/... | Гость — Динара Сафина');
+      patch.url = link;
+    }
+    if (topic.join(' | ')) patch.note = topic.join(' | ');
+    await setStudio(env, patch);
+  } else note = 'Команды: /live ссылка | тема · /live время 20:00 · /live выкл · /live вкл';
+  const { override, banner, next } = await studioState(env);
+  const lines = [
+    `<b>Больше! Лайв</b> — ближайший эфир ${next ? `${mskDate(next.starts_at)} в ${mskTime(override?.date === next.date && override.time ? `${next.date}T${override.time}:00+03:00` : next.starts_at)}` : '—'}`,
+    override?.date === next?.date && override.off ? '❌ Отменён — баннера не будет.' : `Баннер на главной: ${banner ? 'виден сейчас' : 'появится накануне, в воскресенье'}.`,
+    `Ссылка: ${esc(override?.date === next?.date && override.url ? override.url : 'группа ВК (по умолчанию)')}`,
+    override?.date === next?.date && override.note ? `Тема: ${esc(override.note)}` : null,
+    note,
+  ].filter(Boolean);
+  return send(env, chatId, lines.join('\n'));
+}
 
 async function onMessage(env, msg) {
   const chatId = msg.chat.id;
@@ -203,6 +260,8 @@ async function onMessage(env, msg) {
   }
 
   if (cmd === 'hosts') return send(env, chatId, await hostsText(env.DB));
+  if (cmd === 'main') return mainCommand(env, chatId, rest, from.first_name ?? null);
+  if (cmd === 'live') return liveCommand(env, chatId, rest);
   if (cmd === 'host_link') {
     const [who, nick] = rest.split('=').map((x) => x.trim());
     if (!who || !nick) return send(env, chatId, 'Напиши: /host_link Вадим Азаренко = @ник');
@@ -264,6 +323,11 @@ async function onCallback(env, cq) {
   }
   if (!chatId || !isAdmin(env, from.id)) return null;
   const adminInfo = { id: from.id, name: [from.first_name, from.username && `@${from.username}`].filter(Boolean).join(' ') };
+  const mainPick = String(cq.data ?? '').match(/^main:(.+)$/);
+  if (mainPick) {
+    const r = await setMainMatch(env, mainPick[1], from.first_name ?? null);
+    return send(env, chatId, r.ok ? `✅ Главный матч дня:\n${matchLine(r.match)}` : esc(r.error));
+  }
   const [action, playerId] = String(cq.data ?? '').split(':');
   const session = await getSession(env, from.id);
   const skip = session.payload.skip ?? [];

@@ -15,7 +15,8 @@ const SUMMARY = `SELECT t.tournament_key, t.tournament AS name, t.tour, t.level,
     MIN(CASE WHEN m.status = 'scheduled' THEN m.start_at END) AS next_start,
     SUM(EXISTS (SELECT 1 FROM highlights h WHERE h.match_id = m.match_id)) AS highlights
   FROM tournaments t JOIN matches m ON m.tournament_key = t.tournament_key
-  WHERE t.discipline = 'singles' AND t.level IN ('tour', 'challenger') AND t.tournament NOT LIKE '%квалификац%'`;
+  WHERE t.discipline = 'singles' AND t.level IN ('tour', 'challenger')`;
+const NO_QUALIFYING = " AND t.tournament NOT LIKE '%квалификац%'";
 
 function shapeTournament(r, bracket, today) {
   const status = bracket?.status === 'finished' || (r.last_day < today && !r.live && !r.left_matches) ? 'done'
@@ -34,10 +35,11 @@ function shapeTournament(r, bracket, today) {
   };
 }
 
-export async function listTournaments(env, user) {
+// The home screen also takes the qualifying (withQualifying): it stands for a tournament about to start.
+export async function listTournaments(env, user, { withQualifying = false } = {}) {
   const today = mskToday();
   const [{ results }, brackets] = await Promise.all([
-    env.DB.prepare(`${SUMMARY} GROUP BY t.tournament_key`).all(),
+    env.DB.prepare(`${SUMMARY}${withQualifying ? '' : NO_QUALIFYING} GROUP BY t.tournament_key`).all(),
     listBrackets(env, user),
   ]);
   const byKey = new Map(brackets.map((b) => [b.tournament_key, b]));

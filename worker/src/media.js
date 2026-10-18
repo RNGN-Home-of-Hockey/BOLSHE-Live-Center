@@ -2,7 +2,8 @@
 // Flashscore link and every picture stays available for good:
 //   covers — the VK video's own picture of every «Больше» broadcast (og:image of the video page),
 //            cut down by Cloudflare Images to 640×360 JPEG (~35 KB instead of ~125 KB);
-//   heads  — a player's Flashscore photo (100×100 PNG, ~15 KB), stored as is.
+//   heads  — a player's Flashscore photo (100×100 PNG, ~15 KB), stored as is;
+//   hosts, tours — hosts' portraits and tournament stadium photos, uploaded by hand (credited in D1).
 // D1 table `media` says what is stored, where it came from and when to look again.
 //   GET /media/covers/<vk video id>.jpg     GET /media/heads/<flashscore id>.png
 
@@ -189,7 +190,7 @@ export async function syncMedia(env, { covers = 5, heads = 30 } = {}) {
   return { linked, covers: tally(coverResults), heads: tally(headResults) };
 }
 
-const MEDIA_PATH = /^\/media\/(covers|heads|hosts)\/([A-Za-z0-9_-]+\.(?:jpg|png|webp))$/;
+const MEDIA_PATH = /^\/media\/(covers|heads|hosts|tours)\/([A-Za-z0-9_-]+\.(?:jpg|png|webp))$/;
 
 // Stored pictures are immutable: a new cover gets a new ?v= in the API, so browsers cache for a year.
 // A missing one answers 404 (cached 10 minutes) and the app shows the players' heads instead.

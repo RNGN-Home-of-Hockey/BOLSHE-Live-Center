@@ -1,11 +1,12 @@
 // «Вопрос дня»: the app asks one question a day by itself, about the running tournaments —
 // "Дойдёт ли Синнер до полуфинала?", "Сможет ли Швёнтек выиграть турнир?" — and settles it by the
-// draw (worker/src/brackets.js keeps the draws fresh). Answers: 0 «Да», 1 «Нет»,
-// 2 «Затрудняюсь» (counts in the poll, gives no XP).
+// draw (worker/src/brackets.js keeps the draws fresh). Answers: 0 «Да», 1 «Нет» — one tap on the home
+// screen. The vote closes at the end of the Moscow day or when the player's next match starts,
+// whichever comes first (no voting while the answer is being played out).
 
 import { participants } from './bracket.js';
 
-export const QUESTION_OPTIONS = ['Да', 'Нет', 'Затрудняюсь'];
+export const QUESTION_OPTIONS = ['Да', 'Нет'];
 // Answering «Да» or «Нет» gives XP like a match vote; the right answer gives more.
 export const QUESTION_XP = { answer: 10, correct: 20 };
 
@@ -51,7 +52,9 @@ export function questionAnswer(draw, fsId, goal) {
 // The question of the day: the best-ranked player still in a running draw who was not asked
 // about in the last days; ATP and WTA take turns by day. The goal grows with the stage:
 // early rounds — the semi-final, the quarter-finals — the final, later — the title.
-export function pickQuestion(brackets, { day, recent = [] }) {
+// Players who go on court within hours (`soon`, Flashscore ids) come last: their vote would close
+// before most fans wake up.
+export function pickQuestion(brackets, { day, recent = [], soon = new Set() }) {
   const asked = new Set(recent.map((q) => q.player_fs_id));
   const preferTour = Math.floor(Date.parse(`${day}T12:00:00Z`) / 86400e3) % 2 === 0 ? 'ATP' : 'WTA';
   const candidates = [];
@@ -69,7 +72,8 @@ export function pickQuestion(brackets, { day, recent = [] }) {
     }
   }
   if (!candidates.length) return null;
-  candidates.sort((x, y) => (y.b.tour === preferTour) - (x.b.tour === preferTour) || x.p.rank - y.p.rank);
+  candidates.sort((x, y) => soon.has(x.p.fs_id) - soon.has(y.p.fs_id)
+    || (y.b.tour === preferTour) - (x.b.tour === preferTour) || x.p.rank - y.p.rank);
   const { b, p, goal } = candidates[0];
   const name = lastName(p.name_ru ?? p.name);
   return {
@@ -84,4 +88,11 @@ export function pickQuestion(brackets, { day, recent = [] }) {
     player_rank: p.rank,
     photo: p.photo ?? null,
   };
+}
+
+// When the vote closes: the end of the question's Moscow day, or the start of the player's next
+// match if that comes first (ISO strings; nextStart may be null).
+export function questionClosesAt(day, nextStart = null) {
+  const endOfDay = new Date(Date.parse(`${day}T00:00:00Z`) + 21 * 3600e3).toISOString(); // 24:00 MSK
+  return nextStart && nextStart < endOfDay ? new Date(Date.parse(nextStart)).toISOString() : endOfDay;
 }

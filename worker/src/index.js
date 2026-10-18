@@ -12,12 +12,12 @@
 //   POST /api/highlights/push (x-push-token)  GET /api/players/<id>/media   highlights + «Больше» broadcasts of a player
 //   GET  /api/tournaments  GET /api/tournaments/<key>                       «Турниры»: now / soon / done and the tournament page
 //   GET  /api/hosts  GET /api/hosts/<id>                                    «Эксперты «Больше»» (hosts vote in the app themselves)
+//   GET  /api/home   POST /api/home/main {match_id|null} (admins)           home screen; the main match picked by hand
 //   POST /telegram/webhook               Telegram updates (secret header required)
 // Cron (every 10 min): schedule sheet -> broadcasts; registers the bot webhook once the token exists.
 
 import { ACHIEVEMENTS, achievementLevel } from '../../src/game/achievements.js';
 import { LEGEND_STEP, LEVELS, XP_RULES, levelFor } from '../../src/game/levels.js';
-import { explainTournament } from '../../src/insights/tournaments.js';
 import { bracketView, listBrackets, submitBracket, syncBrackets } from './brackets.js';
 import { authUser, castVote, fanProfile, myPredictions, setFollow, setPrefs, trackEvent } from './fans.js';
 import { ratingView } from './rating.js';
@@ -29,12 +29,13 @@ import { syncOdds } from './odds-sync.js';
 import { winlineLink } from './winline-link.js';
 import { getPlayer, searchPlayers } from './players.js';
 import { broadcastsForDate, syncSchedule } from './schedule-sync.js';
-import { answerQuestion, questionUpkeep, questionView, todayQuestion } from './question.js';
+import { answerQuestion, questionUpkeep, questionView } from './question.js';
+import { homeView, setMainMatch } from './home.js';
 import { endWebSession, pollWebLogin, startWebLogin } from './web-login.js';
 import { playerMedia, pushHighlights } from './highlights.js';
 import { listTournaments, tournamentView } from './tournaments.js';
 import { playerInsights, refreshPlayerStats, statsList, syncMatchStats } from './stats.js';
-import { appUrl, ensureMenuButton, ensureWebhook, handleTelegramUpdate, webhookSecret } from './telegram.js';
+import { appUrl, ensureMenuButton, ensureWebhook, handleTelegramUpdate, isAdmin, webhookSecret } from './telegram.js';
 
 const json = (data, status = 200, cacheSeconds = 0) => new Response(JSON.stringify(data), {
   status,
@@ -46,44 +47,6 @@ const json = (data, status = 200, cacheSeconds = 0) => new Response(JSON.stringi
 });
 
 const todayMsk = () => new Date(Date.now() + 3 * 3600 * 1000).toISOString().slice(0, 10);
-
-// Main-tour and challenger singles of the day, one entry per tournament, explained in plain words.
-function summarizeTournaments(matches, broadcasts) {
-  const byKey = new Map();
-  for (const m of matches) {
-    const t = m.tournament;
-    if (m.is_doubles || !['tour', 'challenger'].includes(t.level)) continue;
-    const key = `${t.tour}|${t.name}`;
-    const entry = byKey.get(key) ?? { key: t.key, tour: t.tour, name: t.name, level: t.level, surface: t.surface, country: t.country, logo: t.logo ?? null, matches: 0, live: 0, bolshe: 0, russians: 0 };
-    entry.matches += 1;
-    if (m.status === 'live') entry.live += 1;
-    if (m.bolshe) entry.bolshe += 1;
-    if (m.p1.is_russian || m.p2.is_russian) entry.russians += 1;
-    byKey.set(key, entry);
-  }
-  return [...byKey.values()].map((e) => {
-    const broadcast = broadcasts.find((b) => b.tournament && e.name && b.tournament.toLowerCase().includes(e.name.toLowerCase()));
-    return { ...e, round: broadcast?.round ?? null, ...explainTournament({ ...e, tournament: e.name }, broadcast?.tournament) };
-  }).sort((a, b) => (a.level === b.level ? b.matches - a.matches : a.level === 'tour' ? -1 : 1));
-}
-
-// Main-tour singles still to come that are not on the «Больше» schedule: the best-ranked pairs
-// of each tournament (today and tomorrow), three per tournament.
-function upcomingByTournament(matches) {
-  const now = Date.now();
-  const byKey = new Map();
-  const open = matches.filter((m) => !m.is_doubles && m.tournament.level === 'tour' && m.status === 'scheduled'
-    && !m.bolshe && Date.parse(m.start_at) > now);
-  open.sort((a, b) => ((a.p1.rank ?? 999) + (a.p2.rank ?? 999)) - ((b.p1.rank ?? 999) + (b.p2.rank ?? 999)));
-  for (const m of open) {
-    const key = `${m.tournament.tour}|${m.tournament.name}`;
-    const list = byKey.get(key) ?? [];
-    if (list.length < 3) list.push(m);
-    byKey.set(key, list);
-  }
-  for (const list of byKey.values()) list.sort((a, b) => Date.parse(a.start_at) - Date.parse(b.start_at));
-  return byKey;
-}
 
 async function health(env) {
   const one = async (sql) => (await env.DB.prepare(sql).first())?.n ?? 0;
@@ -295,6 +258,13 @@ export default {
         return json(result, result.ok ? 200 : result.status ?? 400);
       }
       if (path === '/api/web-logout' && request.method === 'POST') return json(await endWebSession(env, request));
+      if (path === '/api/home/main' && request.method === 'POST') {
+        const user = await authUser(env, request);
+        if (!user || !isAdmin(env, user.id)) return json({ ok: false, error: 'Только для админов' }, 403);
+        const body = await request.json().catch(() => ({}));
+        const result = await setMainMatch(env, body.match_id ?? null, user.first_name ?? null);
+        return json(result, result.ok ? 200 : result.status ?? 400);
+      }
       if (path === '/api/question') {
         const user = await authUser(env, request);
         if (request.method !== 'POST') return json(await questionView(env, user));
@@ -309,7 +279,7 @@ export default {
         if (path === '/api/me') {
           const date = url.searchParams.get('date') ?? todayMsk();
           if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return json({ ok: false, error: 'date must be YYYY-MM-DD' }, 400);
-          return json(await fanProfile(env, user, date));
+          return json({ ...(await fanProfile(env, user, date)), is_admin: isAdmin(env, user.id) });
         }
         if (request.method !== 'POST') return json({ ok: false, error: 'method not allowed' }, 405);
         const body = await request.json().catch(() => ({}));
@@ -395,29 +365,8 @@ export default {
       }
       if (path === '/api/home') {
         const date = url.searchParams.get('date') ?? todayMsk();
-        const tomorrow = new Date(Date.parse(`${date}T12:00:00Z`) + 86400e3).toISOString().slice(0, 10);
-        const [all, ahead, broadcasts] = await Promise.all([
-          matchesForDate(env.DB, date, {}),
-          matchesForDate(env.DB, tomorrow, { level: 'tour' }),
-          broadcastsForDate(env.DB, date),
-        ]);
-        const main = all.filter((m) => !m.is_doubles && ['tour', 'challenger'].includes(m.tournament.level));
-        const upcoming = upcomingByTournament([...all, ...ahead]);
-        const { results: open } = await env.DB.prepare("SELECT bracket_key, name FROM brackets WHERE status = 'open'").all();
-        const openBrackets = new Map(open.map((b) => [b.name, b.bracket_key]));
-        const question = await todayQuestion(env).catch(() => null);
-        return json({
-          date,
-          tournaments: summarizeTournaments(all, broadcasts).map((t) => ({
-            ...t, upcoming: upcoming.get(`${t.tour}|${t.name}`) ?? [], bracket_key: openBrackets.get(`${t.tour} ${t.name}`) ?? null,
-          })),
-          bolshe: all.filter((m) => m.bolshe),
-          broadcasts,
-          question,
-          // Players to suggest for «Мои игроки»: the best-ranked of today's main-tour singles.
-          featured: [...new Map(main.filter((m) => m.tournament.level === 'tour').flatMap((m) => [m.p1, m.p2])
-            .filter((p) => p.player_id && p.rank).sort((a, b) => a.rank - b.rank).map((p) => [p.player_id, p])).values()].slice(0, 6),
-        }, 200, 20);
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return json({ ok: false, error: 'date must be YYYY-MM-DD' }, 400);
+        return json(await homeView(env, date), 200, 20);
       }
       if (path === '/api/levels') {
         return json({
