@@ -1710,6 +1710,14 @@ function drawPlayers(d) {
 async function bracketScreen(key, token, params = new URLSearchParams()) {
   const [d] = await Promise.all([api(`/api/brackets/${encodeURIComponent(key)}`), loadMe(mskDay(0))]);
   if (stale(token)) return;
+  renderBracket(d, key, token, params);
+}
+
+// Draws the bracket from the data already loaded: a pick, a round chip or «Изменить» redraw it at once on
+// the phone. Before 2026-10-19 every tap loaded the whole draw and the fan's profile from the server again
+// (1–2 s a tap); now the server is asked only to send the bracket.
+function renderBracket(d, key, token, params) {
+  const redraw = () => { if (!stale(token)) renderBracket(d, key, token, params); };
   const draw = d.draw;
   const showPlayers = params.get('view') === 'players';
   const current = Math.max(0, draw.rounds.findIndex((round) => round.matches.some((m) => m.w == null)));
@@ -1780,19 +1788,19 @@ async function bracketScreen(key, token, params = new URLSearchParams()) {
     ${d.table.length ? `<h2>Таблица</h2><div class="bk-table">${d.table.slice(0, 20).map((t) => `<div class="bk-row${t.me ? ' me' : ''}"><span>${t.place}</span><span>${esc(t.name)}${t.me ? ' (ты)' : ''}</span><b>${t.points}</b></div>`).join('')}</div>` : ''}`;
   view.querySelectorAll('[data-round]').forEach((b) => b.addEventListener('click', () => {
     bracketRound[key] = Number(b.dataset.round);
-    bracketScreen(key, token, params).catch(() => {});
+    redraw();
   }));
   view.querySelector('[data-edit]')?.addEventListener('click', () => {
     bracketEditing[key] = !editing;
     delete bracketDrafts[`${key}:edit`];
-    bracketScreen(key, token, params).catch(() => {});
+    redraw();
   });
   view.querySelectorAll('[data-pick]').forEach((b) => b.addEventListener('click', () => {
     const next = cleanPicks(draw, { ...picks, [b.dataset.pick]: Number(b.dataset.pos) });
     if (editing) bracketDrafts[draftKey] = next;
     else saveDraft(key, next);
     tg?.HapticFeedback?.selectionChanged?.();
-    bracketScreen(key, token, params).catch(() => {});
+    redraw();
   }));
   view.querySelector('[data-send]')?.addEventListener('click', async (e) => {
     const go = () => post(`/api/brackets/${encodeURIComponent(key)}`, { picks: cleanPicks(draw, editing ? bracketDrafts[draftKey] : loadDraft(key)) })
@@ -1800,7 +1808,7 @@ async function bracketScreen(key, token, params = new URLSearchParams()) {
       .catch((error) => toast(error.message));
     e.currentTarget.disabled = true;
     const text = editing ? 'Сохранить новую сетку?' : 'Отправить сетку? Поменять её можно будет до начала первого матча.';
-    if (tg?.showConfirm) tg.showConfirm(text, (yes) => (yes ? go() : bracketScreen(key, token, params)));
+    if (tg?.showConfirm) tg.showConfirm(text, (yes) => (yes ? go() : redraw()));
     else if (window.confirm(text)) go();
     else e.currentTarget.disabled = false;
   });
