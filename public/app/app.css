@@ -28,6 +28,14 @@
   --display: "Oswald", "Arial Narrow", "Roboto Condensed", sans-serif;
   --sans: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
   --smoke-opacity: 1;
+  /* The screen's insets (the iPhone home indicator, the notch) where the page really touches them: the
+     browser counts env() from the page's own frame, so it is right in Telegram, in Safari and in a
+     home-screen web app alike (Telegram's --tg-safe-area-* give the device's insets even where its own
+     panels already cover them, so they are not used). The tab bar sits on the very edge and keeps its
+     buttons above the bottom inset; everything near the bottom counts from here. */
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-t: env(safe-area-inset-top, 0px);
+  --tabbar: 58px;
   color-scheme: dark;
 }
 :root[data-theme="light"] {
@@ -53,7 +61,7 @@ html { background: var(--bg); }
 html, body { margin: 0; color: var(--text); }
 body {
   font: 500 15px/1.4 var(--sans);
-  padding-bottom: calc(84px + env(safe-area-inset-bottom));
+  padding-bottom: calc(var(--tabbar) + var(--safe-b) + 18px);
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
   min-height: 100vh;
@@ -69,7 +77,8 @@ img { -webkit-user-drag: none; }
 /* ---------- header ---------- */
 .top {
   position: sticky; top: 0; z-index: 6; display: flex; align-items: center; justify-content: space-between; gap: 10px;
-  padding: 10px 16px; background: color-mix(in srgb, var(--bg) 82%, transparent);
+  padding: calc(10px + var(--safe-t)) max(16px, env(safe-area-inset-right, 0px)) 10px max(16px, env(safe-area-inset-left, 0px));
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
   -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
 }
 .brand { display: flex; align-items: center; gap: 9px; color: var(--text); }
@@ -89,14 +98,18 @@ img { -webkit-user-drag: none; }
 
 #view { padding: 6px 16px 24px; max-width: 720px; margin: 0 auto; }
 
-/* ---------- tab bar ---------- */
+/* ---------- tab bar: on the very bottom edge everywhere (Telegram, Safari, a home-screen web app) ----------
+   Before 2026-10-19 it floated 8px + the inset above the edge — in a home-screen web app that is ~42px of air.
+   Now the bar's background runs down to the edge and only its buttons keep above the home indicator. */
 .tabs {
-  position: fixed; left: 10px; right: 10px; bottom: calc(8px + env(safe-area-inset-bottom)); z-index: 6;
-  display: grid; grid-template-columns: repeat(5, 1fr); max-width: 700px; margin: 0 auto;
-  background: color-mix(in srgb, var(--card) 88%, transparent); border: 1px solid var(--line); border-radius: 24px;
-  -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); box-shadow: 0 10px 30px rgba(0, 0, 0, .35);
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 6;
+  display: grid; grid-template-columns: repeat(5, 1fr);
+  padding: 0 max(8px, env(safe-area-inset-right, 0px)) var(--safe-b) max(8px, env(safe-area-inset-left, 0px));
+  background: color-mix(in srgb, var(--card) 92%, transparent); border-top: 1px solid var(--line); border-radius: 22px 22px 0 0;
+  -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); box-shadow: 0 -8px 28px rgba(0, 0, 0, .3);
 }
-.tabs a { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 9px 0 8px; font-size: 10px; font-weight: 600; color: var(--hint); }
+@media (min-width: 760px) { .tabs { left: 50%; right: auto; width: 720px; transform: translateX(-50%); border: 1px solid var(--line); border-bottom: 0; } }
+.tabs a { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; height: var(--tabbar); font-size: 10px; font-weight: 600; color: var(--hint); }
 .tabs a svg { width: 23px; height: 23px; }
 .tabs a.on { color: var(--hl); }
 .tabs a.on svg { filter: drop-shadow(0 0 8px color-mix(in srgb, var(--hl) 55%, transparent)); }
@@ -113,7 +126,7 @@ h2, .sec-title { display: flex; justify-content: space-between; align-items: bas
 .hint, .note { color: var(--hint); font-size: 13px; margin: -6px 2px 12px; line-height: 1.45; }
 .empty { color: var(--hint); padding: 18px 14px; text-align: center; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); }
 .loading { text-align: center; color: var(--hint); padding: 40px 0; }
-.toast { position: fixed; left: 50%; bottom: calc(96px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: var(--lime); color: var(--lime-ink);
+.toast { position: fixed; left: 50%; bottom: calc(var(--tabbar) + var(--safe-b) + 14px); transform: translateX(-50%); background: var(--lime); color: var(--lime-ink);
   font-weight: 700; padding: 11px 18px; border-radius: 14px; font-size: 14px; z-index: 20; max-width: 90vw; box-shadow: 0 8px 24px rgba(0, 0, 0, .35); }
 
 /* ---------- chips ---------- */
@@ -360,7 +373,7 @@ details.rules summary { color: var(--text); font-weight: 700; cursor: pointer; }
 .bk-name small { color: var(--hint); }
 .bk-ok { color: var(--win); font-weight: 800; }
 .bk-no { color: var(--bad); font-weight: 800; }
-.bk-send { position: sticky; bottom: calc(86px + env(safe-area-inset-bottom)); padding: 12px 0 4px; z-index: 2; }
+.bk-send { position: sticky; bottom: calc(var(--tabbar) + var(--safe-b) + 4px); padding: 12px 0 4px; z-index: 2; }
 .bk-send button { width: 100%; height: 54px; border: 0; border-radius: 999px; background: var(--lime); color: var(--lime-ink); font-weight: 800; font-size: 16px; cursor: pointer;
   box-shadow: 0 8px 26px rgba(0, 0, 0, .35); }
 .bk-send button:disabled { opacity: .55; cursor: default; }
@@ -508,7 +521,7 @@ details.rules summary { color: var(--text); font-weight: 700; cursor: pointer; }
 .sheet-back { position: fixed; inset: 0; z-index: 30; background: rgba(8, 6, 12, .6); display: flex; align-items: flex-end; justify-content: center;
   -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
 .sheet { position: relative; width: 100%; max-width: 520px; background: var(--card); color: var(--text); border: 1px solid var(--line); border-radius: 26px 26px 0 0;
-  padding: 18px 18px calc(22px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 12px; }
+  padding: 18px 18px calc(22px + var(--safe-b)); display: flex; flex-direction: column; gap: 12px; }
 .sheet h2 { margin: 4px 0 0; }
 .sheet-x { position: absolute; right: 14px; top: 14px; }
 .login-steps { margin: 0; padding-left: 20px; color: var(--hint); font-size: 14px; line-height: 1.6; }
