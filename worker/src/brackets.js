@@ -68,7 +68,7 @@ export async function syncBrackets(env) {
       const final = draw.rounds.at(-1).matches[0];
       await db.prepare(`INSERT INTO brackets (bracket_key, tournament_key, name, tour, surface, draw_json, status, starts_at, ends_at, updated_at)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ON CONFLICT(bracket_key) DO UPDATE SET draw_json = excluded.draw_json, status = excluded.status, starts_at = excluded.starts_at,
+        ON CONFLICT(bracket_key) DO UPDATE SET name = excluded.name, draw_json = excluded.draw_json, status = excluded.status, starts_at = excluded.starts_at,
           ends_at = excluded.ends_at, updated_at = excluded.updated_at`)
         .bind(key, t.tournament_key, `${t.tour} ${t.tournament}`, t.tour, t.surface, JSON.stringify(draw),
           isFinished(draw) ? 'finished' : 'open', starts[0] ?? null, final?.start ?? null, new Date().toISOString()).run();
@@ -108,7 +108,7 @@ export async function listBrackets(env, user) {
       // For the big tournament card: "ATP 1000", the city, the dates of the main draw, the logo.
       city: b.city ?? b.name.replace(/^(ATP|WTA)s+/, ''), tier: explainTournament({ tour: b.tour, level: b.level ?? 'tour', tournament: b.city ?? b.name }).tier,
       logo: b.logo ?? null, starts_at: b.starts_at, ends_at: b.ends_at,
-      round: round?.title ?? null, open_matches: openSlots(draw).length, champion: champion?.name_ru ?? null,
+      round: round?.title ?? null, rounds: draw.rounds.length, open_matches: openSlots(draw).length, champion: champion?.name_ru ?? null,
       mine: e ? { points: e.points, possible: e.possible, correct: e.correct, decided: e.decided } : null,
     };
   });

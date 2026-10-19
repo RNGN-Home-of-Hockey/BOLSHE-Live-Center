@@ -376,7 +376,7 @@ details.rules summary { color: var(--text); font-weight: 700; cursor: pointer; }
 .bk-send { position: sticky; bottom: calc(var(--tabbar) + var(--safe-b) + 4px); padding: 12px 0 4px; z-index: 2; }
 .bk-send button { width: 100%; height: 54px; border: 0; border-radius: 999px; background: var(--lime); color: var(--lime-ink); font-weight: 800; font-size: 16px; cursor: pointer;
   box-shadow: 0 8px 26px rgba(0, 0, 0, .35); }
-.bk-send button:disabled { opacity: .55; cursor: default; }
+.bk-send button:disabled { cursor: default; background: var(--card2); color: var(--hint); box-shadow: 0 0 0 1px var(--line); } /* solid: the tree does not show through */
 .bk-table { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 4px 14px; }
 .bk-row { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 8px; padding: 9px 0; border-bottom: 1px solid var(--line); }
 .bk-row:last-child { border-bottom: 0; }
@@ -904,3 +904,39 @@ a.lv-card { color: #fff; }
 .mm-photo.heads .mm-heads .head, .mm-photo.heads .mm-heads .head.lo { width: 36%; max-width: 160px; }
 .mm-photo.heads.small .mm-heads .head, .mm-photo.heads.small .mm-heads .head.lo { width: 28%; max-width: 124px; }
 .mm-photo.heads + .mm-body { margin-top: 10px; }
+
+/* Bracket: the in-app «Да / Отмена» sheet, sending state */
+.sheet.ask p { margin: 6px 4px 14px; font-size: 16px; font-weight: 700; line-height: 1.4; }
+.ask-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.ask-btns button { height: 50px; border-radius: 999px; font-size: 15px; font-weight: 800; cursor: pointer; }
+.ask-no { border: 1px solid var(--line); background: var(--chip); color: var(--text); }
+.ask-yes { border: 0; background: var(--lime); color: var(--lime-ink); }
+.bk-hint { font-size: 12px; line-height: 1.4; color: var(--hint); background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 8px 12px; margin-bottom: 8px; }
+.bk-hint.err { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 40%, transparent); }
+.bk-send button { display: inline-flex; align-items: center; justify-content: center; gap: 10px; }
+.spin { width: 16px; height: 16px; border-radius: 50%; border: 2.5px solid currentColor; border-right-color: transparent; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.bk-note.ok { border-color: color-mix(in srgb, var(--win) 50%, transparent); }
+.bk-sent { font-size: 17px; font-weight: 800; color: var(--win); margin-bottom: 4px; }
+
+/* «‹ Назад» in the header (outside Telegram) */
+.top { justify-content: flex-start; }
+.top-actions { margin-left: auto; }
+.back-btn { flex: none; margin-right: 2px; }
+.back-btn svg { width: 22px; height: 22px; }
+.back-btn[hidden] { display: none; }
+
+/* «Турниры» card: prize money, two equal buttons side by side (the bracket game · the matches) */
+.tc-prize { font-size: 13px; font-weight: 700; color: var(--lime); margin-top: 2px; }
+.tl-acts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 2px 12px 12px; }
+.tl-acts.one { grid-template-columns: 1fr; }
+.tl-act { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 10px 10px 10px 8px; border-radius: 16px; color: #fff;
+  background: rgba(14, 10, 20, .55); border: 1px solid rgba(255, 255, 255, .14); }
+.tl-act.main { background: var(--lime); color: var(--lime-ink); border-color: transparent; }
+.tl-act .ic { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; flex: none; background: rgba(255, 255, 255, .12); }
+.tl-act.main .ic { background: var(--lime-ink); color: var(--lime); }
+.tl-act .ic svg { width: 16px; height: 16px; }
+.tl-act > span:last-child { display: flex; flex-direction: column; min-width: 0; }
+.tl-act b { font-size: 14px; font-weight: 800; line-height: 1.15; overflow-wrap: anywhere; } /* two lines on a narrow phone rather than «Заполнить…» */
+.tl-act small { display: flex; align-items: center; gap: 5px; margin-top: 2px; font-size: 11px; font-weight: 600; line-height: 1.25; opacity: .8; }
+.tl-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--live); flex: none; animation: blink 1.4s ease-in-out infinite; }

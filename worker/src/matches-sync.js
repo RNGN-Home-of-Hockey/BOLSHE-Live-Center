@@ -3,6 +3,7 @@
 import { tournamentTier } from '../../src/insights/tournaments.js';
 import { mediaUrl } from '../../src/lib/media.js';
 import { fetchDay } from '../../src/sources/flashscore-matches.js';
+import { ruTournament } from '../../src/lib/cities.js';
 import { shapeOdds } from './odds-sync.js';
 import { PHOTO_HQ } from './photos.js';
 
@@ -40,7 +41,8 @@ export async function syncMatchDays(env, offsets) {
         category = CASE WHEN ?15 = 1 THEN excluded.category ELSE tournaments.category END,
         tournament = CASE WHEN ?15 = 1 THEN excluded.tournament ELSE tournaments.tournament END,
         url = CASE WHEN ?15 = 1 THEN COALESCE(excluded.url, tournaments.url) ELSE tournaments.url END`)
-      .bind(t.key, t.name, t.category, t.tour, t.level, t.discipline, t.surface, t.tournament, t.country, t.url, now,
+      // Cities in Russian everywhere: Flashscore writes the smaller ones in Latin ("Ningbo").
+      .bind(t.key, t.name, t.category, t.tour, t.level, t.discipline, t.surface, ruTournament(t.tournament, t.country), t.country, t.url, now,
         qualifying(t) ? null : t.fs_tournament_id ?? null, qualifying(t) ? null : t.fs_stage_id ?? null, t.logo ?? null,
         qualifying(t) ? 0 : 1));
     const ids = matches.map((m) => m.match_id);

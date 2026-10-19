@@ -39,7 +39,7 @@ export async function tourVisuals(db) {
 export const visualOf = (visuals, name) => visuals.get(norm(name)) ?? null;
 
 
-const SUMMARY = `SELECT t.tournament_key, t.tournament AS name, t.tour, t.level, t.surface, t.logo, t.url,
+const SUMMARY = `SELECT t.tournament_key, t.tournament AS name, t.tour, t.level, t.surface, t.logo, t.url, t.prize,
     MIN(m.date_msk) AS first_day, MAX(m.date_msk) AS last_day, COUNT(*) AS matches,
     SUM(m.status = 'live') AS live, SUM(m.status = 'scheduled') AS left_matches,
     MIN(CASE WHEN m.status = 'scheduled' THEN m.start_at END) AS next_start,
@@ -47,6 +47,17 @@ const SUMMARY = `SELECT t.tournament_key, t.tournament AS name, t.tour, t.level,
   FROM tournaments t JOIN matches m ON m.tournament_key = t.tournament_key
   WHERE t.discipline = 'singles' AND t.level IN ('tour', 'challenger')`;
 const QUAL = /\s*\(?квалификац[^)]*\)?/i;
+
+// The last day by the usual length of an event, until the final's own date is known: the final on the
+// Sunday of the week for 250/500s and challengers, ~12 days for the 96-player 1000s, two weeks for the Slams.
+export function endEstimate(startIso, tier, rounds = null) {
+  if (!startIso) return null;
+  const d = new Date(Date.parse(startIso));
+  if (Number.isNaN(d.getTime())) return null;
+  d.setUTCDate(d.getUTCDate() + (tier === 'slam' ? 13 : rounds >= 7 ? 10 : rounds === 6 ? 5 : 4));
+  while (d.getUTCDay() !== 0) d.setUTCDate(d.getUTCDate() + 1);
+  return `${d.toISOString().slice(0, 10)}T12:00:00Z`;
+}
 
 function shapeTournament(r, bracket, today) {
   const status = bracket?.status === 'finished' || (r.last_day < today && !r.live && !r.left_matches) ? 'done'
@@ -59,9 +70,10 @@ function shapeTournament(r, bracket, today) {
     tier: info.tier, about: info.about, status,
     first_day: r.first_day, last_day: r.last_day, matches: r.matches, live: r.live ?? 0, left: r.left_matches ?? 0,
     next_start: r.next_start, highlights: r.highlights ?? 0,
-    starts_at: bracket?.starts_at ?? null, ends_at: bracket?.ends_at ?? null,
+    starts_at: bracket?.starts_at ?? null, ends_at: bracket?.ends_at ?? null, prize: r.prize ?? null,
+    ends_est: endEstimate(bracket?.starts_at ?? (r.first_day ? `${r.first_day}T12:00:00Z` : null), info.tier, bracket?.rounds ?? null),
     bracket: bracket ? {
-      key: bracket.bracket_key, status: bracket.status, round: bracket.round, fans: bracket.fans,
+      key: bracket.bracket_key, status: bracket.status, round: bracket.round, rounds: bracket.rounds ?? null, fans: bracket.fans,
       open_matches: bracket.open_matches, champion: bracket.champion, mine: bracket.mine,
     } : null,
   };

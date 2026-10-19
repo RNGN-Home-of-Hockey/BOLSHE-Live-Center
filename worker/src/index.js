@@ -27,6 +27,7 @@ import { mediaCounts, serveMedia, syncMedia } from './media.js';
 import { syncPhotos } from './photos.js';
 import { channelEveryMs, syncChannel } from './channel.js';
 import { syncCityPhotos } from './city-photos.js';
+import { syncPrizes } from './prizes.js';
 import { matchesForDate, matchesOfPlayer, syncMatchDays } from './matches-sync.js';
 import { syncOdds } from './odds-sync.js';
 import { winlineLink } from './winline-link.js';
@@ -151,6 +152,11 @@ async function maintain(env, { force = false } = {}) {
   if (env.MEDIA && env.IMAGES && await due(env, 'city_photos', 60 * 60e3, false)) {
     await setState(env, 'city_photos', 'run');
     tasks.push(runJob(env, 'city_photos', () => syncCityPhotos(env)));
+  }
+  // Prize money of the main-tour tournaments from Wikipedia, every 6 hours.
+  if (await due(env, 'prizes', 6 * 60 * 60e3, false)) {
+    await setState(env, 'prizes', 'run');
+    tasks.push(runJob(env, 'prizes', () => syncPrizes(env)));
   }
   // Big player photos (WTA / ESPN / Commons → 480×480 WebP), a few every minute.
   if (env.MEDIA && env.IMAGES && await due(env, 'photos_sync', MEDIA_EVERY_MS, force)) {

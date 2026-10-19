@@ -5,6 +5,7 @@ import { getPlayer, nameStats, nextUnverified, searchPlayers, setPlayerName } fr
 import { answerLogin, loginForBot } from './web-login.js';
 import { hostsText, linkHost, unlinkHost } from './hosts.js';
 import { findMatchesByName, mainMatchNow, setMainMatch, setStudio, studioState } from './home.js';
+import { setPrize } from './prizes.js';
 
 const SOURCE_LABEL = {
   override: 'ручная правка (файл)',
@@ -126,6 +127,7 @@ const ADMIN_COMMANDS = [
   { command: 'hosts', description: 'Ведущие и комментаторы' },
   { command: 'main', description: 'Главный матч дня на главной' },
   { command: 'live', description: 'Баннер «Больше! Лайв»' },
+  { command: 'prize', description: 'Призовой фонд турнира' },
   { command: 'start', description: 'Помощь' },
 ];
 
@@ -141,6 +143,7 @@ const HELP_ADMIN = [
   '/host_unlink Имя Фамилия — отвязать',
   '/main — какой матч сейчас главный на главной; /main Картал — сделать главным матч игрока; /main авто — выбирать самим',
   '/live — баннер «Больше! Лайв» (пн 19:00); /live ссылка | тема — ссылка и тема ближайшего эфира; /live время 20:00; /live выкл; /live вкл',
+  '/prize Нинбо = $1 206 446 — призовой фонд турнира в приложении; /prize Нинбо = - — убрать',
 ].join('\n');
 
 const mskTime = (iso) => new Date(Date.parse(iso) + 3 * 3600e3).toISOString().slice(11, 16);
@@ -262,6 +265,12 @@ async function onMessage(env, msg) {
   if (cmd === 'hosts') return send(env, chatId, await hostsText(env.DB));
   if (cmd === 'main') return mainCommand(env, chatId, rest, from.first_name ?? null);
   if (cmd === 'live') return liveCommand(env, chatId, rest);
+  if (cmd === 'prize') {
+    const [city, amount] = rest.split('=').map((x) => x.trim());
+    if (!city || !amount) return send(env, chatId, 'Напиши: /prize Нинбо = $1 206 446');
+    const r = await setPrize(env, city, amount);
+    return send(env, chatId, r.ok ? (r.prize ? `✅ ${esc(r.name)}: призовой фонд ${esc(r.prize)}` : `Призовой фонд ${esc(r.name)} убран`) : esc(r.error));
+  }
   if (cmd === 'host_link') {
     const [who, nick] = rest.split('=').map((x) => x.trim());
     if (!who || !nick) return send(env, chatId, 'Напиши: /host_link Вадим Азаренко = @ник');

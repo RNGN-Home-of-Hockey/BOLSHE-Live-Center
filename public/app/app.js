@@ -6,6 +6,8 @@
 
 const tg = window.Telegram?.WebApp;
 const view = document.getElementById('view');
+const backBtn = document.getElementById('backBtn');
+const trail = []; // the screens of this visit, for «‹ Назад»
 let timer = null;
 // Every navigation gets a token; a screen whose data arrives after the user moved on draws nothing.
 let routeToken = 0;
@@ -60,6 +62,8 @@ const ICON = {
   share: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="m8.2 10.8 7.6-4.4M8.2 13.2l7.6 4.4"/></svg>',
   user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c.8-4.3 4-7 8-7s7.2 2.7 8 7"/></svg>',
   info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg>',
+  bracket: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h5v4H3M3 15h5v4H3M8 7h3v10H8M11 12h4M15 9h6v6h-6z"/></svg>',
+  trophy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4v1.5A3.5 3.5 0 0 0 7.5 11M17 6h3v1.5a3.5 3.5 0 0 1-3.5 3.5M12 14v3M8 20h8M9.5 17h5"/></svg>',
 };
 const BALL = '<svg class="ball" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46" fill="#d7f23a"/><path d="M15 21c17 13 23 41 6 63M85 21C68 34 62 62 79 84" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity=".85"/></svg>';
 const LOGO_MARK = '<svg class="logo" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="20" fill="#d7f23a"/><path d="M15 11.5 26.5 20 15 28.5" fill="none" stroke="#15111c" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
@@ -1549,24 +1553,31 @@ let tourStatus = 'now';
 const TOUR_TABS = [['now', 'Идут сейчас'], ['soon', 'Скоро'], ['done', 'Завершены']];
 const dayIso = (d) => (d ? `${d}T12:00:00Z` : null);
 // One tournament in the list: logo, ★, «ATP 1000», the city, dates · surface, the game bracket line, live now.
+// The dates: the first day and the final's day (its estimate by the usual length until the final is set).
+const tourDates = (t) => datesLabel(t.starts_at ?? dayIso(t.first_day), t.ends_at ?? (t.status === 'done' ? dayIso(t.last_day) : t.ends_est));
+
 function tourCard(t) {
-  const dates = datesLabel(t.starts_at ?? dayIso(t.first_day), t.ends_at ?? (t.status === 'done' ? dayIso(t.last_day) : null));
-  const info = [dates, SURFACE[t.surface]].filter(Boolean).join(' · ');
+  const info = [tourDates(t), SURFACE[t.surface]].filter(Boolean).join(' · ');
   const b = t.bracket;
   const mine = b ? me?.brackets?.find((x) => x.bracket_key === b.key) : null;
-  const bk = !b ? '' : `<a class="tl-bk" href="#/bracket/${encodeURIComponent(b.key)}"><span class="ic">🏆</span><span><b>Игровая сетка</b><small>${mine
-    ? esc(`очков ${b.mine?.points ?? mine.points}${mine.better_than != null ? ` · лучше, чем у ${mine.better_than}% участников` : ''}`)
-    : b.status === 'open' ? `Осталось ${b.open_matches} ${plural(b.open_matches, 'матч', 'матча', 'матчей')} для прогноза` : b.champion ? `Чемпион: ${esc(b.champion)}` : 'Турнир завершён'}</small></span><span class="go">›</span></a>`;
-  const foot = t.status === 'soon'
-    ? `<span class="tl-soon">🕑 Скоро начнётся${t.next_start ? ` · первый матч ${esc(dayWord(t.next_start))} в ${esc(localTime(t.next_start))}` : ''}</span>`
-    : t.live ? `<span class="tl-live"><i></i>${t.live} ${plural(t.live, 'матч', 'матча', 'матчей')} сейчас</span>` : t.highlights ? `<span class="tl-hl">▶ хайлайтов: ${t.highlights}</span>` : '<span></span>';
-  return `<div class="tl-card${t.tour === 'WTA' ? ' wta' : ''}${photoStyle(t).cls}"${photoStyle(t).attr}><a class="tl-main" href="#/tournament/${encodeURIComponent(t.key)}">
+  const tkey = encodeURIComponent(t.key);
+  // Two equal buttons side by side: the bracket game and the tournament's matches.
+  const bracketSub = !b ? '' : mine ? `очков ${b.mine?.points ?? mine.points}`
+    : b.status === 'open' ? `осталось ${b.open_matches} ${plural(b.open_matches, 'матч', 'матча', 'матчей')}` : b.champion ? `чемпион: ${b.champion}` : 'турнир завершён';
+  const matchesSub = t.status === 'soon' ? (t.next_start ? `старт ${dayWord(t.next_start)} в ${localTime(t.next_start)}` : 'скоро начнётся')
+    : t.live ? `${t.live} ${plural(t.live, 'матч', 'матча', 'матчей')} сейчас` : t.highlights ? `хайлайтов: ${t.highlights}` : 'расписание и счёт';
+  const act = (href, icon, title, sub, main) => `<a class="tl-act${main ? ' main' : ''}" href="${href}"><span class="ic">${icon}</span><span><b>${esc(title)}</b><small>${t.live && !main ? '<i class="tl-dot"></i>' : ''}${esc(sub)}</small></span></a>`;
+  const acts = [
+    b ? act(`#/bracket/${encodeURIComponent(b.key)}`, ICON.bracket, mine || b.mine ? 'Моя сетка' : b.status === 'open' ? 'Заполнить сетку' : 'Сетка турнира', bracketSub, true) : '',
+    act(`#/tournament/${tkey}?tab=matches`, ICON.trophy, 'Матчи турнира', matchesSub, false),
+  ].join('');
+  return `<div class="tl-card${t.tour === 'WTA' ? ' wta' : ''}${photoStyle(t).cls}"${photoStyle(t).attr}><a class="tl-main" href="#/tournament/${tkey}">
       ${t.logo ? `<img class="tc-logo" src="${esc(t.logo)}" alt="" loading="lazy" data-cover>` : ''}
       <div class="tc-tier">${esc(tierLabel(t))}</div><div class="tc-city">${esc(t.name)}</div>
-      <div class="tc-dates">${esc(info)}${t.stage === 'qualifying' ? ' · идёт квалификация' : b?.round && t.status === 'now' ? ` · ${esc(b.round.toLowerCase())}` : ''}</div></a>
+      <div class="tc-dates">${esc(info)}${t.stage === 'qualifying' ? ' · идёт квалификация' : b?.round && t.status === 'now' ? ` · ${esc(b.round.toLowerCase())}` : ''}</div>
+      ${t.prize ? `<div class="tc-prize">Призовой фонд ${esc(t.prize)}</div>` : ''}</a>
     <span class="tl-fav">${favButton(t.name)}</span>
-    ${bk}
-    <div class="tl-foot">${foot}<a class="tl-go" href="#/tournament/${encodeURIComponent(t.key)}?tab=matches">Матчи турнира →</a></div></div>`;
+    <div class="tl-acts${b ? '' : ' one'}">${acts}</div></div>`;
 }
 
 async function tournamentsTab(token) {
@@ -1612,7 +1623,7 @@ async function tournamentScreen(key, token, params) {
   const tabs = TOUR_PAGE_TABS.filter(([k]) => k !== 'bracket' || b);
   const hl = ms.filter((m) => m.highlights && showScore(m));
   const link = (k) => `#/tournament/${encodeURIComponent(key)}?tab=${k}`;
-  const dates = datesLabel(t.starts_at ?? dayIso(t.first_day), t.ends_at ?? (t.status === 'done' ? dayIso(t.last_day) : null));
+  const dates = tourDates(t);
   const live = ms.filter((m) => m.status === 'live');
   const next = ms.filter((m) => m.status === 'scheduled').slice(0, 4);
   const onBolshe = ms.filter((m) => m.bolshe && (m.status === 'live' || m.status === 'scheduled')).slice(0, 4);
@@ -1658,7 +1669,8 @@ async function tournamentScreen(key, token, params) {
   view.innerHTML = `<div class="tp-head${t.tour === 'WTA' ? ' wta' : ''}${photoStyle(t).cls}"${photoStyle(t).attr}>${t.logo ? `<img class="tc-logo" src="${esc(t.logo)}" alt="" loading="lazy" data-cover>` : ''}
       <span class="tl-fav">${favButton(t.name)}</span>
       <div class="tc-tier">${esc(tierLabel(t))}</div><div class="tc-city">${esc(t.name)}</div>
-      <div class="tc-dates">${esc([dates, SURFACE[t.surface], b?.round && t.status === 'now' ? b.round.toLowerCase() : t.status === 'done' ? 'завершён' : null].filter(Boolean).join(' · '))}</div></div>
+      <div class="tc-dates">${esc([dates, SURFACE[t.surface], b?.round && t.status === 'now' ? b.round.toLowerCase() : t.status === 'done' ? 'завершён' : null].filter(Boolean).join(' · '))}</div>
+      ${t.prize ? `<div class="tc-prize">Призовой фонд ${esc(t.prize)}</div>` : ''}</div>
     <div class="chips tp-tabs">${tabs.map(([k, label]) => `<a class="chip${k === tab ? ' on' : ''}" href="${link(k)}">${label}${k === 'highlights' && hl.length ? ` ${hl.length}` : ''}</a>`).join('')}</div>
     <div class="tp-body">${body}</div>`;
   view.querySelectorAll('[data-thl]').forEach((el) => el.addEventListener('click', () => {
@@ -1679,7 +1691,6 @@ function saveDraft(key, picks) {
   bracketDrafts[key] = picks;
   try { localStorage.setItem(`bolshe-bracket-${key}`, JSON.stringify(picks)); } catch { /* ignore */ }
 }
-const bracketRound = {};
 const bracketEditing = {};
 
 // Players of a draw by ranking: still in, or out in which round.
@@ -1707,15 +1718,50 @@ function drawPlayers(d) {
   return `<div class="stat-list">${list.map(row).join('')}</div>`;
 }
 
+// The whole draw as one tree from its first round. A draw with more than 16 first-round matches is filled in
+// parts of 16 (a 64 draw — two halves, a 128 draw — four quarters), then «Финальная часть».
+const bracketPart = {};
+const bracketSending = {}; // key → 'sending' | 'sent' | error text
+function bracketParts(draw) {
+  const rounds = draw.rounds.length;
+  const first = draw.rounds[0]?.matches.length ?? 0;
+  if (first <= 16) return [{ label: null, from: 0, to: rounds - 1, lo: 0, size: first }];
+  const n = first / 16;
+  const names = n === 2 ? ['Верхняя половина', 'Нижняя половина'] : Array.from({ length: n }, (_, i) => `${i + 1}-я ${n === 4 ? 'четверть' : 'часть'}`);
+  const last = 4; // 16 → 8 → 4 → 2 → 1: the round where a part narrows to one match
+  return [
+    ...names.map((label, i) => ({ label, from: 0, to: last, lo: i * 16, size: 16 })),
+    { label: 'Финальная часть', from: last + 1, to: rounds - 1, lo: 0, size: draw.rounds[last + 1]?.matches.length ?? 1 },
+  ];
+}
+
+// An in-app «Да / Отмена» sheet: Telegram's own dialog does not work outside Telegram (Safari, a home-screen
+// web app) — before 2026-10-19 it stopped «Отправить сетку» there without a word.
+function askConfirm(text, okLabel = 'Да') {
+  return new Promise((resolve) => {
+    document.querySelector('.sheet-back')?.remove();
+    const back = document.createElement('div');
+    back.className = 'sheet-back';
+    back.innerHTML = `<div class="sheet ask" role="dialog"><p>${esc(text)}</p>
+      <div class="ask-btns"><button class="ask-no" type="button" data-no>Отмена</button><button class="ask-yes" type="button" data-yes>${esc(okLabel)}</button></div></div>`;
+    const done = (value) => { back.remove(); resolve(value); };
+    back.addEventListener('click', (e) => {
+      if (e.target.closest('[data-yes]')) done(true);
+      else if (e.target === back || e.target.closest('[data-no]')) done(false);
+    });
+    document.body.appendChild(back);
+  });
+}
+
 async function bracketScreen(key, token, params = new URLSearchParams()) {
   const [d] = await Promise.all([api(`/api/brackets/${encodeURIComponent(key)}`), loadMe(mskDay(0))]);
   if (stale(token)) return;
   renderBracket(d, key, token, params);
 }
 
-// Draws the bracket from the data already loaded: a pick, a round chip or «Изменить» redraw it at once on
-// the phone. Before 2026-10-19 every tap loaded the whole draw and the fan's profile from the server again
-// (1–2 s a tap); now the server is asked only to send the bracket.
+// Draws the bracket from the data already loaded: a pick, a part chip or «Изменить» redraw it at once on
+// the phone (before 2026-10-19 every tap loaded the draw and the profile again — 1–2 s a tap); the server
+// is asked only to send the bracket.
 function renderBracket(d, key, token, params) {
   const redraw = () => { if (!stale(token)) renderBracket(d, key, token, params); };
   const draw = d.draw;
@@ -1738,61 +1784,85 @@ function renderBracket(d, key, token, params) {
   const sides = drawSides(draw, picks);
   const open = openKeys(draw);
   const filled = open.filter((k) => picks[k] != null).length;
-  const r = bracketRound[key] ?? current;
+  const parts = bracketParts(draw);
+  const span = (p, rr) => ({ lo: p.lo >> (rr - p.from), count: Math.max(1, p.size >> (rr - p.from)) });
+  const needsPick = (p) => {
+    for (let rr = p.from; rr <= p.to; rr += 1) {
+      const { lo, count } = span(p, rr);
+      for (let k = lo; k < lo + count; k += 1) if (draw.rounds[rr].matches[k]?.w == null && picks[slotKey(rr, k)] == null) return true;
+    }
+    return false;
+  };
+  // The part shown: the one picked, else the first with a match still to pick.
+  const pi = Math.min(bracketPart[key] ?? Math.max(0, parts.findIndex(needsPick)), parts.length - 1);
+  const part = parts[pi];
   const player = (pos) => draw.players.find((p) => p.pos === pos);
-  const sideRow = (pos, m, k, other, rr = r, compact = false) => {
+  const sideRow = (pos, m, k, other, rr) => {
     const p = pos == null ? null : player(pos);
     const myPick = picks[slotKey(rr, k)];
     const won = m.w != null && m.w === pos;
     const lost = m.w != null && pos != null && m.w !== pos;
     const picked = myPick != null && myPick === pos;
     const mark = picked && m.w != null ? (won ? '<span class="bk-ok">✓</span>' : '<span class="bk-no">✗</span>') : '';
-    const name = p ? `${esc(lastName({ name: p.name_ru }))}${p.seed ? ` <small>(${esc(p.seed)})</small>` : p.tag ? ` <small>(${esc(p.tag)})</small>` : ''}` : `<span class="muted">${compact ? '—' : rr > 0 ? 'победитель прошлого круга' : '—'}</span>`;
-    const canPick = editable && m.w == null && pos != null && other !== undefined;
-    return `<button class="${compact ? 'tr-side' : 'bk-side'}${won ? ' won' : ''}${lost ? ' lost' : ''}${picked ? ' picked' : ''}" type="button"${canPick ? ` data-pick="${slotKey(rr, k)}" data-pos="${pos}"` : ' disabled'}>
-      ${p ? avatar(p.photo, 'ava') : '<span class="ava ph"></span>'}<span class="bk-name">${name}</span>${!compact && p?.rank ? `<small class="muted">№${p.rank}</small>` : ''}${mark}</button>`;
+    const name = p ? `${esc(lastName({ name: p.name_ru }))}${p.seed ? ` <small>(${esc(p.seed)})</small>` : p.tag ? ` <small>(${esc(p.tag)})</small>` : ''}` : '<span class="muted">—</span>';
+    const canPick = editable && m.w == null && pos != null && other !== undefined && bracketSending[key] !== 'sending';
+    return `<button class="tr-side${won ? ' won' : ''}${lost ? ' lost' : ''}${picked ? ' picked' : ''}" type="button"${canPick ? ` data-pick="${slotKey(rr, k)}" data-pos="${pos}"` : ' disabled'}>
+      ${p ? avatar(p.photo, 'ava') : '<span class="ava ph"></span>'}<span class="bk-name">${name}</span>${mark}</button>`;
   };
-  // The visual bracket from round `from` to the final, and the champion (real or picked).
-  const tree = (from) => {
+  // One part as a tree: columns from its first round to its last, the champion after the final.
+  const tree = (p) => {
     const last = draw.rounds.length - 1;
-    const champPos = draw.rounds[last].matches[0]?.w ?? picks[slotKey(last, 0)] ?? null;
-    const champ = champPos != null ? player(champPos) : null;
-    return `<div class="tree">${draw.rounds.slice(from).map((round, i) => {
-      const rr = from + i;
-      return `<div class="tr-col"><div class="tr-cap">${esc(round.short)} <small>+${roundPoints(draw, rr)}</small></div>${round.matches.map((m, k) => {
+    const cols = [];
+    for (let rr = p.from; rr <= p.to; rr += 1) {
+      const { lo, count } = span(p, rr);
+      cols.push(`<div class="tr-col"><div class="tr-cap">${esc(draw.rounds[rr].short)} <small>+${roundPoints(draw, rr)}</small></div>${draw.rounds[rr].matches.slice(lo, lo + count).map((m, i) => {
+        const k = lo + i;
         const [h, a] = sides[rr][k];
-        return `<div class="tr-cell"><div class="tr-match">${sideRow(h, m, k, a, rr, true)}${sideRow(a, m, k, h, rr, true)}</div></div>`;
-      }).join('')}</div>`;
-    }).join('')}<div class="tr-col tr-champ"><div class="tr-cap">🏆</div><div class="tr-cell"><div class="tr-win">${champ
-      ? `${avatar(champ.photo, 'head')}<span>${esc(lastName({ name: champ.name_ru }))}</span><small>${draw.rounds[last].matches[0]?.w != null ? 'чемпион' : 'твой выбор'}</small>` : '<span class="muted">Победитель</span>'}</div></div></div></div>`;
+        return `<div class="tr-cell"><div class="tr-match">${sideRow(h, m, k, a, rr)}${sideRow(a, m, k, h, rr)}</div></div>`;
+      }).join('')}</div>`);
+    }
+    if (p.to === last) {
+      const champPos = draw.rounds[last].matches[0]?.w ?? picks[slotKey(last, 0)] ?? null;
+      const champ = champPos != null ? player(champPos) : null;
+      cols.push(`<div class="tr-col tr-champ"><div class="tr-cap">🏆</div><div class="tr-cell"><div class="tr-win">${champ
+        ? `${avatar(champ.photo, 'head')}<span>${esc(lastName({ name: champ.name_ru }))}</span><small>${draw.rounds[last].matches[0]?.w != null ? 'чемпион' : 'твой выбор'}</small>` : '<span class="muted">Победитель</span>'}</div></div></div>`);
+    }
+    return `<div class="tree">${cols.join('')}</div>`;
   };
-  const round = draw.rounds[r];
+  const sending = bracketSending[key];
   const status = !signedIn() && !sent
     ? needLogin('Войди через Telegram, чтобы заполнить сетку и попасть в таблицу.')
     : sent
-      ? `<div class="bk-note"><b>${sent.updated_at ? 'Сетка сохранена' : 'Твоя сетка отправлена'}</b> ${esc(new Date(sent.updated_at ?? sent.submitted_at).toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }))}.
+      ? `<div class="bk-note${sending === 'sent' ? ' ok' : ''}">${sending === 'sent' ? '<div class="bk-sent">✓ Сетка отправлена!</div>' : ''}<b>${sent.updated_at ? 'Сетка сохранена' : 'Твоя сетка отправлена'}</b> ${esc(new Date(sent.updated_at ?? sent.submitted_at).toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }))}.
         Очки: <b>${sent.points}</b> · угадано ${sent.correct} из ${sent.decided}${d.status === 'open' ? ` · ещё можно набрать до ${sent.possible}` : ''}${d.place ? ` · место ${d.place} из ${d.table.length}` : ''}
         ${sent.editable ? `<div class="bk-edit">${editing ? 'Меняешь сетку — сохрани до начала первого матча' : `Можно изменить до ${esc(`${dayWord(sent.lock_at)} ${localTime(sent.lock_at)}`)}`}
           <button type="button" class="chip${editing ? '' : ' on'}" data-edit>${editing ? 'Отменить' : 'Изменить'}</button></div>` : ''}</div>`
       : d.status === 'open' ? `<div class="bk-note">${esc(RULES)}</div>` : '<div class="bk-note">Турнир завершён.</div>';
+  const partChips = parts.length > 1
+    ? `<div class="chips bk-rounds">${parts.map((p, i) => `<button class="chip${i === pi ? ' on' : ''}" type="button" data-part="${i}">${esc(p.label)}${editable && needsPick(p) ? ' •' : ''}</button>`).join('')}</div>` : '';
+  let send = '';
+  if (editable) {
+    const label = sending === 'sending' ? '<span class="spin"></span>Отправляю сетку…'
+      : filled < open.length ? `Заполнено ${filled} из ${open.length}` : editing ? 'Сохранить изменения' : 'Отправить сетку';
+    const hint = sending === 'sending' ? '<div class="bk-hint">Пара секунд. Окно можно не закрывать и не ждать — сетка сохранится, даже если перейти в другой раздел.</div>'
+      : sending && sending !== 'sent' ? `<div class="bk-hint err">Не отправилось: ${esc(sending)}. Попробуй ещё раз.</div>` : '';
+    send = `<div class="bk-send">${hint}<button type="button" data-send${filled < open.length || sending === 'sending' ? ' disabled' : ''}>${label}</button></div>`;
+  }
   view.innerHTML = `${head}
     ${status}
-    <div class="chips bk-rounds">${draw.rounds.map((x, i) => `<button class="chip${i === r ? ' on' : ''}" type="button" data-round="${i}">${esc(x.short)} <small>+${roundPoints(draw, i)}</small></button>`).join('')}</div>
-    ${round.matches.length <= 8 ? tree(r) : `<div class="bk-list">${round.matches.map((m, k) => {
-      const [h, a] = sides[r][k];
-      const when = m.w != null ? '' : m.status === 'live' ? '<span class="pill-live">LIVE</span>' : m.start ? esc(`${dayWord(m.start)} ${localTime(m.start)}`) : '';
-      return `<div class="bk-match"><div class="bk-meta"><span>${esc(round.title)} · матч ${k + 1}</span><span>${when}</span></div>${sideRow(h, m, k, a)}${sideRow(a, m, k, h)}</div>`;
-    }).join('')}</div>`}
+    ${partChips}
+    ${tree(part)}
     ${communityBlock(d)}
-    ${editable ? `<div class="bk-send"><button type="button" data-send${filled < open.length ? ' disabled' : ''}>${filled < open.length ? `Заполнено ${filled} из ${open.length}` : editing ? 'Сохранить изменения' : 'Отправить сетку'}</button></div>` : ''}
+    ${send}
     ${d.table.length ? `<h2>Таблица</h2><div class="bk-table">${d.table.slice(0, 20).map((t) => `<div class="bk-row${t.me ? ' me' : ''}"><span>${t.place}</span><span>${esc(t.name)}${t.me ? ' (ты)' : ''}</span><b>${t.points}</b></div>`).join('')}</div>` : ''}`;
-  view.querySelectorAll('[data-round]').forEach((b) => b.addEventListener('click', () => {
-    bracketRound[key] = Number(b.dataset.round);
+  view.querySelectorAll('[data-part]').forEach((b) => b.addEventListener('click', () => {
+    bracketPart[key] = Number(b.dataset.part);
     redraw();
   }));
   view.querySelector('[data-edit]')?.addEventListener('click', () => {
     bracketEditing[key] = !editing;
     delete bracketDrafts[`${key}:edit`];
+    delete bracketSending[key];
     redraw();
   });
   view.querySelectorAll('[data-pick]').forEach((b) => b.addEventListener('click', () => {
@@ -1802,15 +1872,23 @@ function renderBracket(d, key, token, params) {
     tg?.HapticFeedback?.selectionChanged?.();
     redraw();
   }));
-  view.querySelector('[data-send]')?.addEventListener('click', async (e) => {
-    const go = () => post(`/api/brackets/${encodeURIComponent(key)}`, { picks: cleanPicks(draw, editing ? bracketDrafts[draftKey] : loadDraft(key)) })
-      .then(() => { toast(editing ? 'Сетка изменена' : 'Сетка отправлена'); bracketEditing[key] = false; delete bracketDrafts[`${key}:edit`]; return bracketScreen(key, token, params); })
-      .catch((error) => toast(error.message));
-    e.currentTarget.disabled = true;
-    const text = editing ? 'Сохранить новую сетку?' : 'Отправить сетку? Поменять её можно будет до начала первого матча.';
-    if (tg?.showConfirm) tg.showConfirm(text, (yes) => (yes ? go() : redraw()));
-    else if (window.confirm(text)) go();
-    else e.currentTarget.disabled = false;
+  view.querySelector('[data-send]')?.addEventListener('click', async () => {
+    const yes = await askConfirm(editing ? 'Сохранить новую сетку?' : 'Отправить сетку? Поменять её можно будет до начала первого матча.', editing ? 'Сохранить' : 'Отправить');
+    if (!yes) return;
+    bracketSending[key] = 'sending';
+    redraw();
+    try {
+      await post(`/api/brackets/${encodeURIComponent(key)}`, { picks: cleanPicks(draw, editing ? bracketDrafts[draftKey] : loadDraft(key)) });
+      bracketSending[key] = 'sent';
+      bracketEditing[key] = false;
+      delete bracketDrafts[`${key}:edit`];
+      toast(editing ? 'Сетка изменена' : 'Сетка отправлена');
+      tg?.HapticFeedback?.notificationOccurred?.('success');
+      await bracketScreen(key, token, params);
+    } catch (error) {
+      bracketSending[key] = error.message || 'нет связи';
+      redraw();
+    }
   });
 }
 
@@ -1923,6 +2001,10 @@ async function route() {
   document.querySelectorAll('.tabs a').forEach((a) => a.classList.toggle('on', a.dataset.tab === tab));
   const detail = ['match', 'player', 'settings', 'bracket', 'question', 'tournament', 'achievements', 'levels', 'rating', 'hosts', 'host', 'credits'].includes(parts[0]);
   if (tg?.BackButton) { if (detail) tg.BackButton.show(); else tg.BackButton.hide(); }
+  // Outside Telegram (a browser, a home-screen web app) our own «‹» in the header; Telegram shows its own.
+  if (trail.at(-2) === location.hash) trail.pop();
+  else if (trail.at(-1) !== location.hash) trail.push(location.hash); // a redraw of the same screen is not a step
+  backBtn.hidden = !detail || Boolean(tg?.initData);
   if (!view.innerHTML) view.innerHTML = '<div class="loading">Загружаем…</div>';
   try {
     if (parts[0] === 'match' && parts[1]) await match(decodeURIComponent(parts[1]), token);
@@ -1951,5 +2033,12 @@ async function route() {
 }
 
 tg?.BackButton?.onClick(() => history.back());
+// «‹ Назад»: the previous screen of this visit, or the section above when the app was opened right here.
+const PARENT = { bracket: '#/tournaments', tournament: '#/tournaments', match: '#/matches', player: '#/players', question: '#/',
+  achievements: '#/profile', levels: '#/profile', rating: '#/profile', hosts: '#/profile', host: '#/hosts', settings: '#/profile', credits: '#/settings' };
+backBtn.addEventListener('click', () => {
+  if (trail.length > 1) history.back();
+  else location.hash = PARENT[(location.hash.slice(2).split(/[/?]/)[0])] ?? '#/';
+});
 window.addEventListener('hashchange', route);
 route();
