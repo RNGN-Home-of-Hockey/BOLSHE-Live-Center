@@ -64,10 +64,11 @@ const QUAL = /\s*\(?квалификац[^)]*\)?/i;
 // today (with the champion), then the coming ones — shown by their qualifying while only it is on.
 // Challengers only as a count. `covered` — tournament keys with «Больше» broadcasts.
 export function homeTournaments(list, { covered = new Set(), limit = 3, today = null } = {}) {
+  const isQual = (t) => t.stage === 'qualifying' || QUAL.test(t.name ?? '');
   const tour = list.filter((t) => t.level === 'tour');
-  const main = tour.filter((t) => !QUAL.test(t.name ?? ''));
+  const main = tour.filter((t) => !isQual(t));
   const mainNames = new Set(main.map((t) => `${t.tour}|${t.name}`));
-  const quals = tour.filter((t) => QUAL.test(t.name ?? '') && ['now', 'soon'].includes(t.status))
+  const quals = tour.filter((t) => isQual(t) && ['now', 'soon'].includes(t.status))
     .map((t) => ({ ...t, name: t.name.replace(QUAL, '').trim(), stage: 'qualifying' }))
     .filter((t) => !mainNames.has(`${t.tour}|${t.name}`));
   const weight = (t) => (TIER_WEIGHT[tierOf(t)] ?? 30) + (covered.has(t.key) ? 30 : 0) + (t.live ? 5 : 0);
@@ -80,13 +81,14 @@ export function homeTournaments(list, { covered = new Set(), limit = 3, today = 
   return {
     tournaments: picked,
     more_tour: all.length - picked.length,
-    challengers: list.filter((t) => t.level === 'challenger' && t.status === 'now' && !QUAL.test(t.name ?? '')).length,
+    challengers: list.filter((t) => t.level === 'challenger' && t.status === 'now').length,
   };
 }
 
 // «Больше! Лайв» — the studio show every Monday at 19:00 Moscow time (VK Видео and YouTube).
 // The banner shows the day before and on the day until the show is over. `override` (set by the
-// admins in the bot) can give that week's link and topic, move the time or cancel the show.
+// admins in the bot) can give that week's link and topic, move the time or cancel the show; `auto` —
+// the links of the show's announcement in the Telegram channel (worker/src/channel.js).
 export const STUDIO = {
   title: 'Больше! Лайв',
   about: 'Традиционный понедельничный эфир: главное за неделю в теннисе, гости и ваши вопросы.',
@@ -112,7 +114,7 @@ export function nextStudio(now = Date.now(), { time = STUDIO.time, minutes = STU
   return null;
 }
 
-export function studioBanner(now = Date.now(), override = null) {
+export function studioBanner(now = Date.now(), override = null, auto = null) {
   const o = override ?? {};
   let slot = nextStudio(now);
   if (!slot) return null;
@@ -122,10 +124,13 @@ export function studioBanner(now = Date.now(), override = null) {
   if (mine.off) return null;
   const dayBefore = Date.parse(`${slot.date}T00:00:00Z`) - MSK - 86400e3; // Sunday 00:00 MSK
   if (now < dayBefore) return null;
+  const posted = auto?.date === slot.date ? auto : null;
   return {
     title: STUDIO.title,
     about: mine.note || STUDIO.about,
-    url: mine.url || STUDIO.url,
+    url: mine.url || posted?.vk || posted?.youtube || STUDIO.url,
+    youtube: posted?.youtube && posted.youtube !== (mine.url || posted.vk) ? posted.youtube : null,
+    stream: Boolean(mine.url || posted?.vk || posted?.youtube), // the show's own link, not the group page
     starts_at: slot.starts_at,
     ends_at: slot.ends_at,
     live: now >= Date.parse(slot.starts_at),

@@ -120,6 +120,9 @@ const silhouette = (cls) => `<span class="${cls} ph" aria-hidden="true"></span>`
 function avatar(src, cls = 'ava') {
   return src ? `<img class="${cls}" src="${esc(src)}" alt="" loading="lazy" referrerpolicy="no-referrer" data-head>` : silhouette(cls);
 }
+// Where the face is big: the 480×480 photo (WTA / ESPN / Commons, worker/src/photos.js); without it the
+// 100×100 head is shown small ("lo"), never stretched.
+const bigPhoto = (p, cls = 'head') => (p?.photo_hq ? avatar(p.photo_hq, cls) : avatar(p?.photo ?? p?.photo_url, `${cls} lo`));
 
 // A picture that fails to load is replaced once (a cover simply goes away and shows the heads
 // under it); nothing is ever retried in a loop.
@@ -161,6 +164,8 @@ function dateTitle(date) {
 const TIER = { slam: 'Большой шлем', finals: 'Итоговый турнир', challenger: 'Челленджер', itf: 'ITF' };
 function tierLabel(t) {
   if (['1000', '500', '250'].includes(String(t?.tier))) return `${t.tour ?? ''} ${t.tier}`.trim();
+  // A main-tour event outside the lists of 1000s and 500s is a 250.
+  if (t?.tier === 'tour' && t.tour) return `${t.tour} 250`;
   return TIER[t?.tier] ?? t?.tour ?? '';
 }
 const tourTitle = (t) => [tierLabel(t), t?.name].filter(Boolean).join(' · ');
@@ -168,7 +173,8 @@ const tourTitle = (t) => [tierLabel(t), t?.name].filter(Boolean).join(' · ');
 // ---------- links out: Winline, VK ----------
 const WINLINE_LOGO = '/app/winline.png';
 function openExternal(url) {
-  if (tg?.openLink) tg.openLink(url);
+  if (/^https:\/\/t\.me\//.test(url) && tg?.openTelegramLink) tg.openTelegramLink(url);
+  else if (tg?.openLink) tg.openLink(url);
   else window.open(url, '_blank', 'noopener');
 }
 // A «Больше» broadcast opened from the app counts for «Эфиры через приложение».
@@ -536,7 +542,7 @@ function heroMedia(cover, p1, p2, href) {
 function mainPhotos(m) {
   const cover = m.bolshe?.cover;
   const tpl = m.tournament.level === 'challenger' ? 'ch' : m.tournament.tour === 'WTA' ? 'wta' : 'full';
-  const heads = `<div class="mm-heads">${avatar(m.p1.photo, 'head')}<span class="vs-mark">VS</span>${avatar(m.p2.photo, 'head')}</div>`;
+  const heads = `<div class="mm-heads">${bigPhoto(m.p1)}<span class="vs-mark">VS</span>${bigPhoto(m.p2)}</div>`;
   return `<div class="mm-photo${cover ? ` tpl-${tpl}` : ''}">${heads}${cover ? `<img class="mm-cover" src="${esc(cover)}" alt="" data-cover>` : ''}</div>`;
 }
 
@@ -578,24 +584,36 @@ function mainMatchCard(m) {
   </section>`;
 }
 
-// «Больше! Лайв»: the studio show every Monday, announced the day before and on the day.
+// «Больше! Лайв»: the studio show every Monday, announced the day before and on the day. The button
+// leads to the show itself once its link is posted in the channel (worker/src/channel.js), and
+// «Голосование недели» from the channel — what the show talks over — goes under it.
 function studioBanner(s) {
   if (!s) return '';
   const when = s.live ? '<span class="pill-live">В ЭФИРЕ</span>' : `<span class="sb-when">${esc(cap(dayWord(s.starts_at)))} в ${esc(localTime(s.starts_at))}</span>`;
-  return `<button class="sbanner" type="button" data-ext="${esc(s.url)}">
-    <span class="sb-ic">${ICON.play}</span>
-    <span class="sb-text"><span class="sb-top"><b>${esc(s.title)}</b>${when}</span><small>${esc(s.about)}</small></span>
-    <span class="sb-go">${ICON.arrow}</span></button>`;
+  const p = s.poll;
+  const voters = p?.voters ? `${p.voters.toLocaleString('ru-RU')} ${plural(p.voters, 'голос', 'голоса', 'голосов')} · ` : '';
+  const poll = p ? `<a class="sb-poll" href="${esc(p.url)}" data-ext="${esc(p.url)}">
+      <span class="sb-pcap">${p.weekly ? 'Вопрос недели' : 'Голосование недели'} · обсудим в эфире</span>
+      <b class="sb-q">${esc(p.question)}</b>
+      ${p.options.map((o) => `<span class="sb-opt"><i style="width:${Math.min(100, o.percent)}%"></i><span>${esc(o.text)}</span><em>${o.percent}%</em></span>`).join('')}
+      <small>${esc(voters)}голосовать в Telegram →</small></a>` : '';
+  return `<section class="sbanner">
+    <button class="sb-main" type="button" data-ext="${esc(s.url)}">
+      <span class="sb-ic">${ICON.play}</span>
+      <span class="sb-text"><span class="sb-top"><b>${esc(s.title)}</b>${when}</span><small>${esc(s.stream ? (s.live ? 'Смотреть прямой эфир' : 'Ссылка на эфир готова — откроется в VK Видео') : s.about)}</small></span>
+      <span class="sb-go">${ICON.arrow}</span></button>
+    ${s.youtube ? `<button class="sb-yt" type="button" data-ext="${esc(s.youtube)}">Смотреть на YouTube</button>` : ''}
+    ${poll}</section>`;
 }
 
 // «Твои игроки»: a strip to swipe, 2–3 cards on the screen. Followed players with their match now /
 // next and the last result; nobody followed yet — players of the day to follow with one ☆.
-function playerCardSmall({ id, name, photo, line, sub, last, live, followed }) {
+function playerCardSmall({ id, name, player, line, sub, last, live, followed }) {
   const star = signedIn()
     ? `<button class="pc-star${followed ? ' on' : ''}" type="button" data-follow="${esc(id)}"${followed ? ' data-on="0"' : ''} aria-label="${followed ? 'Убрать из твоих игроков' : 'Следить за игроком'}">${followed ? '★' : '☆'}</button>`
     : '<button class="pc-star" type="button" data-login aria-label="Войти, чтобы следить">☆</button>';
   return `<a class="pc${live ? ' is-live' : ''}" href="#/player/${encodeURIComponent(id)}">
-    <span class="pc-photo">${avatar(photo, 'head')}${live ? '<span class="pill-live">LIVE</span>' : ''}</span>${star}
+    <span class="pc-photo">${bigPhoto(player)}${live ? '<span class="pill-live">LIVE</span>' : ''}</span>${star}
     <b class="pc-name">${esc(name)}</b>
     <span class="pc-line">${line}</span>${sub ? `<small>${sub}</small>` : ''}${last ? `<small class="pc-last">${last}</small>` : ''}</a>`;
 }
@@ -619,7 +637,7 @@ function myPlayersStrip(d) {
         line = `<b>${whenLine(p.next.start_at)}</b>`;
         sub = `с ${esc(lastName({ name: p.next.opponent }))}`;
       }
-      return playerCardSmall({ id: p.player_id, name: lastName({ name: p.name }), photo: p.photo, line, sub, last: p.live ? '' : lastRes, live: Boolean(p.live), followed: true });
+      return playerCardSmall({ id: p.player_id, name: lastName({ name: p.name }), player: p, line, sub, last: p.live ? '' : lastRes, live: Boolean(p.live), followed: true });
     });
     return `${head}<div class="pstrip">${cards.join('')}<a class="pc pc-add" href="#/players"><span class="pc-plus">+</span><b class="pc-name">Добавить</b><small>ещё игроков</small></a></div>`;
   }
@@ -631,7 +649,7 @@ function myPlayersStrip(d) {
       : m.status === 'scheduled' ? `<b>${whenLine(m.start_at)}</b>`
         : m.won != null && showScore(m) ? `<span class="${m.won ? 'w' : 'l'}">${m.won ? 'Победа' : 'Поражение'} ${esc(m.score ?? '')}</span>`
           : `<span class="muted">${esc(cap(dayWord(m.start_at)))}</span>`;
-    return playerCardSmall({ id: p.player_id, name: lastName(p), photo: p.photo, line, sub: `с ${esc(lastName({ name: m.opponent }))}`, last: p.rank ? `№${p.rank}` : '', live: m.status === 'live', followed: false });
+    return playerCardSmall({ id: p.player_id, name: lastName(p), player: p, line, sub: `с ${esc(lastName({ name: m.opponent }))}`, last: p.rank ? `№${p.rank}` : '', live: m.status === 'live', followed: false });
   });
   return `${head}<div class="hint">Нажми ☆ — и здесь будут матчи, соперники и результаты твоих игроков.</div><div class="pstrip">${cards.join('')}</div>`;
 }
@@ -679,7 +697,7 @@ function questionCard(q) {
   const all = location.hash.startsWith('#/question') ? '' : '<a class="qc-all" href="#/question">Все →</a>';
   return `<section class="qcard2" data-qcard>
     <div class="qc-top"><span class="cap">Вопрос дня</span>${closes}${all}</div>
-    <div class="qc-q"><div class="qc-text">${esc(q.question)}<small>${esc(q.tournament)}</small></div>${avatar(q.player.photo, 'head')}</div>
+    <div class="qc-q"><div class="qc-text">${esc(q.question)}<small>${esc(q.tournament)}</small></div>${avatar(q.player.photo_hq ?? q.player.photo, 'head')}</div>
     ${questionPoll(q)}</section>`;
 }
 
@@ -713,14 +731,26 @@ function tourStage(t) {
   if (t.bracket?.round) return t.live ? `${t.bracket.round} · LIVE` : t.bracket.round;
   return t.live ? `Идёт ${t.live} ${plural(t.live, 'матч', 'матча', 'матчей')}` : 'Идёт';
 }
+// One of the city's photos: changes every 3 hours and differs from fan to fan (and city to city).
+let viewerSeed = 0;
+try {
+  viewerSeed = Number(localStorage.getItem('bolshe-seed')) || Math.floor(Math.random() * 1e6);
+  localStorage.setItem('bolshe-seed', String(viewerSeed));
+} catch { viewerSeed = Math.floor(Math.random() * 1e6); }
+function rotatingPhoto(list, salt) {
+  if (!list?.length) return null;
+  const seed = (me?.user?.id ?? viewerSeed) + [...String(salt)].reduce((a, c) => a + c.charCodeAt(0), 0) + Math.floor(Date.now() / (3 * 3600e3));
+  return list[seed % list.length];
+}
 function tourCard2(t) {
   const v = t.visual;
-  const pic = v?.photo
-    ? `<span class="tc2-pic" style="background-image:url('${esc(v.photo)}')">`
+  const photo = rotatingPhoto(v?.photos, t.name);
+  const pic = photo
+    ? `<span class="tc2-pic" style="background-image:url('${esc(photo)}')">`
     : `<span class="tc2-pic court ${SURF_CLASS[t.surface] ?? 'hard'}">${t.logo ? `<img class="tc2-logo" src="${esc(t.logo)}" alt="" loading="lazy" data-cover>` : ''}`;
-  const dates = datesLabel(t.starts_at ?? dayIso(t.first_day), t.ends_at ?? dayIso(t.last_day));
+  const dates = datesLabel(t.starts_at ?? dayIso(t.first_day), t.ends_at ?? (t.status === 'done' ? dayIso(t.last_day) : null));
   return `<a class="tc2${t.status === 'done' ? ' done' : ''}" href="#/tournament/${encodeURIComponent(t.key)}">
-    ${pic}<span class="tc2-tier">${esc(tierLabel(t) || t.tour)}</span>${t.covered ? '<span class="badge">Больше</span>' : ''}${v?.credit ? `<span class="tc2-cr">${esc(v.credit)}</span>` : ''}</span>
+    ${pic}<span class="tc2-tier">${esc(tierLabel(t) || t.tour)}</span>${t.covered ? '<span class="badge">Больше</span>' : ''}</span>
     <span class="tc2-body"><b class="tc2-name">${esc(t.name)}</b>
       <span class="tc2-stage">${esc(tourStage(t))}</span>
       <small>${esc([dates, SURFACE[t.surface]].filter(Boolean).join(' · '))}</small></span></a>`;
@@ -758,6 +788,16 @@ async function home(params, token) {
     home(params, token).catch(() => {});
   });
   refreshEvery(60000, () => home(params, token));
+}
+
+// ---------- «Авторы фотографий» (the free photos' licences ask to name the authors) ----------
+async function creditsScreen(token) {
+  const d = await api('/api/credits');
+  if (stale(token)) return;
+  const block = (title, list) => (list.length ? `<h2>${title}</h2><div class="credits">${list.map((x) => `<div><b>${esc(x.name)}</b><small>${x.credits.map(esc).join('<br>')}</small></div>`).join('')}</div>` : '');
+  view.innerHTML = `<div class="page-head"><h1>Авторы фотографий</h1></div>
+    <p class="muted small">Свободные фотографии из Wikimedia Commons — по их лицензиям называем авторов. Официальные фото игроков — WTA и ESPN, обложки эфиров — «Больше!».</p>
+    ${block('Турниры и города', d.tournaments)}${block('Игроки', d.players)}${block('Ведущие', d.hosts)}`;
 }
 
 // ---------- «Вопрос дня» (today's and the last ones) ----------
@@ -1143,7 +1183,7 @@ async function player(id, token) {
   if (stale(token)) return;
   const a = age(p.birth_date);
   view.innerHTML = `
-    <div class="p-head">${avatar(p.photo_url, 'head')}<div><h1>${esc(p.name_ru)}</h1>
+    <div class="p-head">${avatar(p.photo_hq ?? p.photo_url, 'head')}<div><h1>${esc(p.name_ru)}</h1>
       <div class="muted">${esc(p.name_latin ?? '')} · ${esc(p.tour)}${p.country_code ? ` · ${esc(p.country_code)}` : ''}${a != null ? ` · ${a} лет` : ''}</div>
       ${p.sportsru_url ? `<a href="${esc(p.sportsru_url)}" target="_blank" rel="noopener" class="small">sports.ru</a>` : ''}
       ${followButton(p.player_id)}</div></div>
@@ -1494,7 +1534,7 @@ const TOUR_TABS = [['now', 'Идут сейчас'], ['soon', 'Скоро'], ['d
 const dayIso = (d) => (d ? `${d}T12:00:00Z` : null);
 // One tournament in the list: logo, ★, «ATP 1000», the city, dates · surface, the game bracket line, live now.
 function tourCard(t) {
-  const dates = datesLabel(t.starts_at ?? dayIso(t.first_day), t.ends_at ?? dayIso(t.last_day));
+  const dates = datesLabel(t.starts_at ?? dayIso(t.first_day), t.ends_at ?? (t.status === 'done' ? dayIso(t.last_day) : null));
   const info = [dates, SURFACE[t.surface]].filter(Boolean).join(' · ');
   const b = t.bracket;
   const mine = b ? me?.brackets?.find((x) => x.bracket_key === b.key) : null;
@@ -1507,7 +1547,7 @@ function tourCard(t) {
   return `<div class="tl-card${t.tour === 'WTA' ? ' wta' : ''}"><a class="tl-main" href="#/tournament/${encodeURIComponent(t.key)}">
       ${t.logo ? `<img class="tc-logo" src="${esc(t.logo)}" alt="" loading="lazy" data-cover>` : ''}
       <div class="tc-tier">${esc(tierLabel(t))}</div><div class="tc-city">${esc(t.name)}</div>
-      <div class="tc-dates">${esc(info)}${b?.round && t.status === 'now' ? ` · ${esc(b.round.toLowerCase())}` : ''}</div></a>
+      <div class="tc-dates">${esc(info)}${t.stage === 'qualifying' ? ' · идёт квалификация' : b?.round && t.status === 'now' ? ` · ${esc(b.round.toLowerCase())}` : ''}</div></a>
     <span class="tl-fav">${favButton(t.name)}</span>
     ${bk}
     <div class="tl-foot">${foot}<a class="tl-go" href="#/tournament/${encodeURIComponent(t.key)}?tab=matches">Матчи турнира →</a></div></div>`;
@@ -1556,7 +1596,7 @@ async function tournamentScreen(key, token, params) {
   const tabs = TOUR_PAGE_TABS.filter(([k]) => k !== 'bracket' || b);
   const hl = ms.filter((m) => m.highlights && showScore(m));
   const link = (k) => `#/tournament/${encodeURIComponent(key)}?tab=${k}`;
-  const dates = datesLabel(t.starts_at ?? dayIso(t.first_day), t.ends_at ?? dayIso(t.last_day));
+  const dates = datesLabel(t.starts_at ?? dayIso(t.first_day), t.ends_at ?? (t.status === 'done' ? dayIso(t.last_day) : null));
   const live = ms.filter((m) => m.status === 'live');
   const next = ms.filter((m) => m.status === 'scheduled').slice(0, 4);
   const onBolshe = ms.filter((m) => m.bolshe && (m.status === 'live' || m.status === 'scheduled')).slice(0, 4);
@@ -1818,6 +1858,7 @@ async function settings(token) {
     <a class="more-btn" href="#/welcome">Ответить на вопросы о себе заново</a>` : ''}
     ${session ? `<h2>Вход на сайте</h2><p class="muted small">Ты вошёл через Telegram${session.user?.first_name ? ` как ${esc(session.user.first_name)}` : ''}.</p>
     <button class="more-btn" type="button" data-logout>Выйти на этом устройстве</button>` : !signedIn() ? `<h2>Вход</h2>${loginButton()}` : ''}
+    <a class="more-btn" href="#/credits" style="margin-top:24px">Авторы фотографий</a>
     <p class="muted small">Время матчей и эфиров показывается по часовому поясу телефона (${esc(tzLabel())}).</p>`;
   view.querySelector('[data-logout]')?.addEventListener('click', async () => {
     await post('/api/web-logout', {}).catch(() => {});
@@ -1856,7 +1897,7 @@ async function route() {
     players: 'players', player: 'players', profile: 'profile', settings: 'profile', achievements: 'profile', levels: 'profile', rating: 'profile', hosts: 'profile', host: 'profile',
   }[parts[0] ?? ''] ?? 'home';
   document.querySelectorAll('.tabs a').forEach((a) => a.classList.toggle('on', a.dataset.tab === tab));
-  const detail = ['match', 'player', 'settings', 'bracket', 'question', 'tournament', 'achievements', 'levels', 'rating', 'hosts', 'host'].includes(parts[0]);
+  const detail = ['match', 'player', 'settings', 'bracket', 'question', 'tournament', 'achievements', 'levels', 'rating', 'hosts', 'host', 'credits'].includes(parts[0]);
   if (tg?.BackButton) { if (detail) tg.BackButton.show(); else tg.BackButton.hide(); }
   if (!view.innerHTML) view.innerHTML = '<div class="loading">Загружаем…</div>';
   try {
@@ -1871,6 +1912,7 @@ async function route() {
     else if (parts[0] === 'hosts') await hostsScreen(token);
     else if (parts[0] === 'host' && parts[1]) await hostScreen(decodeURIComponent(parts[1]), token);
     else if (parts[0] === 'settings') await settings(token);
+    else if (parts[0] === 'credits') await creditsScreen(token);
     else if (parts[0] === 'welcome') await welcome(token);
     else if (parts[0] === 'question') await questionScreen(token);
     else if (parts[0] === 'tournaments') await tournamentsTab(token);

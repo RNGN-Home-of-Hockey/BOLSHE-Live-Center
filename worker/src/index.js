@@ -24,6 +24,8 @@ import { ratingView } from './rating.js';
 import { hostView, listHosts, matchExperts } from './hosts.js';
 import { matchCard } from './match-details.js';
 import { mediaCounts, serveMedia, syncMedia } from './media.js';
+import { syncPhotos } from './photos.js';
+import { channelEveryMs, syncChannel } from './channel.js';
 import { matchesForDate, matchesOfPlayer, syncMatchDays } from './matches-sync.js';
 import { syncOdds } from './odds-sync.js';
 import { winlineLink } from './winline-link.js';
@@ -31,6 +33,7 @@ import { getPlayer, searchPlayers } from './players.js';
 import { broadcastsForDate, syncSchedule } from './schedule-sync.js';
 import { answerQuestion, questionUpkeep, questionView } from './question.js';
 import { homeView, setMainMatch } from './home.js';
+import { photoCredits } from './credits.js';
 import { endWebSession, pollWebLogin, startWebLogin } from './web-login.js';
 import { playerMedia, pushHighlights } from './highlights.js';
 import { listTournaments, tournamentView } from './tournaments.js';
@@ -137,6 +140,16 @@ async function maintain(env, { force = false } = {}) {
   if (env.MEDIA && await due(env, 'media_sync', MEDIA_EVERY_MS, force)) {
     await setState(env, 'media_sync', 'run');
     tasks.push(runJob(env, 'media', () => syncMedia(env)));
+  }
+  // The «Больше!» Telegram channel: «Больше! Лайв» links and «Голосование недели» (hourly, often on show days).
+  if (await due(env, 'channel_sync', channelEveryMs(), false)) {
+    await setState(env, 'channel_sync', 'run');
+    tasks.push(runJob(env, 'channel', () => syncChannel(env)));
+  }
+  // Big player photos (WTA / ESPN / Commons → 480×480 WebP), a few every minute.
+  if (env.MEDIA && env.IMAGES && await due(env, 'photos_sync', MEDIA_EVERY_MS, force)) {
+    await setState(env, 'photos_sync', 'run');
+    tasks.push(runJob(env, 'photos', () => syncPhotos(env)));
   }
   // Winline odds: in play every minute, pre-match every 10 minutes (the feed is ~6.5 MB).
   if (await due(env, 'odds_live', ODDS_LIVE_EVERY_MS, force)) {
@@ -368,6 +381,7 @@ export default {
         if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return json({ ok: false, error: 'date must be YYYY-MM-DD' }, 400);
         return json(await homeView(env, date), 200, 20);
       }
+      if (path === '/api/credits') return json(await photoCredits(env), 200, 600);
       if (path === '/api/levels') {
         return json({
           levels: LEVELS, legend_step: LEGEND_STEP, xp_rules: XP_RULES, you: levelFor(url.searchParams.get('xp') ?? 0),

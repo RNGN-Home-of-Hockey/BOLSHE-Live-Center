@@ -7,6 +7,7 @@ import { homeTournaments, nextStudio, pickMainMatch, studioBanner } from '../../
 import { mediaUrl } from '../../src/lib/media.js';
 import { MATCH_SELECT, matchesForDate, shapeMatch } from './matches-sync.js';
 import { todayQuestion } from './question.js';
+import { readChannel } from './channel.js';
 import { broadcastsForDate } from './schedule-sync.js';
 import { listTournaments } from './tournaments.js';
 
@@ -37,13 +38,23 @@ async function matchById(db, matchId) {
   return row ? shapeMatch(row) : null;
 }
 
-// ---------- tournament pictures: a stadium photo (Wikimedia Commons, credited) by city ----------
+// ---------- tournament pictures: 5 photos of the tournament's city (Wikimedia Commons) ----------
+// tour_photos keeps them by city; tour_visuals gives the spellings of the city (Flashscore writes some
+// in Russian, some in Latin) and the stadium photo used while a city has no photos of its own. The app
+// shows one at a time and changes it every few hours; the authors are on «Авторы фотографий».
 async function tourVisuals(db) {
   try {
-    const { results } = await db.prepare('SELECT * FROM tour_visuals').all();
+    const [{ results: cities }, { results: photos }] = await Promise.all([
+      db.prepare('SELECT * FROM tour_visuals').all(),
+      db.prepare('SELECT city, photo_url FROM tour_photos ORDER BY city, n').all().catch(() => ({ results: [] })),
+    ]);
+    const byCity = new Map();
+    for (const ph of photos) byCity.set(ph.city, [...(byCity.get(ph.city) ?? []), ph.photo_url]);
     const byName = new Map();
-    for (const v of results) {
-      for (const n of [v.city, ...String(v.aliases ?? '').split(',')]) if (n.trim()) byName.set(norm(n), v);
+    for (const v of cities) {
+      const urls = byCity.get(v.city) ?? (v.photo_url ? [v.photo_url] : []);
+      const visual = { photos: urls.map((u) => mediaUrl(u) ?? u), venue: v.venue ?? null };
+      for (const n of [v.city, ...String(v.aliases ?? '').split(',')]) if (n.trim()) byName.set(norm(n), visual);
     }
     return byName;
   } catch {
@@ -51,10 +62,7 @@ async function tourVisuals(db) {
   }
 }
 
-const visualOf = (visuals, name) => {
-  const v = visuals.get(norm(name));
-  return v ? { photo: mediaUrl(v.photo_url) ?? v.photo_url, credit: v.photo_credit ?? null, venue: v.venue ?? null } : null;
-};
+const visualOf = (visuals, name) => visuals.get(norm(name)) ?? null;
 
 // Tournaments with «Больше» broadcasts around today: they go first on the home screen.
 async function coveredTournaments(db, today) {
@@ -87,22 +95,26 @@ function featuredPlayers(matches, limit = 8) {
   return [...byId.values()].sort((a, b) => a.rank * (a.is_russian ? 0.4 : 1) - b.rank * (b.is_russian ? 0.4 : 1)).slice(0, limit);
 }
 
+// «Голосование недели» from the channel goes with the studio banner: the show talks it over.
+const withPoll = (banner, poll) => (banner ? { ...banner, poll: poll ?? null } : null);
+
 export async function homeView(env, date = mskDay()) {
   const db = env.DB;
   const now = Date.now();
   const today = mskDay(now);
   const tomorrow = addDays(date, 1);
-  const [all, aheadTour, aheadCh, broadcasts, pick, studio, list, covered, visuals, question] = await Promise.all([
+  const [all, aheadTour, aheadCh, broadcasts, pick, studio, list, covered, visuals, question, channel] = await Promise.all([
     matchesForDate(db, date, {}),
     matchesForDate(db, tomorrow, { level: 'tour' }),
     matchesForDate(db, tomorrow, { level: 'challenger' }),
     broadcastsForDate(db, date),
     readState(db, MAIN_KEY),
     readState(db, STUDIO_KEY),
-    listTournaments(env, null, { withQualifying: true }),
+    listTournaments(env, null),
     coveredTournaments(db, today),
     tourVisuals(db),
     todayQuestion(env).catch(() => null),
+    readChannel(db).catch(() => null),
   ]);
   const candidates = [...all, ...aheadTour, ...aheadCh];
   // The editors' pick holds for its day.
@@ -120,7 +132,7 @@ export async function homeView(env, date = mskDay()) {
   return {
     date,
     main: main ? { ...main.match, manual: main.manual } : null,
-    studio: studioBanner(now, studio),
+    studio: withPoll(studioBanner(now, studio, channel?.live), channel?.poll),
     tournaments: tours.tournaments.map(withVisual),
     more_tour: tours.more_tour,
     challengers: tours.challengers,

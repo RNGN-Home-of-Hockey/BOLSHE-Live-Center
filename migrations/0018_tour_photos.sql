@@ -1,0 +1,106 @@
+-- «Актуальные турниры»: 5 photos of each tournament's city (Wikimedia Commons, free licences); the app shows one
+-- at a time and changes it every few hours, without captions — the authors are on «Авторы фотографий» (2026-10-19).
+CREATE TABLE IF NOT EXISTS tour_photos (
+  city TEXT NOT NULL,       -- tour_visuals.city
+  n INTEGER NOT NULL,
+  photo_url TEXT NOT NULL,  -- R2 key in MEDIA (tours/...)
+  photo_credit TEXT,
+  PRIMARY KEY (city, n)
+);
+
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Lyon', 0, 'tours/lyon.jpg?v=1', NULL);
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Lyon', 1, 'tours/lyon-2.jpg?v=1', 'Фото: Vincent Montcuit, CC BY-SA 4.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Lyon', 2, 'tours/lyon-4.jpg?v=1', 'Фото: Jeanne Menjoulet, CC BY 2.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Lyon', 3, 'tours/lyon-5.jpg?v=1', 'Фото: Jeanne Menjoulet, CC BY 2.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Lyon', 4, 'tours/lyon-6.jpg?v=1', 'Фото: Jeanne Menjoulet, CC BY 2.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Brussels', 0, 'tours/brussels.jpg?v=1', NULL);
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Brussels', 1, 'tours/brussels-1.jpg?v=1', 'Фото: Celuici, CC BY-SA 4.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Brussels', 2, 'tours/brussels-2.jpg?v=1', 'Фото: Trougnouf (Benoit Brummer), CC BY 4.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Brussels', 3, 'tours/brussels-5.jpg?v=1', 'Фото: Diego Delso, CC BY-SA 4.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Brussels', 4, 'tours/brussels-6.jpg?v=1', 'Фото: Diego Delso, CC BY-SA 4.0, Wikimedia Commons');
+INSERT OR IGNORE INTO tour_visuals (city, aliases, venue, photo_url, photo_credit) VALUES ('Almaty', 'Алматы', NULL, 'tours/almaty-0.jpg?v=1', NULL);
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Almaty', 0, 'tours/almaty-0.jpg?v=1', 'Фото: Kurmanbek, CC BY-SA 4.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Almaty', 1, 'tours/almaty-2.jpg?v=1', 'Фото: Matti Blume, CC BY-SA 4.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Almaty', 2, 'tours/almaty-3.jpg?v=1', 'Фото: Astrobond, CC BY-SA 4.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Almaty', 3, 'tours/almaty-5.jpg?v=1', 'Фото: Matti Blume, CC BY-SA 4.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Almaty', 4, 'tours/almaty-6.jpg?v=1', 'Фото: Nikolai Bulykin, CC BY-SA 4.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Осака', 0, 'tours/osaka.jpg?v=1', NULL);
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Осака', 1, 'tours/osaka-0.jpg?v=1', 'Фото: Martin Falbisoner, CC BY-SA 4.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Осака', 2, 'tours/osaka-7.jpg?v=1', 'Фото: DXR, CC BY-SA 4.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Осака', 3, 'tours/osaka-5.jpg?v=1', 'Фото: Markus Leupold-Löwenthal, CC BY-SA 3.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Осака', 4, 'tours/osaka-3.jpg?v=1', 'Фото: автор неизвестен, CC BY-SA 3.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Ningbo', 0, 'tours/ningbo.jpg?v=1', NULL);
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Ningbo', 1, 'tours/ningbo-0.jpg?v=1', 'Фото: Siyuwj, CC BY-SA 3.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Ningbo', 2, 'tours/ningbo-1.jpg?v=1', 'Фото: DXR, CC BY-SA 3.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Ningbo', 3, 'tours/ningbo-2.jpg?v=1', 'Фото: DXR, CC BY-SA 4.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Вена', 0, 'tours/vienna-0.jpg?v=1', 'Фото: Fabian Lackner, CC BY-SA 3.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Вена', 1, 'tours/vienna-1.jpg?v=1', 'Фото: Michal Klajban, CC BY-SA 4.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Вена', 2, 'tours/vienna-3.jpg?v=1', 'Фото: Andrzej Otrębski, CC BY-SA 4.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Вена', 3, 'tours/vienna-4.jpg?v=1', 'Фото: Alireza Javaheri, CC BY 3.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Вена', 4, 'tours/vienna-6.jpg?v=1', 'Фото: Pierre Blaché, CC0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Базель', 0, 'tours/basel.jpg?v=1', NULL);
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Базель', 1, 'tours/basel-3.jpg?v=1', 'Фото: karlheinz klingbeil, CC BY 4.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Базель', 2, 'tours/basel-4.jpg?v=1', 'Фото: Karlheinz Klingbeil, CC BY 4.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Базель', 3, 'tours/basel-7.jpg?v=1', 'Фото: Pedelecs, CC BY-SA 3.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Базель', 4, 'tours/basel-1.jpg?v=1', 'Фото: User:Mattes, CC BY 2.0 de, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Париж', 0, 'tours/paris-0.jpg?v=1', 'Фото: Myrabella, CC BY-SA 3.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Париж', 1, 'tours/paris-1.jpg?v=1', 'Фото: King of Hearts, CC BY-SA 3.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Париж', 2, 'tours/paris-3.jpg?v=1', 'Фото: DXR, CC BY-SA 3.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Париж', 3, 'tours/paris-4.jpg?v=1', 'Фото: Basile Morin, CC BY-SA 4.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Париж', 4, 'tours/paris-7.jpg?v=1', 'Фото: DXR, CC BY-SA 3.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Токио', 0, 'tours/tokyo-2.jpg?v=1', 'Фото: David Kernan, CC BY 4.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Токио', 1, 'tours/tokyo-3.jpg?v=1', 'Фото: Ximonic (Simo Räsänen), CC BY-SA 4.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Токио', 2, 'tours/tokyo-4.jpg?v=1', 'Фото: автор неизвестен, CC BY 4.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Токио', 3, 'tours/tokyo-5.jpg?v=1', 'Фото: Martin Falbisoner, CC BY-SA 3.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Токио', 4, 'tours/tokyo-7.jpg?v=1', 'Фото: Martin Falbisoner, CC BY-SA 3.0, Wikimedia Commons');
+INSERT OR IGNORE INTO tour_visuals (city, aliases, venue, photo_url, photo_credit) VALUES ('Гуанчжоу', 'Guangzhou', NULL, 'tours/guangzhou-5.jpg?v=1', NULL);
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Гуанчжоу', 0, 'tours/guangzhou-5.jpg?v=1', 'Фото: kevinmcgill, CC BY-SA 2.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Гуанчжоу', 1, 'tours/guangzhou-6.jpg?v=1', 'Фото: YikyuenG, CC BY-SA 4.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Гуанчжоу', 2, 'tours/guangzhou-7.jpg?v=1', 'Фото: そらみみ, CC BY-SA 4.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Гуанчжоу', 3, 'tours/guangzhou-0.jpg?v=1', 'Фото: Chinatravelsavvy, CC BY-SA 3.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Гуанчжоу', 4, 'tours/guangzhou-1.jpg?v=1', 'Фото: Chinatravelsavvy, CC BY-SA 3.0, Wikimedia Commons');
+INSERT OR IGNORE INTO tour_visuals (city, aliases, venue, photo_url, photo_credit) VALUES ('Гонконг', 'Hong Kong,Гонконг', NULL, 'tours/hongkong-0.jpg?v=1', NULL);
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Гонконг', 0, 'tours/hongkong-0.jpg?v=1', 'Фото: Diliff, CC BY 3.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Гонконг', 1, 'tours/hongkong-2.jpg?v=1', 'Фото: Base64, CC BY-SA 3.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Гонконг', 2, 'tours/hongkong-3.jpg?v=1', 'Фото: Diego Delso, CC BY-SA 3.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Гонконг', 3, 'tours/hongkong-6.jpg?v=1', 'Фото: Diego Delso, CC BY-SA 3.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Гонконг', 4, 'tours/hongkong-7.jpg?v=1', 'Фото: Diego Delso, CC BY-SA 3.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Эр-Рияд', 0, 'tours/riyadh-1.jpg?v=1', 'Фото: B.alotaby, CC BY-SA 4.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Эр-Рияд', 1, 'tours/riyadh-2.jpg?v=1', 'Фото: B.alotaby, CC BY-SA 4.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Эр-Рияд', 2, 'tours/riyadh-3.jpg?v=1', 'Фото: Thesadcactus, CC BY-SA 4.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Эр-Рияд', 3, 'tours/riyadh-4.jpg?v=1', 'Фото: Unknown authorUnknown author, CC BY-SA 4.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Эр-Рияд', 4, 'tours/riyadh-0.jpg?v=1', 'Фото: Peter, CC BY 2.0, Wikimedia Commons');
+INSERT OR IGNORE INTO tour_visuals (city, aliases, venue, photo_url, photo_credit) VALUES ('Турин', 'Turin,Torino,ATP Finals,Итоговый турнир ATP', NULL, 'tours/turin-3.jpg?v=1', NULL);
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Турин', 0, 'tours/turin-3.jpg?v=1', 'Фото: Benjamin Smith, CC BY-SA 4.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Турин', 1, 'tours/turin-4.jpg?v=1', 'Фото: chensiyuan, CC BY-SA 4.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Турин', 2, 'tours/turin-5.jpg?v=1', 'Фото: photo uploaded by RicciSpeziari Photographer: Riccardo Speziari, CC BY-SA 3.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Турин', 3, 'tours/turin-6.jpg?v=1', 'Фото: Alexandros Mantoukas, CC BY-SA 4.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Турин', 4, 'tours/turin-7.jpg?v=1', 'Фото: Giorgio Duma .mw-parser-output .messagebox{margin:4px 0;width:auto;border-collap, CC BY-SA 4.0, Wikimedia Commons');
+INSERT OR IGNORE INTO tour_visuals (city, aliases, venue, photo_url, photo_credit) VALUES ('Афины', 'Athens', NULL, 'tours/athens-0.jpg?v=1', NULL);
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Афины', 0, 'tours/athens-0.jpg?v=1', 'Фото: A.Savin, CC BY-SA 3.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Афины', 1, 'tours/athens-3.jpg?v=1', 'Фото: Jebulon, CC0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Афины', 2, 'tours/athens-4.jpg?v=1', 'Фото: Jebulon, CC0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Афины', 3, 'tours/athens-5.jpg?v=1', 'Фото: Jakub Hałun, CC BY 4.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Афины', 4, 'tours/athens-6.jpg?v=1', 'Фото: Jakub Hałun, CC BY 4.0, Wikimedia Commons');
+INSERT OR IGNORE INTO tour_visuals (city, aliases, venue, photo_url, photo_credit) VALUES ('Мец', 'Metz', NULL, 'tours/metz-1.jpg?v=1', NULL);
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Мец', 0, 'tours/metz-1.jpg?v=1', 'Фото: автор неизвестен, CC BY-SA 2.5, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Мец', 1, 'tours/metz-3.jpg?v=1', 'Фото: Florian Pépellin, CC BY-SA 4.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Мец', 2, 'tours/metz-5.jpg?v=1', 'Фото: Florian Pépellin, CC BY-SA 4.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Мец', 3, 'tours/metz-6.jpg?v=1', 'Фото: Florian Pépellin, CC BY-SA 4.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Мец', 4, 'tours/metz-7.jpg?v=1', 'Фото: Florian Pépellin, CC BY-SA 4.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Шанхай', 0, 'tours/shanghai-1.jpg?v=1', 'Фото: Ermell, CC0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Шанхай', 1, 'tours/shanghai-3.jpg?v=1', 'Фото: King of Hearts, CC BY-SA 4.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Шанхай', 2, 'tours/shanghai-5.jpg?v=1', 'Фото: King of Hearts, CC BY-SA 4.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Шанхай', 3, 'tours/shanghai-6.jpg?v=1', 'Фото: Dllu, CC BY-SA 4.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Шанхай', 4, 'tours/shanghai-7.jpg?v=1', 'Фото: A Chinese ID, CC BY-SA 4.0, Wikimedia Commons');
+INSERT OR IGNORE INTO tour_visuals (city, aliases, venue, photo_url, photo_credit) VALUES ('Ухань', 'Wuhan', NULL, 'tours/wuhan-4.jpg?v=1', NULL);
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Ухань', 0, 'tours/wuhan-4.jpg?v=1', 'Фото: AndrewHorne at English Wikipedia, CC BY-SA 3.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Ухань', 1, 'tours/wuhan-5.jpg?v=1', 'Фото: Majorantarktis, CC BY-SA 4.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Ухань', 2, 'tours/wuhan-6.jpg?v=1', 'Фото: Majorantarktis, CC BY-SA 4.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Ухань', 3, 'tours/wuhan-7.jpg?v=1', 'Фото: Pan Chen, CC BY 3.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Ухань', 4, 'tours/wuhan-1.jpg?v=1', 'Фото: User:Vmenkov, CC BY-SA 3.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Пекин', 0, 'tours/beijing-2.jpg?v=1', 'Фото: Picrazy2, CC BY-SA 4.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Пекин', 1, 'tours/beijing-3.jpg?v=1', 'Фото: N509FZ, CC BY-SA 4.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Пекин', 2, 'tours/beijing-4.jpg?v=1', 'Фото: Picrazy2, CC BY-SA 4.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Пекин', 3, 'tours/beijing-6.jpg?v=1', 'Фото: Yang Liu, CC BY-SA 2.0, Wikimedia Commons');
+INSERT OR REPLACE INTO tour_photos (city, n, photo_url, photo_credit) VALUES ('Пекин', 4, 'tours/beijing-7.jpg?v=1', 'Фото: Gary Todd, CC0, Wikimedia Commons');

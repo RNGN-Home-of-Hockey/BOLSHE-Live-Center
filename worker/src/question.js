@@ -6,6 +6,7 @@
 
 import { QUESTION_OPTIONS, QUESTION_XP, pickQuestion, questionAnswer, questionClosesAt } from '../../src/game/question.js';
 import { mediaUrl } from '../../src/lib/media.js';
+import { PHOTO_HQ } from './photos.js';
 
 const mskDay = (ms = Date.now()) => new Date(ms + 3 * 3600e3).toISOString().slice(0, 10);
 const daysBefore = (day, n) => new Date(Date.parse(`${day}T12:00:00Z`) - n * 86400e3).toISOString().slice(0, 10);
@@ -79,6 +80,7 @@ async function shape(db, q, user, today) {
   for (const r of results) if (counts[r.pick] != null) counts[r.pick] = r.n; // old «Затрудняюсь» votes are left out
   const mine = user ? await db.prepare('SELECT pick FROM question_votes WHERE day = ? AND user_id = ?').bind(q.day, user.id).first() : null;
   const pick = mine?.pick != null && mine.pick < QUESTION_OPTIONS.length ? mine.pick : null;
+  const hq = q.player_fs_id ? await db.prepare(`SELECT ${PHOTO_HQ('?')} AS p`).bind(q.player_fs_id).first() : null;
   const closes = q.day === today ? await closesAt(db, q) : null;
   const open = q.answer == null && q.day === today && Date.now() < Date.parse(closes);
   return {
@@ -89,7 +91,7 @@ async function shape(db, q, user, today) {
     bracket_key: q.bracket_key,
     options: QUESTION_OPTIONS,
     xp: QUESTION_XP,
-    player: { id: q.player_id, name: q.player_name, rank: q.player_rank, photo: q.photo },
+    player: { id: q.player_id, name: q.player_name, rank: q.player_rank, photo: q.photo, photo_hq: mediaUrl(hq?.p) },
     counts,
     total: counts.reduce((a, n) => a + n, 0),
     pick,

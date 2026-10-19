@@ -6,6 +6,7 @@
 //   POST /api/prefs   {public, surface, tours, since, onboarded, fav_tournaments}   (onboarding, settings, ★ tournaments)
 //   POST /api/events  {kind: 'vk', ref}                            (a «Больше» broadcast opened from the app)
 
+import { PHOTO_HQ } from './photos.js';
 import { achievementsXp, fanAchievements } from '../../src/game/achievements.js';
 import { bracketStatus } from '../../src/game/bracket.js';
 import { LEVELS, XP_RULES, levelFor } from '../../src/game/levels.js';
@@ -194,6 +195,7 @@ function playerCard(p, matches, now) {
     player_id: p.player_id,
     name: p.name_ru,
     photo: mediaUrl(p.head) ?? p.photo_url ?? null,
+    photo_hq: mediaUrl(p.photo_hq),
     live: live ? { ...side(live), score: sets(live) } : null,
     last: last ? { ...side(last), won: last.winner === mine(last), score: sets(last), status: last.status } : null,
     next: next ? side(next) : null,
@@ -214,7 +216,8 @@ export async function fanProfile(env, user, date) {
   const { results: picks } = await db.prepare(`SELECT v.match_id, v.pick FROM votes v JOIN matches m ON m.match_id = v.match_id
     WHERE v.user_id = ? AND m.date_msk BETWEEN ? AND ?`).bind(user.id, near(-1), near(1)).all();
   const { results: followed } = await db.prepare(`SELECT p.player_id, p.name_ru, p.fs_id, p.photo_url,
-      (SELECT r2_key || '?v=' || version FROM media WHERE media_key = 'head/' || p.fs_id AND status = 'ok') AS head
+      (SELECT r2_key || '?v=' || version FROM media WHERE media_key = 'head/' || p.fs_id AND status = 'ok') AS head,
+      ${PHOTO_HQ('p.fs_id')} AS photo_hq
     FROM follows f JOIN players p ON p.player_id = f.player_id WHERE f.user_id = ? ORDER BY f.created_at LIMIT 30`).bind(user.id).all();
   // Everything the achievements count: the fan's votes with the match result, surface, Winline
   // pre-match prices, the community split, our players and «Больше» broadcasts.

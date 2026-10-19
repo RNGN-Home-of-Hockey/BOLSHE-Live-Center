@@ -190,7 +190,7 @@ export async function syncMedia(env, { covers = 5, heads = 30 } = {}) {
   return { linked, covers: tally(coverResults), heads: tally(headResults) };
 }
 
-const MEDIA_PATH = /^\/media\/(covers|heads|hosts|tours)\/([A-Za-z0-9_-]+\.(?:jpg|png|webp))$/;
+const MEDIA_PATH = /^\/media\/(covers|heads|hosts|tours|photos)\/([A-Za-z0-9_-]+\.(?:jpg|png|webp))$/;
 
 // Stored pictures are immutable: a new cover gets a new ?v= in the API, so browsers cache for a year.
 // A missing one answers 404 (cached 10 minutes) and the app shows the players' heads instead.

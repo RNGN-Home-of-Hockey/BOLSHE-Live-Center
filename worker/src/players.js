@@ -1,13 +1,14 @@
 // Player search and permanent name edits in D1.
 
+import { PHOTO_HQ } from './photos.js';
 import { mediaUrl } from '../../src/lib/media.js';
 import { nameTokens, shortRu, tokenKey } from '../../src/lib/names.js';
 
 const RANK_ORDER = 'ORDER BY (p.singles_rank IS NULL), p.singles_rank, (p.doubles_rank IS NULL), p.doubles_rank';
 
 // Our stored copy of the player's head (worker/src/media.js) wins over the outside link.
-const HEAD = "(SELECT r2_key || '?v=' || version FROM media WHERE media_key = 'head/' || p.fs_id AND status = 'ok') AS head";
-const withHead = ({ head, ...p }) => ({ ...p, photo_url: mediaUrl(head) ?? p.photo_url });
+const HEAD = `(SELECT r2_key || '?v=' || version FROM media WHERE media_key = 'head/' || p.fs_id AND status = 'ok') AS head, ${PHOTO_HQ('p.fs_id')} AS photo_hq`;
+const withHead = ({ head, photo_hq: hq, ...p }) => ({ ...p, photo_url: mediaUrl(head) ?? p.photo_url, photo_hq: mediaUrl(hq) });
 
 export async function searchPlayers(db, query, { tour = null, russian = false, limit = 20 } = {}) {
   const tokens = nameTokens(query).slice(0, 4);

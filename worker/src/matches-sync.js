@@ -4,6 +4,7 @@ import { tournamentTier } from '../../src/insights/tournaments.js';
 import { mediaUrl } from '../../src/lib/media.js';
 import { fetchDay } from '../../src/sources/flashscore-matches.js';
 import { shapeOdds } from './odds-sync.js';
+import { PHOTO_HQ } from './photos.js';
 
 const qualifying = (t) => /квалификац|qualif/i.test(`${t.tournament ?? ''} ${t.name ?? ''}`);
 
@@ -26,15 +27,22 @@ export async function syncMatchDays(env, offsets) {
   for (const offset of offsets) {
     const { tournaments, matches } = await fetchDay(offset);
     seen += matches.length;
+    // Qualifying shares the tournament key with the main draw: only the main draw's ids are kept, and
+    // once the main draw shows up its name replaces "Brussels (квалификация)" (before 2026-10-19 the
+    // first name stayed for good, so the whole tournament passed for qualifying and had no bracket).
     const statements = tournaments.map((t) => db.prepare(`INSERT INTO tournaments
         (tournament_key, name, category, tour, level, discipline, surface, tournament, country, url, first_seen, fs_tournament_id, fs_stage_id, logo)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(tournament_key) DO UPDATE SET
+      VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14) ON CONFLICT(tournament_key) DO UPDATE SET
         fs_tournament_id = COALESCE(excluded.fs_tournament_id, tournaments.fs_tournament_id),
         fs_stage_id = COALESCE(excluded.fs_stage_id, tournaments.fs_stage_id),
-        logo = COALESCE(excluded.logo, tournaments.logo)`)
-      // Qualifying shares the tournament key with the main draw: only the main draw's ids are kept.
+        logo = COALESCE(excluded.logo, tournaments.logo),
+        name = CASE WHEN ?15 = 1 THEN excluded.name ELSE tournaments.name END,
+        category = CASE WHEN ?15 = 1 THEN excluded.category ELSE tournaments.category END,
+        tournament = CASE WHEN ?15 = 1 THEN excluded.tournament ELSE tournaments.tournament END,
+        url = CASE WHEN ?15 = 1 THEN COALESCE(excluded.url, tournaments.url) ELSE tournaments.url END`)
       .bind(t.key, t.name, t.category, t.tour, t.level, t.discipline, t.surface, t.tournament, t.country, t.url, now,
-        qualifying(t) ? null : t.fs_tournament_id ?? null, qualifying(t) ? null : t.fs_stage_id ?? null, t.logo ?? null));
+        qualifying(t) ? null : t.fs_tournament_id ?? null, qualifying(t) ? null : t.fs_stage_id ?? null, t.logo ?? null,
+        qualifying(t) ? 0 : 1));
     const ids = matches.map((m) => m.match_id);
     const known = new Map();
     for (let i = 0; i < ids.length; i += 90) {
@@ -78,6 +86,7 @@ export const MATCH_SELECT = `SELECT m.*, t.name AS tournament_name, t.tournament
     ${PLAYER_COLS('a')}, ${PLAYER_COLS('b')},
     (SELECT r2_key || '?v=' || version FROM media WHERE media_key = 'head/' || m.p1_fs_id AND status = 'ok') AS p1_head,
     (SELECT r2_key || '?v=' || version FROM media WHERE media_key = 'head/' || m.p2_fs_id AND status = 'ok') AS p2_head,
+    ${PHOTO_HQ('m.p1_fs_id')} AS p1_photo_hq, ${PHOTO_HQ('m.p2_fs_id')} AS p2_photo_hq,
     (SELECT json_object('pre1', o.pre1, 'pre2', o.pre2, 'live1', o.live1, 'live2', o.live2, 'live_at', o.live_at, 'wl_url', o.wl_url,
         'hcap', o.hcap, 'hcap1', o.hcap1, 'hcap2', o.hcap2)
        FROM match_odds o WHERE o.match_id = m.match_id) AS odds,
@@ -105,6 +114,7 @@ function side(row, alias, n) {
     rank: row[`${alias}_singles_rank`] ?? null,
     doubles_rank: row[`${alias}_doubles_rank`] ?? null,
     photo: mediaUrl(row[`p${n}_head`]) ?? row[`${alias}_photo_url`] ?? row[`p${n}_photo`] ?? null,
+    photo_hq: mediaUrl(row[`p${n}_photo_hq`]),
     is_russian: Boolean(row[`${alias}_is_russian`]),
     country: row[`${alias}_country_code`] ?? null,
   };

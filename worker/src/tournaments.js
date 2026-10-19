@@ -1,5 +1,6 @@
-// Tournaments of the «Турниры» tab and the tournament page (singles of the main tour and challengers,
-// qualifying left out), built from the matches we keep (yesterday…a week ahead and the recent days).
+// Tournaments of the «Турниры» tab and the tournament page (singles of the main tour and challengers),
+// built from the matches we keep (yesterday…a week ahead and the recent days). A tournament whose
+// main draw has not begun yet is listed by its qualifying: stage 'qualifying', the city without "(квалификация)".
 //   GET /api/tournaments          every tournament with status now | soon | done, its bracket and highlights count
 //   GET /api/tournaments/<key>    one tournament: the summary and all its matches (with our highlights)
 
@@ -16,14 +17,16 @@ const SUMMARY = `SELECT t.tournament_key, t.tournament AS name, t.tour, t.level,
     SUM(EXISTS (SELECT 1 FROM highlights h WHERE h.match_id = m.match_id)) AS highlights
   FROM tournaments t JOIN matches m ON m.tournament_key = t.tournament_key
   WHERE t.discipline = 'singles' AND t.level IN ('tour', 'challenger')`;
-const NO_QUALIFYING = " AND t.tournament NOT LIKE '%квалификац%'";
+const QUAL = /\s*\(?квалификац[^)]*\)?/i;
 
 function shapeTournament(r, bracket, today) {
   const status = bracket?.status === 'finished' || (r.last_day < today && !r.live && !r.left_matches) ? 'done'
     : r.first_day > today && !r.live ? 'soon' : 'now';
   const info = explainTournament({ tour: r.tour, level: r.level, tournament: r.name });
+  const qualifying = QUAL.test(r.name ?? '');
   return {
-    key: r.tournament_key, name: r.name, tour: r.tour, level: r.level, surface: r.surface, logo: r.logo,
+    key: r.tournament_key, name: qualifying ? r.name.replace(QUAL, '').trim() : r.name, stage: qualifying ? 'qualifying' : null,
+    tour: r.tour, level: r.level, surface: r.surface, logo: r.logo,
     tier: info.tier, about: info.about, status,
     first_day: r.first_day, last_day: r.last_day, matches: r.matches, live: r.live ?? 0, left: r.left_matches ?? 0,
     next_start: r.next_start, highlights: r.highlights ?? 0,
@@ -35,11 +38,10 @@ function shapeTournament(r, bracket, today) {
   };
 }
 
-// The home screen also takes the qualifying (withQualifying): it stands for a tournament about to start.
-export async function listTournaments(env, user, { withQualifying = false } = {}) {
+export async function listTournaments(env, user) {
   const today = mskToday();
   const [{ results }, brackets] = await Promise.all([
-    env.DB.prepare(`${SUMMARY}${withQualifying ? '' : NO_QUALIFYING} GROUP BY t.tournament_key`).all(),
+    env.DB.prepare(`${SUMMARY} GROUP BY t.tournament_key`).all(),
     listBrackets(env, user),
   ]);
   const byKey = new Map(brackets.map((b) => [b.tournament_key, b]));
