@@ -26,6 +26,7 @@ import { matchCard } from './match-details.js';
 import { mediaCounts, serveMedia, syncMedia } from './media.js';
 import { syncPhotos } from './photos.js';
 import { channelEveryMs, syncChannel } from './channel.js';
+import { syncCityPhotos } from './city-photos.js';
 import { matchesForDate, matchesOfPlayer, syncMatchDays } from './matches-sync.js';
 import { syncOdds } from './odds-sync.js';
 import { winlineLink } from './winline-link.js';
@@ -145,6 +146,11 @@ async function maintain(env, { force = false } = {}) {
   if (await due(env, 'channel_sync', channelEveryMs(), false)) {
     await setState(env, 'channel_sync', 'run');
     tasks.push(runJob(env, 'channel', () => syncChannel(env)));
+  }
+  // City photos for tournaments that have none yet (Commons, two cities an hour).
+  if (env.MEDIA && env.IMAGES && await due(env, 'city_photos', 60 * 60e3, false)) {
+    await setState(env, 'city_photos', 'run');
+    tasks.push(runJob(env, 'city_photos', () => syncCityPhotos(env)));
   }
   // Big player photos (WTA / ESPN / Commons → 480×480 WebP), a few every minute.
   if (env.MEDIA && env.IMAGES && await due(env, 'photos_sync', MEDIA_EVERY_MS, force)) {

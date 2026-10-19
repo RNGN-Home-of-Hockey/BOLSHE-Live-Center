@@ -876,3 +876,18 @@ a.lv-card { color: #fff; }
 .credits { display: flex; flex-direction: column; gap: 8px; }
 .credits div { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; font-size: 14px; }
 .credits small { display: block; color: var(--hint); font-size: 12px; margin-top: 3px; line-height: 1.4; }
+
+/* Cards with a layered background and a 1px border: the layers are laid out from the border's outer edge.
+   With the default (inside the border) a gradient repeats into the border and its light top showed as a
+   1–2px strip along the bottom edge (seen on the «Турниры» cards, 2026-10-19). */
+.tl-card, .tp-head, .mhero, .p-head, .lv-card, .hl-card, .mm, .qcard2, .sbanner, .cover { background-origin: border-box; }
+
+/* «Турниры» tab and the tournament page: a photo of the tournament's city (one of up to five, changing),
+   darkened so the text stays first; the painted background stays where a city has no photos yet. */
+.tl-card.has-photo, .tp-head.has-photo { background: #140f1d; isolation: isolate; }
+.tl-card.has-photo::before, .tp-head.has-photo::before,
+.tl-card.has-photo::after, .tp-head.has-photo::after { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+.tl-card.has-photo::before, .tp-head.has-photo::before { background: var(--photo) center / cover no-repeat; filter: saturate(.85); }
+.tl-card.has-photo::after { background: linear-gradient(180deg, rgba(14, 10, 20, .62) 0%, rgba(14, 10, 20, .74) 45%, rgba(14, 10, 20, .9) 100%); }
+.tp-head.has-photo::after { background: linear-gradient(180deg, rgba(14, 10, 20, .35) 0%, rgba(14, 10, 20, .7) 55%, rgba(14, 10, 20, .92) 100%); }
+.tl-card.has-photo .tl-bk { background: rgba(14, 10, 20, .55); }

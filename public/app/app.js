@@ -742,6 +742,11 @@ function rotatingPhoto(list, salt) {
   const seed = (me?.user?.id ?? viewerSeed) + [...String(salt)].reduce((a, c) => a + c.charCodeAt(0), 0) + Math.floor(Date.now() / (3 * 3600e3));
   return list[seed % list.length];
 }
+// A darkened city photo behind a tournament poster (the «Турниры» tab, the tournament page).
+function photoStyle(t) {
+  const photo = rotatingPhoto(t.visual?.photos, t.name);
+  return photo ? { cls: ' has-photo', attr: ` style="--photo:url('${esc(photo)}')"` } : { cls: '', attr: '' };
+}
 function tourCard2(t) {
   const v = t.visual;
   const photo = rotatingPhoto(v?.photos, t.name);
@@ -1544,7 +1549,7 @@ function tourCard(t) {
   const foot = t.status === 'soon'
     ? `<span class="tl-soon">🕑 Скоро начнётся${t.next_start ? ` · первый матч ${esc(dayWord(t.next_start))} в ${esc(localTime(t.next_start))}` : ''}</span>`
     : t.live ? `<span class="tl-live"><i></i>${t.live} ${plural(t.live, 'матч', 'матча', 'матчей')} сейчас</span>` : t.highlights ? `<span class="tl-hl">▶ хайлайтов: ${t.highlights}</span>` : '<span></span>';
-  return `<div class="tl-card${t.tour === 'WTA' ? ' wta' : ''}"><a class="tl-main" href="#/tournament/${encodeURIComponent(t.key)}">
+  return `<div class="tl-card${t.tour === 'WTA' ? ' wta' : ''}${photoStyle(t).cls}"${photoStyle(t).attr}><a class="tl-main" href="#/tournament/${encodeURIComponent(t.key)}">
       ${t.logo ? `<img class="tc-logo" src="${esc(t.logo)}" alt="" loading="lazy" data-cover>` : ''}
       <div class="tc-tier">${esc(tierLabel(t))}</div><div class="tc-city">${esc(t.name)}</div>
       <div class="tc-dates">${esc(info)}${t.stage === 'qualifying' ? ' · идёт квалификация' : b?.round && t.status === 'now' ? ` · ${esc(b.round.toLowerCase())}` : ''}</div></a>
@@ -1639,7 +1644,7 @@ async function tournamentScreen(key, token, params) {
         <span class="hl-cap"><b>${esc(lastName(m.p1))} — ${esc(lastName(m.p2))}</b><small>${esc(shortDate(m.date_msk))} · ${hlLabel(review)} ${mmss(review.secs)}</small></span></button>`;
     }).join('')}</div>` : `<div class="empty">${noSpoilers ? 'Хайлайты скрыты — выключи «без спойлеров» вверху' : 'Хайлайтов этого турнира пока нет — они появляются после матчей, которые показывал «Больше»'}</div>`;
   }
-  view.innerHTML = `<div class="tp-head${t.tour === 'WTA' ? ' wta' : ''}">${t.logo ? `<img class="tc-logo" src="${esc(t.logo)}" alt="" loading="lazy" data-cover>` : ''}
+  view.innerHTML = `<div class="tp-head${t.tour === 'WTA' ? ' wta' : ''}${photoStyle(t).cls}"${photoStyle(t).attr}>${t.logo ? `<img class="tc-logo" src="${esc(t.logo)}" alt="" loading="lazy" data-cover>` : ''}
       <span class="tl-fav">${favButton(t.name)}</span>
       <div class="tc-tier">${esc(tierLabel(t))}</div><div class="tc-city">${esc(t.name)}</div>
       <div class="tc-dates">${esc([dates, SURFACE[t.surface], b?.round && t.status === 'now' ? b.round.toLowerCase() : t.status === 'done' ? 'завершён' : null].filter(Boolean).join(' · '))}</div></div>

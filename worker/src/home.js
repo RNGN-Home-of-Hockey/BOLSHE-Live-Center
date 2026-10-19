@@ -4,7 +4,6 @@
 // bot (/main Фамилия) — and set that week's studio link (/live). Both live in app_state.
 
 import { homeTournaments, nextStudio, pickMainMatch, studioBanner } from '../../src/insights/home.js';
-import { mediaUrl } from '../../src/lib/media.js';
 import { MATCH_SELECT, matchesForDate, shapeMatch } from './matches-sync.js';
 import { todayQuestion } from './question.js';
 import { readChannel } from './channel.js';
@@ -37,32 +36,6 @@ async function matchById(db, matchId) {
   const row = await db.prepare(`${MATCH_SELECT} WHERE m.match_id = ?`).bind(matchId).first();
   return row ? shapeMatch(row) : null;
 }
-
-// ---------- tournament pictures: 5 photos of the tournament's city (Wikimedia Commons) ----------
-// tour_photos keeps them by city; tour_visuals gives the spellings of the city (Flashscore writes some
-// in Russian, some in Latin) and the stadium photo used while a city has no photos of its own. The app
-// shows one at a time and changes it every few hours; the authors are on «Авторы фотографий».
-async function tourVisuals(db) {
-  try {
-    const [{ results: cities }, { results: photos }] = await Promise.all([
-      db.prepare('SELECT * FROM tour_visuals').all(),
-      db.prepare('SELECT city, photo_url FROM tour_photos ORDER BY city, n').all().catch(() => ({ results: [] })),
-    ]);
-    const byCity = new Map();
-    for (const ph of photos) byCity.set(ph.city, [...(byCity.get(ph.city) ?? []), ph.photo_url]);
-    const byName = new Map();
-    for (const v of cities) {
-      const urls = byCity.get(v.city) ?? (v.photo_url ? [v.photo_url] : []);
-      const visual = { photos: urls.map((u) => mediaUrl(u) ?? u), venue: v.venue ?? null };
-      for (const n of [v.city, ...String(v.aliases ?? '').split(',')]) if (n.trim()) byName.set(norm(n), visual);
-    }
-    return byName;
-  } catch {
-    return new Map(); // no table yet
-  }
-}
-
-const visualOf = (visuals, name) => visuals.get(norm(name)) ?? null;
 
 // Tournaments with «Больше» broadcasts around today: they go first on the home screen.
 async function coveredTournaments(db, today) {
@@ -103,7 +76,7 @@ export async function homeView(env, date = mskDay()) {
   const now = Date.now();
   const today = mskDay(now);
   const tomorrow = addDays(date, 1);
-  const [all, aheadTour, aheadCh, broadcasts, pick, studio, list, covered, visuals, question, channel] = await Promise.all([
+  const [all, aheadTour, aheadCh, broadcasts, pick, studio, list, covered, question, channel] = await Promise.all([
     matchesForDate(db, date, {}),
     matchesForDate(db, tomorrow, { level: 'tour' }),
     matchesForDate(db, tomorrow, { level: 'challenger' }),
@@ -112,7 +85,6 @@ export async function homeView(env, date = mskDay()) {
     readState(db, STUDIO_KEY),
     listTournaments(env, null),
     coveredTournaments(db, today),
-    tourVisuals(db),
     todayQuestion(env).catch(() => null),
     readChannel(db).catch(() => null),
   ]);
@@ -128,7 +100,7 @@ export async function homeView(env, date = mskDay()) {
   }
   const main = pickMainMatch(candidates, { pickId, now, today });
   const tours = homeTournaments(list, { covered, today });
-  const withVisual = (t) => ({ ...t, covered: covered.has(t.key), visual: visualOf(visuals, t.name) });
+  const withVisual = (t) => ({ ...t, covered: covered.has(t.key) });
   return {
     date,
     main: main ? { ...main.match, manual: main.manual } : null,
