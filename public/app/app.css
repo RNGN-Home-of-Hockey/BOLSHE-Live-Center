@@ -891,3 +891,16 @@ a.lv-card { color: #fff; }
 .tl-card.has-photo::after { background: linear-gradient(180deg, rgba(14, 10, 20, .62) 0%, rgba(14, 10, 20, .74) 45%, rgba(14, 10, 20, .9) 100%); }
 .tp-head.has-photo::after { background: linear-gradient(180deg, rgba(14, 10, 20, .35) 0%, rgba(14, 10, 20, .7) 55%, rgba(14, 10, 20, .92) 100%); }
 .tl-card.has-photo .tl-bk { background: rgba(14, 10, 20, .55); }
+
+/* A match past its planned time that has not begun («Задерживается»). */
+.mm-time.late { background: rgba(255, 176, 64, .2); color: #ffc46b; }
+.mm-note { font-size: 13px; line-height: 1.35; color: rgba(255, 255, 255, .78); margin-top: -2px; }
+.mc-time.late { color: #e8a33d; }
+
+/* «Главный матч дня» without a cover: the photos in their own row above the text, the same size. */
+.mm-photo.heads { aspect-ratio: auto; padding: 22px 16px 4px; }
+.mm-photo.heads::after { display: none; }
+.mm-photo.heads .mm-heads { position: static; padding: 0; }
+.mm-photo.heads .mm-heads .head, .mm-photo.heads .mm-heads .head.lo { width: 36%; max-width: 160px; }
+.mm-photo.heads.small .mm-heads .head, .mm-photo.heads.small .mm-heads .head.lo { width: 28%; max-width: 124px; }
+.mm-photo.heads + .mm-body { margin-top: 10px; }

@@ -153,6 +153,10 @@ function dayWord(iso) {
   return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }).replace('.', '');
 }
 const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
+// Tennis start times are estimates: a match waits until its court is free (the match before it, rain).
+// Once the planned time has passed and the match has not begun, it is shown as delayed, with that time.
+const isLate = (m, iso = m.start_at) => m.status === 'scheduled' && Boolean(iso) && Date.now() > Date.parse(iso) + 5 * 60e3;
+const lateNote = (iso) => `Должен был начаться в ${localTime(iso)} — ждём, пока освободится корт`;
 // "Сегодня, 15 октября" for a Moscow date.
 function dateTitle(date) {
   const word = { [mskDay(-1)]: 'Вчера', [mskDay(0)]: 'Сегодня', [mskDay(1)]: 'Завтра' }[date]
@@ -509,7 +513,8 @@ function matchRow(m, side) {
 function matchCard(m) {
   const t = m.tournament;
   const top = m.status === 'live' ? '<span class="pill-live">LIVE</span>'
-    : m.status === 'scheduled' ? `<span class="mc-time">${esc(localTime(m.start_at))}</span>` : `<span>${esc(STATUS[m.status] ?? '')}</span>`;
+    : m.status === 'scheduled' ? (isLate(m) ? `<span class="mc-time late" title="${esc(lateNote(m.start_at))}">ждём · ${esc(localTime(m.start_at))}</span>` : `<span class="mc-time">${esc(localTime(m.start_at))}</span>`)
+      : `<span>${esc(STATUS[m.status] ?? '')}</span>`;
   const label = [tourTitle(t), t.discipline && t.discipline !== 'singles' ? 'пары' : null, m.status === 'live' && m.live_set ? `${m.live_set}-й сет` : null].filter(Boolean).join(' · ');
   const hidden = noSpoilers && m.status !== 'scheduled' ? '<div class="hidden-score">Счёт скрыт</div>' : '';
   const watch = m.bolshe?.vk_url && m.status !== 'cancelled'
@@ -543,7 +548,10 @@ function mainPhotos(m) {
   const cover = m.bolshe?.cover;
   const tpl = m.tournament.level === 'challenger' ? 'ch' : m.tournament.tour === 'WTA' ? 'wta' : 'full';
   const heads = `<div class="mm-heads">${bigPhoto(m.p1)}<span class="vs-mark">VS</span>${bigPhoto(m.p2)}</div>`;
-  return `<div class="mm-photo${cover ? ` tpl-${tpl}` : ''}">${heads}${cover ? `<img class="mm-cover" src="${esc(cover)}" alt="" data-cover>` : ''}</div>`;
+  if (cover) return `<div class="mm-photo tpl-${tpl}">${heads}<img class="mm-cover" src="${esc(cover)}" alt="" data-cover></div>`;
+  // Without a cover: the two photos in a row above the text (never under it), always the same size —
+  // smaller while one of them is still the 100×100 head.
+  return `<div class="mm-photo heads${m.p1.photo_hq && m.p2.photo_hq ? '' : ' small'}">${heads}</div>`;
 }
 
 function mainMatchCard(m) {
@@ -552,9 +560,11 @@ function mainMatchCard(m) {
   const live = m.status === 'live';
   const done = DONE.includes(m.status);
   const start = m.bolshe?.starts_at ?? m.start_at;
+  const late = isLate(m, start);
   const when = live ? '<span class="pill-live">LIVE</span>'
-    : m.status === 'scheduled' ? `<span class="mm-time">${esc(cap(dayWord(start)))} · ${esc(localTime(start))}</span>`
-      : `<span class="mm-time">${esc(STATUS[m.status] ?? '')}</span>`;
+    : late ? '<span class="mm-time late">Задерживается</span>'
+      : m.status === 'scheduled' ? `<span class="mm-time">${esc(cap(dayWord(start)))} · ${esc(localTime(start))}</span>`
+        : `<span class="mm-time">${esc(STATUS[m.status] ?? '')}</span>`;
   const meta = [tourTitle(m.tournament), m.bolshe?.round].filter(Boolean).join(' · ');
   const winner = done && showScore(m) ? m.winner : null;
   const name = (side) => `<span${winner ? ` class="${winner === side ? 'won' : 'lost'}"` : ''}>${esc(lastName(side === 1 ? m.p1 : m.p2))}</span>`;
@@ -578,6 +588,7 @@ function mainMatchCard(m) {
         <div class="mm-cap">Главный матч дня${m.bolshe ? '<span class="badge">Больше</span>' : ''}</div>
         <div class="mm-meta">${when}<span>${esc(meta)}</span></div>
         <div class="mm-names${long > 17 ? ' s2' : ''}">${name(1)}<i>—</i>${name(2)}</div>
+        ${late ? `<div class="mm-note">${esc(lateNote(start))}</div>` : ''}
         ${score}
       </div></a>
     <div class="mm-actions">${action}${vk ? `<a class="mm-more" href="${href}">О матче</a>` : ''}</div>${adminNote}
@@ -934,7 +945,7 @@ function scoreCard(m) {
     return `<div class="sc-row${cls}"><span class="sc-name">${done && m.winner === side ? '✓ ' : ''}${esc(p.short ?? p.name)}${p.rank ? `<small>№${p.rank}</small>` : ''}</span>${sets}</div>`;
   };
   const foot = m.status === 'live' ? `<span class="live">LIVE</span>${m.live_set ? ` · ${m.live_set}-й сет` : ''}`
-    : m.status === 'scheduled' ? `Начало ${esc(dayWord(m.start_at))} в ${esc(localTime(m.start_at))} (${esc(tzLabel())})`
+    : m.status === 'scheduled' ? (isLate(m) ? esc(lateNote(m.start_at)) : `Начало ${esc(dayWord(m.start_at))} в ${esc(localTime(m.start_at))} (${esc(tzLabel())})`)
       : esc(STATUS[m.status] ?? '');
   return `<div class="score-card">${row(1)}${row(2)}<div class="sc-foot">${hide ? 'Счёт скрыт — выключи «без спойлеров» вверху' : foot}</div></div>`;
 }
